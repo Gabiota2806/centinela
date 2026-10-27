@@ -7,6 +7,74 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## 🚀 Guía de Inicio Rápido (Setup y Ejecución)
+
+Sigue estos pasos para poner en marcha el proyecto en un entorno local:
+
+### 1. Prerrequisitos
+Asegúrate de contar con:
+- **PHP >= 8.3** con las extensiones requeridas (`php-pgsql` / `pdo_pgsql`, `mbstring`, `xml`, etc.):
+  ```bash
+  sudo apt install -y php8.3-pgsql # o la versión de PHP instalada
+  ```
+- **Composer**
+- **Node.js** (v18+ recomendado) y **npm**
+- **Docker** y **Docker Compose**
+
+### 2. Instalación de dependencias
+Instalar los paquetes de PHP y Node.js:
+```bash
+composer install
+npm install
+```
+
+### 3. Variables de Entorno
+Copiar la plantilla de configuración y generar la clave de aplicación:
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+
+Verifica que la sección de base de datos en `.env` coincida con:
+```env
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=centinela
+DB_USERNAME=centinela
+DB_PASSWORD=centinela_secret
+DB_SCHEMA=centinela,public
+```
+
+### 4. Levantar la Base de Datos (PostgreSQL + PostGIS)
+Iniciar el contenedor de Docker en segundo plano:
+```bash
+docker compose up -d
+```
+
+### 5. Ejecutar Migraciones
+El esquema `centinela` y la extensión `postgis` se configuran automáticamente:
+```bash
+php artisan migrate
+```
+
+### 6. Levantar el Sistema
+Puedes levantar el servidor web y los assets de frontend en terminales separadas:
+
+**Terminal 1 (Backend):**
+```bash
+php artisan serve
+```
+
+**Terminal 2 (Frontend / Vite):**
+```bash
+npm run dev
+```
+
+La aplicación estará disponible en `http://localhost:8000`.
+
+---
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
