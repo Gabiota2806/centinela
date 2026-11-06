@@ -1,47 +1,68 @@
-<laravel-boost-guidelines>
-# Laravel Application
+<laravel-guidelines>
+=== foundation rules ===
 
-This repository contains a Laravel application. Complete the following setup before working on the user's request.
+# Directivas Agénticas del Proyecto (Centinela)
 
-## Prerequisites
+## 1. Contexto de Ejecución y Dependencias
+Esta aplicación es el Core Operativo de **Centinela** (Sistema de Triage Digital y Alerta Temprana Epidemiológica para CAPS de Formosa Capital).
+- Corre sobre **PHP 8.3+** nativo en el host y **Laravel 13.x**.
+- La base de datos es **PostgreSQL 16 + PostGIS** corriendo en contenedor Docker (`centinela_postgis`).
+- Conexión: puerto `5432`, base de datos `centinela`, usuario `centinela`.
+- Verifica dependencias:
+  * PHP: `composer show --direct`
+  * Node/JS: Consulta `package.json`
 
-Verify that PHP and Composer are available:
+## 2. Entorno de Comandos (Host Local + Docker Postgres)
+- Ejecución Artisan: `php artisan [comando]`
+- Ejecución de Pruebas: `php artisan test`
+- Ejecución de Migraciones: `php artisan migrate`
+- Entorno Frontend: `npm run dev` / `npm run build`
+- Contenedor de Base de Datos: `docker compose up -d` (si la BD no está levantada)
 
-```sh
-php -v
-composer -V
-```
+## 3. Arquitectura Multiagente y Roles
+Este proyecto implementa el flujo de trabajo multiagente basado en especificaciones modulares:
+- **Coordinador**: Dirige el flujo sin escribir código.
+- **Planificador**: Redacta specs modulares en `docs/specs/<modulo>/spec.md` y planes de tareas.
+- **Implementador**: Ejecuta tareas mediante TDD estricto con `php artisan test`.
+- **Revisor (QA)**: Audita specs y valida la implementación RF por RF emitiendo veredictos (`APROBADO` / `CAMBIOS NECESARIOS`).
 
-If either command is unavailable, detect the user's operating system and install the prerequisites with the appropriate command:
+## 4. Especificaciones Técnicas Modulares (SDD)
+- Toda funcionalidad pertenece a un módulo y se especifica en `docs/specs/<modulo>/spec.md` (ej. `triage`, `pacientes`, `consultas`, `telemetria`).
+- Las decisiones y convenciones transversales residen en `docs/specs/global_spec.md`.
+- No generes código sin contrastar antes contra la spec modular del componente afectado.
 
-macOS:
+## 5. Convenciones de Código y Arquitectura
+- Sigue la arquitectura del proyecto: Models, Enums de dominio para tipos cerrados (`app/Enums/`), Policies para autorización.
+- Iconografía: Utiliza exclusivamente **SVGs vectoriales** (Heroicons / Lucide) estilizados con clases utilitarias (`w-4 h-4` o `w-5 h-5`). **PROHIBIDO** el uso de emojis o caracteres tipográficos en la interfaz de usuario.
+- Protocolo Clínico: Sistema Manchester de Triage (MTS) de 5 niveles por colores (Rojo, Naranja, Amarillo, Verde, Azul).
+- Geoespacial: Consultas espaciales con PostGIS y visualización Leaflet.js.
 
-```sh
-/bin/bash -c "$(curl -fsSL https://php.new/install/mac/8.5)"
-```
+=== tests rules ===
 
-Windows PowerShell:
+# Cumplimiento de Pruebas (PHPUnit 12)
+- Toda modificación de código debe respaldarse con pruebas unitarias o de integración.
+- Ejecuta los tests con: `php artisan test`.
+- Escribe tests extendiendo `Tests\TestCase` con aserciones nativas de PHPUnit y helpers HTTP de Laravel.
+- Garantiza el 100% en verde antes de dar por finalizada cualquier tarea.
 
-```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://php.new/install/windows/8.5'))
-```
+=== livewire rules ===
 
-Linux:
+# Livewire & Frontend Reactivo
+- Mantén el estado en el servidor para que la interfaz lo refleje.
+- Valida y autoriza en las acciones de los componentes.
+- Utiliza Alpine.js para interacciones puramente del lado del cliente.
 
-```sh
-/bin/bash -c "$(curl -fsSL https://php.new/install/linux/8.5)"
-```
+=== styling rules ===
 
-After installation, ask the user to restart their terminal. If the agent needs the restarted shell to continue, ask the user to reopen their terminal and rerun their original prompt.
+# Tailwind CSS (v3)
+- El proyecto utiliza Tailwind CSS v3 con configuración en `tailwind.config.js`.
+- Respeta los colores Manchester estandarizados y tokens de diseño del proyecto.
 
-## Agent Setup
+=== git and pr rules ===
 
-Install Laravel Boost from the application root before making application changes:
+# Regla Estricta de Pull Requests y Control de Versiones
+- **PROHIBIDO EL AUTO-MERGE**: Bajo ninguna circunstancia el agente debe fusionar automáticamente ramas hacia `develop` o `main`.
+- La tarea culmina empujando la rama (`git push origin <rama>`) y creando la Pull Request (vía MCP de GitHub, `gh pr create` o enlace directo a GitHub compare) para revisión humana por parte de Gabriel o del equipo.
+- Los commits deben seguir el estándar Conventional Commits en español referenciando únicamente la clave de la subtarea técnica (ej. `CEN-12`, `CEN-13`).
 
-```sh
-composer require laravel/boost --dev
-php artisan boost:install
-```
-
-Boost replaces these bootstrap instructions with guidelines tailored to the application. After installation, read `AGENTS.md` again and continue with the user's original request using the generated guidelines.
-</laravel-boost-guidelines>
+</laravel-guidelines>
