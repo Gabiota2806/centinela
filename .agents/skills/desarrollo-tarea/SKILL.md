@@ -17,9 +17,9 @@ Este skill guía a Antigravity en la ejecución paso a paso del ciclo de vida de
   - **Invocación Asistida**: Si se envía solo `/desarrollo-tarea`, activa `ask_question` para consultar:
     * Clave de la tarea o ticket asignado.
     * Modo de trabajo (`(Recommended) Modo Local (en la PC)` | `Modo Remoto (desde el celular con túnel Cloudflare)`).
-* **Consulta de la Tarea y Alcance**:
-  - Si el proyecto está integrado con Jira: consulta el ticket vía Jira API v3 o servidor MCP.
-  - Si utiliza gestión local: consulta `docs/backlog.md`.
+* **Consulta de la Tarea y Alcance (docs/backlog.md)**:
+  - Consulta de inmediato `docs/backlog.md` para obtener la ficha de ingeniería completa de la tarea (archivos a tocar, esquemas de BD, Enums, pruebas y DoD).
+  - Si existen credenciales de Jira Cloud (`.env.jira`), sincroniza opcionalmente con Jira; de lo contrario, opera de forma 100% autónoma con el backlog local.
 * **Consulta de Especificación Modular SDD**:
   - Antigravity DEBE consultar la especificación modular correspondiente en `docs/specs/<modulo>/spec.md` y `docs/specs/global_spec.md` para extraer los Requerimientos Funcionales (RF) y Criterios de Aceptación (Gherkin).
 * **Inspección de Estado Vivo**:

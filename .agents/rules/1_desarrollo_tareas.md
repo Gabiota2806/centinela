@@ -13,8 +13,10 @@ Esta regla rige de forma permanente en todas las sesiones y conversaciones en Ce
      * **Invocación Inline**: Si Gabriel escribe `/desarrollo-tarea <CLAVE> <modo>` (ej. `/desarrollo-tarea CEN-12 local`), Antigravity extrae directamente los parámetros y avanza de inmediato a consultar Jira sin preguntas redundantes.
      * **Invocación Vacía / Asistida**: Si Gabriel invoca `/desarrollo-tarea` sin argumentos, Antigravity **DEBE activar de inmediato la herramienta interactiva `ask_question`** presentando el modal (Clave de Jira y selector de Modo Local vs. Remoto).
    - NUNCA escribas código, modifiques archivos ni crees ramas sin antes presentar un Plan Técnico detallado en el chat.
-   - **Consulta de la Tarea en Jira**:
-     * Consulta Jira Cloud vía API REST v3 o servidor MCP de Jira (`.env.jira`), extrae el título oficial y estructura el nombre de rama estandarizado (ej. `CEN-12-autenticacion-roles-livewire`).
+   - **Consulta de la Tarea (Local First en docs/backlog.md)**:
+     * Antigravity DEBE consultar primero el archivo `docs/backlog.md` en el repositorio para extraer el detalle técnico exhaustivo de la tarea (`CEN-xxx`), responsable, archivos objetivo, criterios Gherkin y resultados esperados.
+     * Si el entorno cuenta con credenciales en `.env.jira` o servidor MCP de Jira activo, puede consultar opcionalmente Jira Cloud; en caso contrario, `docs/backlog.md` es la fuente de verdad definitiva y suficiente.
+     * Estructura el nombre de rama estandarizado (ej. `CEN-xxx-nombre-tarea`).
    - **Consulta de Especificación Modular SDD**:
      * Antigravity DEBE consultar la especificación del módulo correspondiente en `docs/specs/<modulo>/spec.md` y las directivas generales en `docs/specs/global_spec.md` para extraer los requerimientos funcionales (RF) y criterios de aceptación (Gherkin).
    - **Inspección de Estado Vivo**:

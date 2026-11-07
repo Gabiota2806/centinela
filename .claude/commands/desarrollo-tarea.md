@@ -6,7 +6,8 @@ argument: "[CLAVE] [modo]"
 Ejecuta el ciclo de vida de desarrollo de la tarea técnica indicada ($ARGUMENTS) siguiendo rigurosamente las directivas de Centinela:
 
 1. **Lectura de la Skill y Reglas:**
-   - Lee de inmediato el archivo `.agents/skills/desarrollo-tarea/SKILL.md` y `.agents/rules/1_desarrollo_tareas.md`.
+   - Consulta de inmediato `docs/backlog.md` para extraer la especificación técnica exhaustiva de la tarea ($ARGUMENTS).
+   - Lee el archivo `.agents/skills/desarrollo-tarea/SKILL.md` y `.agents/rules/1_desarrollo_tareas.md`.
    - Consulta la especificación técnica en `docs/specs/` correspondiente al módulo de la tarea y las directivas transversales en `docs/specs/global_spec.md`.
 2. **Plan Técnico:**
    - Si no se especificó la clave de la tarea o el modo (local/remoto), solicita la información antes de continuar.

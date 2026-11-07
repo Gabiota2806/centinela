@@ -6,7 +6,8 @@ argument: "[CLAVE] [desarrollador] [modo]"
 Ejecuta la auditoría y control de calidad de la tarea indicada ($ARGUMENTS) siguiendo rigurosamente las directivas de Centinela:
 
 1. **Lectura de la Skill y Reglas:**
-   - Lee de inmediato el archivo `.agents/skills/auditoria/SKILL.md` y `.agents/rules/2_auditoria_codigo.md`.
+   - Consulta la tarea correspondiente en `docs/backlog.md` para conocer los resultados esperados y criterios de aceptación (DoD).
+   - Lee el archivo `.agents/skills/auditoria/SKILL.md` y `.agents/rules/2_auditoria_codigo.md`.
    - Consulta la especificación del módulo en `docs/specs/<modulo>/spec.md` y `docs/specs/global_spec.md`.
 2. **Posicionamiento en Rama:**
    - Si no se indicaron los argumentos, consulta la clave de la tarea y la rama a auditar.
