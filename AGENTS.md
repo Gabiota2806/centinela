@@ -19,8 +19,13 @@ Esta aplicación es el Core Operativo de **Centinela** (Sistema de Triage Digita
 - Entorno Frontend: `npm run dev` / `npm run build`
 - Contenedor de Base de Datos: `docker compose up -d` (si la BD no está levantada)
 
-## 3. Arquitectura Multiagente y Roles
-Este proyecto implementa el flujo de trabajo multiagente basado en especificaciones modulares:
+## 3. Arquitectura Multiagente y Entornos del Equipo
+Este proyecto implementa el flujo de trabajo multiagente basado en especificaciones modulares adaptado a las herramientas de cada integrante:
+- **Antonio Gabriel Pineda** (Full Stack / QA): Desarrolla con Google Antigravity.
+- **Valeria Budiño** (Frontend / UX): Desarrolla con **Claude Code** (comandos nativos en `.claude/commands/`).
+- **Enrique Maximiliano González** (Backend / Datos): Desarrolla con **Google Antigravity** o **OpenCode** (agentes en `.opencode/agents/`).
+
+### Roles Operativos:
 - **Coordinador**: Dirige el flujo sin escribir código.
 - **Planificador**: Redacta specs modulares en `docs/specs/<modulo>/spec.md` y planes de tareas.
 - **Implementador**: Ejecuta tareas mediante TDD estricto con `php artisan test`.
