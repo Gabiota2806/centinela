@@ -64,7 +64,7 @@
 ---
 
 #### 📌 CEN-12: [T2.2] Inicialización de proyecto Laravel y configuración de TailwindCSS
-- **Estado:** `[/]` En curso
+- **Estado:** `[x]` Listo
 - **Responsable:** Valeria Budiño
 - **Estimación:** 4 Story Points (4 hs)
 - **Archivos Objetivo:**
@@ -81,7 +81,7 @@
      * 🟡 Amarillo (Urgente): `#EAB308` / `bg-yellow-500 text-black` (Espera: 60 min).
      * 🟢 Verde (Poco Urgente): `#16A34A` / `bg-green-600 text-white` (Espera: 120 min).
      * 🔵 Azul (No Urgente): `#2563EB` / `bg-blue-600 text-white` (Espera: 240 min).
-  3. **Estándar de Iconografía Frontend:** Queda **TERMINANTEMENTE PROHIBIDO** usar emojis tipográficos (`🔴`, `⚠️`, `👤`) en vistas Blade o Livewire. Utilizar exclusivamente **Heroicons SVG vectoriales** con clases utilitarias (`w-4 h-4` o `w-5 h-5`).
+  3. **Estándar de Iconografía Frontend:** Queda **TERMINANTEMENTE PROHIBIDO** usar emojis tipográficos (`🔴`, `⚠️`, `👤`) en vistas Blade o Livewire. Utilizar exclusivamente **SVG vectoriales de Heroicons o Lucide** con clases utilitarias (`w-4 h-4` o `w-5 h-5`), según `docs/specs/ui/spec.md`.
   4. **Diseño de Layouts:**
      * `guest.blade.php`: Tarjeta centrada limpia para login con branding institucional de Centinela.
      * `app.blade.php`: Sidebar de navegación responsivo colapsable con indicador de nodo CAPS y perfil activo.
