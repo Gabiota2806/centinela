@@ -7,7 +7,7 @@
   * **Nodo Periférico (Edge - Este Repositorio):** Laravel 13 con Livewire, Alpine.js y Tailwind CSS instalado en servidores locales de cada CAPS para funcionamiento offline-first.
   * **Motor Central (Hub):** FastAPI (Python 3.12) con Scikit-learn para analítica geoespacial y correlación meteorológica (Open-Meteo).
   * **Protocolo de Sincronización:** Outbox Pattern asíncrono con reintentos vía endpoint seguro `POST /api/v1/telemetry` autenticado con API Key (`X-CAPS-Key`). Los datos identificatorios del paciente nunca salen de la red local del CAPS (Ley N° 25.326).
-- **Entorno de Ejecución:** Host Local (PHP 8.3+, Composer, Node) + Docker para PostgreSQL 16 con extensión PostGIS (`centinela_postgis`).
+- **Entorno de Ejecución:** Contenerizado con Docker Compose (`centinela_app` con PHP 8.5.12, Composer 2.11.2, Node 26.13.0 y `centinela_postgis` con PostgreSQL 18 + PostGIS 3.7).
 - **Ramas Git:** Base de producción `main`, integración `develop`.
 
 ---
@@ -31,7 +31,7 @@ Implementado mediante Enums nativos de PHP 8.3 (`App\Enums\UserRole`) desacoplad
 - **Clinical Override**: Si el médico o enfermero discrepan con la clasificación algorítmica, pueden reclasificar justificando el motivo clínico. Se registra obligatoriamente en la tabla de auditoría inmutable `triage_audit_logs`.
 
 ### C. Base de Datos y Persistencia Espacial
-- Motor: **PostgreSQL 16 + PostGIS**.
+- Motor: **PostgreSQL 18 + PostGIS 3.7** (`postgis/postgis:18-3.7`).
 - Tipos de geometrías espaciales: coordenadas de CAPS y geometrías poligonales de barrios de Formosa Capital en SRID 4326.
 - Convención de nombres: tablas en plural snake_case (`patients`, `triages`, `consultations`, `neighborhoods`, `triage_audit_logs`).
 

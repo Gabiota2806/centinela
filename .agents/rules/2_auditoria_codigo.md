@@ -18,7 +18,7 @@ Esta regla rige cada vez que se invoque el Slash Command `/auditoria` o se solic
    - Antigravity DEBE identificar al desarrollador asignado (Valeria, Enrique, Gabriel) y el propósito de la tarea en Centinela.
 
 2. **AUDITORÍA DE TESTS Y COBERTURA (PHPUnit)**:
-   - Ejecutar de inmediato la suite de pruebas del proyecto: `php artisan test`.
+   - Ejecutar de inmediato la suite de pruebas del proyecto: `docker compose exec app php artisan test`.
    - 🚫 **BLOQUEO INMEDIATO**: Si algún test falla, la auditoría se detiene. Se emite de inmediato el veredicto `VEREDICTO: CAMBIOS NECESARIOS` detallando los fallos detectados.
 
 3. **INSPECCIÓN PROFUNDA DE CÓDIGO (GIT DIFF)**:

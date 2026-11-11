@@ -31,7 +31,7 @@ Esta regla rige de forma permanente en todas las sesiones y conversaciones en Ce
 
 3. **TDD, SMOKE TESTING Y PRE-VERIFICACIÓN TÉCNICA EN NAVEGADOR**:
    - **TDD Estricto**: Escribe o actualiza las pruebas unitarias y de integración cubriendo los criterios Gherkin en PHPUnit antes o en paralelo al código de producción.
-   - Ejecuta la suite de pruebas mediante: `php artisan test`. Garantiza el 100% en verde.
+   - Ejecuta la suite de pruebas mediante: `docker compose exec app php artisan test`. Garantiza el 100% en verde.
    - **Estándar de Iconografía**: Queda **PROHIBIDO** usar emojis de texto o caracteres tipográficos sustitutos. Utilizar exclusivamente **SVGs vectoriales** con clases utilitarias (`w-4 h-4` o `w-5 h-5`).
    - **Pre-Verificación Técnica en Navegador**:
      * Si la tarea afecta interfaz gráfica o Livewire, navegar a la pantalla afectada con `/browser` o Playwright en `http://localhost:8000` (o `http://localhost`).

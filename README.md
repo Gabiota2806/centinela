@@ -7,38 +7,29 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
-## 🚀 Guía de Inicio Rápido (Setup y Ejecución)
+## 🚀 Guía de Inicio Rápido (Entorno Contenerizado con Docker)
 
-Sigue estos pasos para poner en marcha el proyecto en un entorno local:
+El entorno de desarrollo de **Centinela** está completamente contenerizado para garantizar paridad exacta de versiones entre todos los integrantes del equipo sin requerir instalaciones nativas en el host:
+- **PHP:** `8.5.12` (`pdo_pgsql`, `pgsql`, `mbstring`, `xml`, `curl`, `zip`, `intl`, `bcmath`, `opcache`)
+- **Composer:** `2.11.2`
+- **Node.js:** `v26.13.0` + `npm`
+- **Base de Datos Espacial:** `postgis/postgis:18-3.7` (**PostgreSQL 18 + PostGIS 3.7**)
+- **Usuario no-root:** Mapeado a `UID:GID` (`1000:1000`) del host.
 
 ### 1. Prerrequisitos
-Asegúrate de contar con:
-- **PHP >= 8.3** con las extensiones requeridas (`php-pgsql` / `pdo_pgsql`, `mbstring`, `xml`, etc.):
-  ```bash
-  sudo apt install -y php8.3-pgsql # o la versión de PHP instalada
-  ```
-- **Composer**
-- **Node.js** (v18+ recomendado) y **npm**
-- **Docker** y **Docker Compose**
+Asegúrate de contar únicamente con:
+- **Docker** y **Docker Compose v2+**
 
-### 2. Instalación de dependencias
-Instalar los paquetes de PHP y Node.js:
-```bash
-composer install
-npm install
-```
-
-### 3. Variables de Entorno
-Copiar la plantilla de configuración y generar la clave de aplicación:
+### 2. Variables de Entorno
+Copiar la plantilla de configuración antes de levantar los contenedores:
 ```bash
 cp .env.example .env
-php artisan key:generate
 ```
 
 Verifica que la sección de base de datos en `.env` coincida con:
 ```env
 DB_CONNECTION=pgsql
-DB_HOST=127.0.0.1
+DB_HOST=postgres
 DB_PORT=5432
 DB_DATABASE=centinela
 DB_USERNAME=centinela
@@ -46,32 +37,46 @@ DB_PASSWORD=centinela_secret
 DB_SCHEMA=centinela,public
 ```
 
-### 4. Levantar la Base de Datos (PostgreSQL + PostGIS)
-Iniciar el contenedor de Docker en segundo plano:
+### 3. Construir y Levantar los Contenedores (`app` y `postgres`)
+Construir la imagen de aplicación e iniciar los servicios en segundo plano:
 ```bash
-docker compose up -d
+docker compose up -d --build
+```
+
+### 4. Instalación de Dependencias y Clave de Aplicación
+Ejecutar Composer, NPM y generar la `APP_KEY` dentro del contenedor `app`:
+```bash
+docker compose exec app composer install
+docker compose exec app npm install
+docker compose exec app php artisan key:generate
 ```
 
 ### 5. Ejecutar Migraciones
-El esquema `centinela` y la extensión `postgis` se configuran automáticamente:
+El esquema `centinela` y la extensión espacial `postgis` se configuran automáticamente:
 ```bash
-php artisan migrate
+docker compose exec app php artisan migrate
 ```
 
-### 6. Levantar el Sistema
-Puedes levantar el servidor web y los assets de frontend en terminales separadas:
+### 6. Servidores en Segundo Plano, Compilación y Pruebas
+Al levantar el entorno con `docker compose up -d`, el contenedor `app` inicia **automáticamente en segundo plano**:
+- **Backend Laravel:** `http://localhost:8000`
+- **Frontend Vite (HMR):** `http://localhost:5173`
 
-**Terminal 1 (Backend):**
+Si deseas generar el build estático de producción manualmente:
 ```bash
-php artisan serve
+docker compose exec app npm run build
 ```
 
-**Terminal 2 (Frontend / Vite):**
+Para ejecutar la suite de pruebas (PHPUnit 12):
 ```bash
-npm run dev
+docker compose exec app php artisan test
 ```
 
-La aplicación estará disponible en `http://localhost:8000`.
+### 7. Apagar el Entorno
+Para detener y dar de baja todos los contenedores y procesos en segundo plano (`artisan serve`, `vite` y `postgres`), liberando los puertos `8000`, `5173` y `5432` para trabajar en otros proyectos:
+```bash
+docker compose down
+```
 
 ---
 
