@@ -92,7 +92,7 @@
 ---
 
 #### 📌 CEN-13: [T2.3] Instalación y configuración de PostgreSQL con extensión espacial PostGIS
-- **Estado:** `[/]` En curso
+- **Estado:** `[x]` Listo
 - **Responsable:** Enrique M. González
 - **Estimación:** 4 Story Points (4 hs)
 - **Archivos Objetivo:**
