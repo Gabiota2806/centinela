@@ -44,10 +44,10 @@
 ## 🏃 Sprint 2: Modelado de Persistencia, Repositorio y Autenticación Base (ACTIVO)
 - **Épica:** `CEN-2`
 - **Estado:** 🚧 **En curso (In Progress)**
-- **Duración:** 7 días (Semana 2) | **Cómputo Total:** 24 Story Points (72 hs cátedra)
+- **Duración:** 7 días (Semana 2) | **Cómputo Total:** 28 Story Points (84 hs cátedra)
 
 ### 📖 HU01: Autenticación y Roles del Personal en Nodo Local
-- **Clave:** `CEN-10` | **Estado:** `En curso` | **Puntos:** 24 SP | **Épica:** `CEN-2`
+- **Clave:** `CEN-10` | **Estado:** `En curso` | **Puntos:** 28 SP | **Épica:** `CEN-2`
 - **Spec Modular:** `docs/specs/auth/spec.md` y `docs/specs/global_spec.md`
 - **Subtareas Técnicas Detalladas:**
 
@@ -269,6 +269,34 @@
 - **Criterio de Aceptación (DoD):**
   * `php artisan test` ejecuta la suite completa y reporta 100% de tests en verde.
   * Tiempo total de ejecución de la suite inferior a 5 segundos.
+
+---
+
+#### 📌 CEN-17: [T2.7] Contenerización integral del entorno de desarrollo (PHP 8.5.12, Node 26.13.0, Composer 2.11.2, PostgreSQL 18 / PostGIS 3.7) y actualización de directivas agénticas
+- **Estado:** `[ ]` Por hacer
+- **Responsable:** Gabriel Pineda
+- **Estimación:** 4 Story Points (4 hs)
+- **Archivos Objetivo:**
+  * `Dockerfile`
+  * `docker-compose.yml`
+  * `README.md`
+  * `AGENTS.md`
+  * `.agents/rules/`
+- **Especificaciones Técnicas Obligatorias:**
+  1. **Runtime PHP:** `PHP 8.5.12` con extensiones `pdo_pgsql`, `pgsql`, `mbstring`, `xml`, `curl`, `zip`, `intl`, `bcmath`, `opcache`.
+  2. **Runtime JS/Node:** `Node.js 26.13.0` con `npm`.
+  3. **Manejador de Paquetes PHP:** `Composer 2.11.2`.
+  4. **Base de Datos Espacial:** Imagen `postgis/postgis:18-3.7` (PostgreSQL 18 + PostGIS 3.7).
+  5. **Mapeo de Usuario:** Usuario de desarrollo no-root con `UID:GID` (1000:1000) idénticos al host para evitar conflictos con archivos creados por root.
+  6. **Estandarización Agéntica:** Documentación de arranque en `README.md` y actualización de directivas en `AGENTS.md` y `.agents/rules/` para uso de `docker compose exec app ...`.
+- **Criterio de Aceptación (DoD):**
+  * `docker compose up -d --build` construye y levanta los servicios `app` y `postgres` sin fallos.
+  * `docker compose exec app php -v` retorna `PHP 8.5.12`.
+  * `docker compose exec app node -v` retorna `v26.13.0`.
+  * `docker compose exec app composer --version` retorna `2.11.2`.
+  * `docker compose exec postgres psql -U centinela -d centinela -c "SELECT PostGIS_Version();"` retorna versión `3.7` sobre PostgreSQL 18.
+  * `docker compose exec app php artisan test` pasa el 100% de las pruebas en verde sin requerir dependencias en el host.
+  * Los archivos generados por Artisan o npm conservan propietario `gabrielp2806:gabrielp2806`.
 
 ---
 
