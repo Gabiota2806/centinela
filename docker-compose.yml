@@ -33,6 +33,7 @@ services:
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./docker/init-testing-db.sql:/docker-entrypoint-initdb.d/init-testing-db.sql:ro
 
 volumes:
   postgres_data:
