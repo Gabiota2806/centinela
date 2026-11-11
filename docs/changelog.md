@@ -7,6 +7,11 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
 
 ## [Unreleased]
 ### Added
+- `CEN-15`: Roles del personal con el Enum `UserRole` del backlog (`admission`, `triage_nurse`, `doctor`, `director`), métodos `isAdmission()`/`isTriageNurse()`/`isDoctor()`/`isDirector()` y Gates `access-admission`, `access-triage`, `access-doctor` y `access-analytics`.
+- `CEN-15`: Redirección por rol después del login (`/pacientes`, `/triage`, `/consultas`, `/dashboard`) con pantallas mínimas protegidas por Gate, login en español, rol visible en la barra superior y menú lateral filtrado por permisos. Spec modular `docs/specs/auth/spec.md`.
+
+### Changed
+- `CEN-15`: Migración `update_role_values_on_users_table` (default `admission` y conversión de valores previos); la migración original de `users` usa el valor literal histórico.
 - `CEN-17`: Contenerización integral del entorno de desarrollo (`Dockerfile` y `docker-compose.yml` con `PHP 8.5.12`, `Composer 2.11.2`, `Node.js 26.13.0`, `PostgreSQL 18 + PostGIS 3.7` y usuario no-root `1000:1000`), arranque automático de `php artisan serve` y `npm run dev` en segundo plano, pruebas de integración en `DockerEnvironmentTest` y estandarización de directivas agénticas (`docker compose exec app ...`).
 - `CEN-12`: Design System en Tailwind CSS v3 (colores MTS del backlog, marca, neutros, feedback y riesgo), tipografía Plus Jakarta Sans empaquetada localmente (sin CDN, apta para modo offline) y spec modular `docs/specs/ui/spec.md`.
 - `CEN-12`: Layout `guest` de pantalla dividida con branding de Centinela y layout `app` con barra superior (nodo CAPS y perfil activo) y barra lateral colapsable / menú deslizable en tablet y celular.

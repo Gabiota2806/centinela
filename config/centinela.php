@@ -20,13 +20,16 @@ return [
     |--------------------------------------------------------------------------
     |
     | Ítems de la barra lateral. Solo se muestran los que tienen la ruta
-    | registrada (Route::has), así los módulos de próximos sprints aparecen
-    | al crear su ruta. El ícono es una clave de <x-icon>.
+    | registrada (Route::has) y, si declaran `can`, cuyo Gate el usuario tiene
+    | (docs/specs/auth/spec.md §4). El ícono es una clave de <x-icon>.
     |
     */
 
     'navigation' => [
         ['label' => 'Inicio', 'route' => 'dashboard', 'icon' => 'home'],
+        ['label' => 'Admisión', 'route' => 'patients.index', 'icon' => 'clipboard-list', 'can' => 'access-admission'],
+        ['label' => 'Triage MTS', 'route' => 'triage.index', 'icon' => 'activity', 'can' => 'access-triage'],
+        ['label' => 'Consultas', 'route' => 'consultations.index', 'icon' => 'stethoscope', 'can' => 'access-doctor'],
         ['label' => 'Mi perfil', 'route' => 'profile.edit', 'icon' => 'user-circle'],
     ],
 

@@ -1,6 +1,7 @@
 @php
     $items = collect(config('centinela.navigation', []))
-        ->filter(fn (array $item) => Route::has($item['route']));
+        ->filter(fn (array $item) => Route::has($item['route'])
+            && (! isset($item['can']) || Gate::allows($item['can'])));
 @endphp
 
 {{-- Fondo del menú deslizable (tablet/celular) --}}

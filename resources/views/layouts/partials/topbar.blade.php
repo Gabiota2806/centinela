@@ -30,7 +30,12 @@
         <x-slot name="trigger">
             <button type="button" class="flex items-center gap-2.5 rounded-lg p-1 pe-2 hover:bg-canvas focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-turquesa">
                 <span class="w-9 h-9 rounded-full bg-brand-50 text-brand-petroleo grid place-items-center text-sm font-bold">{{ $initials }}</span>
-                <span class="hidden sm:block text-sm font-semibold text-ink max-w-[12rem] truncate">{{ $user->name }}</span>
+                <span class="hidden sm:block text-start leading-tight max-w-[14rem]">
+                    <span class="block text-sm font-semibold text-ink truncate">{{ $user->name }}</span>
+                    @if ($user->role)
+                        <span class="block text-xs text-ink-muted truncate">{{ $user->role->label() }}</span>
+                    @endif
+                </span>
                 <x-icon name="chevron-down" class="w-4 h-4 text-ink-muted" />
             </button>
         </x-slot>

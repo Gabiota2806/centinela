@@ -31,4 +31,32 @@ class User extends Authenticatable
             'role' => UserRole::class,
         ];
     }
+
+    public function isAdmission(): bool
+    {
+        return $this->role === UserRole::ADMISSION;
+    }
+
+    public function isTriageNurse(): bool
+    {
+        return $this->role === UserRole::TRIAGE_NURSE;
+    }
+
+    public function isDoctor(): bool
+    {
+        return $this->role === UserRole::DOCTOR;
+    }
+
+    public function isDirector(): bool
+    {
+        return $this->role === UserRole::DIRECTOR;
+    }
+
+    /**
+     * Ruta de inicio según el rol (docs/specs/auth/spec.md §4).
+     */
+    public function homeRoute(): string
+    {
+        return ($this->role ?? UserRole::ADMISSION)->homeRoute();
+    }
 }
