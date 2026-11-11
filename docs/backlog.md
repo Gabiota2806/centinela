@@ -273,7 +273,7 @@
 ---
 
 #### 📌 CEN-17: [T2.7] Contenerización integral del entorno de desarrollo (PHP 8.5.12, Node 26.13.0, Composer 2.11.2, PostgreSQL 18 / PostGIS 3.7) y actualización de directivas agénticas
-- **Estado:** `[ ]` Por hacer
+- **Estado:** `[x]` Listo
 - **Responsable:** Gabriel Pineda
 - **Estimación:** 4 Story Points (4 hs)
 - **Archivos Objetivo:**

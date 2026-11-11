@@ -5,19 +5,20 @@
 
 ## 1. Contexto de Ejecución y Dependencias
 Esta aplicación es el Core Operativo de **Centinela** (Sistema de Triage Digital y Alerta Temprana Epidemiológica para CAPS de Formosa Capital).
-- Corre sobre **PHP 8.3+** nativo en el host y **Laravel 13.x**.
-- La base de datos es **PostgreSQL 16 + PostGIS** corriendo en contenedor Docker (`centinela_postgis`).
-- Conexión: puerto `5432`, base de datos `centinela`, usuario `centinela`.
+- Corre en entorno Dockerizado (`centinela_app`) sobre **PHP 8.5.12**, **Composer 2.11.2**, **Node.js 26.13.0** y **Laravel 13.x** con usuario no-root (`1000:1000`).
+- La base de datos es **PostgreSQL 18 + PostGIS 3.7** (`postgis/postgis:18-3.7`) corriendo en contenedor Docker (`centinela_postgis`).
+- Conexión: servicio `postgres` (puerto `5432`), base de datos `centinela`, usuario `centinela`.
 - Verifica dependencias:
-  * PHP: `composer show --direct`
+  * PHP: `docker compose exec app composer show --direct`
   * Node/JS: Consulta `package.json`
 
-## 2. Entorno de Comandos (Host Local + Docker Postgres)
-- Ejecución Artisan: `php artisan [comando]`
-- Ejecución de Pruebas: `php artisan test`
-- Ejecución de Migraciones: `php artisan migrate`
-- Entorno Frontend: `npm run dev` / `npm run build`
-- Contenedor de Base de Datos: `docker compose up -d` (si la BD no está levantada)
+## 2. Entorno de Comandos (Docker Compose: `app` + `postgres`)
+- Levantar entorno completo: `docker compose up -d --build`
+- Ejecución Artisan: `docker compose exec app php artisan [comando]`
+- Ejecución Composer: `docker compose exec app composer [comando]`
+- Ejecución de Pruebas: `docker compose exec app php artisan test`
+- Ejecución de Migraciones: `docker compose exec app php artisan migrate`
+- Entorno Frontend: `docker compose exec app npm run dev` / `docker compose exec app npm run build`
 
 ## 3. Arquitectura Multiagente y Entornos del Equipo
 Este proyecto implementa el flujo de trabajo multiagente basado en especificaciones modulares adaptado a las herramientas de cada integrante:
@@ -28,7 +29,7 @@ Este proyecto implementa el flujo de trabajo multiagente basado en especificacio
 ### Roles Operativos:
 - **Coordinador**: Dirige el flujo sin escribir código.
 - **Planificador**: Redacta specs modulares en `docs/specs/<modulo>/spec.md` y planes de tareas.
-- **Implementador**: Ejecuta tareas mediante TDD estricto con `php artisan test`.
+- **Implementador**: Ejecuta tareas mediante TDD estricto con `docker compose exec app php artisan test`.
 - **Revisor (QA)**: Audita specs y valida la implementación RF por RF emitiendo veredictos (`APROBADO` / `CAMBIOS NECESARIOS`).
 
 ## 4. Especificaciones Técnicas Modulares (SDD)
@@ -46,7 +47,7 @@ Este proyecto implementa el flujo de trabajo multiagente basado en especificacio
 
 # Cumplimiento de Pruebas (PHPUnit 12)
 - Toda modificación de código debe respaldarse con pruebas unitarias o de integración.
-- Ejecuta los tests con: `php artisan test`.
+- Ejecuta los tests con: `docker compose exec app php artisan test`.
 - Escribe tests extendiendo `Tests\TestCase` con aserciones nativas de PHPUnit y helpers HTTP de Laravel.
 - Garantiza el 100% en verde antes de dar por finalizada cualquier tarea.
 
