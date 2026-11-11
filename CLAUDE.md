@@ -1,11 +1,12 @@
 # Instrucciones para Claude Code - Centinela
 
-## Entorno de Ejecución (Host Local + Docker Postgres)
-- Comandos Artisan: `php artisan [comando]`
-- Comandos Composer: `composer [comando]`
-- Comandos NPM: `npm run dev` / `npm run build`
-- Ejecución de Pruebas: `php artisan test`
-- Base de datos: PostgreSQL 16 + PostGIS en Docker (`docker compose up -d`)
+## Entorno de Ejecución Contenerizado (`docker compose exec app ...`)
+- Levantar servicios (`app` y `postgres`): `docker compose up -d --build`
+- Comandos Artisan: `docker compose exec app php artisan [comando]`
+- Comandos Composer: `docker compose exec app composer [comando]`
+- Comandos NPM: `docker compose exec app npm run dev` / `docker compose exec app npm run build`
+- Ejecución de Pruebas: `docker compose exec app php artisan test`
+- Stack en Contenedores: PHP 8.5.12, Composer 2.11.2, Node.js 26.13.0 y PostgreSQL 18 + PostGIS 3.7 (`postgis/postgis:18-3.7`)
 
 ---
 
