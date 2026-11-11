@@ -11,6 +11,7 @@ services:
       POSTGRES_PASSWORD: centinela_secret
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./docker/init-testing-db.sql:/docker-entrypoint-initdb.d/init-testing-db.sql:ro
 
 volumes:
   postgres_data:

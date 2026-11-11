@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Feature\Database;
 
 use Illuminate\Support\Facades\DB;
@@ -51,12 +53,22 @@ class PostgisConnectionTest extends TestCase
     }
 
     /**
-     * Test that the default search_path includes centinela schema.
+     * Test that the centinela schema exists in the database.
      */
     public function test_centinela_schema_exists(): void
     {
         $schema = DB::selectOne("SELECT schema_name FROM information_schema.schemata WHERE schema_name = 'centinela'");
 
         $this->assertNotNull($schema, "Schema 'centinela' must exist in the database.");
+    }
+
+    /**
+     * Test that the default search_path includes the centinela schema.
+     */
+    public function test_search_path_includes_centinela_schema(): void
+    {
+        $searchPath = DB::selectOne('SHOW search_path')->search_path;
+
+        $this->assertStringContainsString('centinela', $searchPath, 'The search_path must include the centinela schema.');
     }
 }
