@@ -47,7 +47,7 @@ Implementado mediante Enums nativos de PHP 8.3 (`App\Enums\UserRole`) desacoplad
 
 | Módulo | Directorio de la Spec | Estado | Subtareas / HUs Asociadas |
 | :--- | :--- | :--- | :--- |
-| **Autenticación y Roles** | `docs/specs/auth/spec.md` | *En Progreso* | `CEN-10`, `CEN-14` |
+| **Autenticación y Roles** | `docs/specs/auth/spec.md` | *En Progreso* | `CEN-10`, `CEN-14`, `CEN-15` |
 | **Design System y Layouts** | `docs/specs/ui/spec.md` | *En Progreso* | `CEN-12` |
 | **Pacientes y Admisión** | `docs/specs/pacientes/spec.md` | *Planificado* | Sprint 3 |
 | **Triage MTS y Auditoría** | `docs/specs/triage/spec.md` | *Planificado* | Sprint 4 |

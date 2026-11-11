@@ -24,6 +24,13 @@ class AppLayoutTest extends TestCase
         $response->assertSee('Lucía Gómez');
     }
 
+    public function test_el_layout_muestra_la_etiqueta_del_rol(): void
+    {
+        $user = User::factory()->director()->make(['id' => 1]);
+
+        $this->actingAs($user)->get('/dashboard')->assertSee('Dirección de CAPS');
+    }
+
     public function test_el_layout_incluye_la_barra_lateral_colapsable(): void
     {
         $response = $this->actingAs($this->usuario())->get('/dashboard');
@@ -37,13 +44,13 @@ class AppLayoutTest extends TestCase
     {
         config(['centinela.navigation' => [
             ['label' => 'Inicio', 'route' => 'dashboard', 'icon' => 'home'],
-            ['label' => 'Triage MTS', 'route' => 'triage.index', 'icon' => 'activity'],
+            ['label' => 'Módulo futuro', 'route' => 'modulo.inexistente', 'icon' => 'activity'],
         ]]);
 
         $response = $this->actingAs($this->usuario())->get('/dashboard');
 
         $response->assertSee('Inicio');
-        $response->assertDontSee('Triage MTS');
+        $response->assertDontSee('Módulo futuro');
     }
 
     public function test_el_layout_no_muestra_el_logo_de_laravel(): void

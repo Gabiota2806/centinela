@@ -7,6 +7,11 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
 
 ## [Unreleased]
 ### Added
+- `CEN-15`: Roles del personal con el Enum `UserRole` del backlog (`admission`, `triage_nurse`, `doctor`, `director`), métodos `isAdmission()`/`isTriageNurse()`/`isDoctor()`/`isDirector()` y Gates `access-admission`, `access-triage`, `access-doctor` y `access-analytics`.
+- `CEN-15`: Redirección por rol después del login (`/pacientes`, `/triage`, `/consultas`, `/dashboard`) con pantallas mínimas protegidas por Gate, login en español, rol visible en la barra superior y menú lateral filtrado por permisos. Spec modular `docs/specs/auth/spec.md`.
+
+### Changed
+- `CEN-15`: Migración `update_role_values_on_users_table` (default `admission` y conversión de valores previos); la migración original de `users` usa el valor literal histórico.
 - `CEN-17`: Contenerización integral del entorno de desarrollo (`Dockerfile` y `docker-compose.yml` con `PHP 8.5.12`, `Composer 2.11.2`, `Node.js 26.13.0`, `PostgreSQL 18 + PostGIS 3.7` y usuario no-root `1000:1000`), arranque automático de `php artisan serve` y `npm run dev` en segundo plano, pruebas de integración en `DockerEnvironmentTest` y estandarización de directivas agénticas (`docker compose exec app ...`).
 - `CEN-13`: Contenedor Docker `centinela_postgis` (`postgis/postgis:18-3.7`) con PostgreSQL 18 y extensión espacial PostGIS 3.7 configurado en puerto 5432 y volumen persistente.
 - `CEN-13`: Configuración de entorno y conexión `pgsql` con search path `centinela,public`, base de datos aislada `centinela_test` en `phpunit.xml` con script de inicialización `docker/init-testing-db.sql`, y suite de integración `PostgisConnectionTest` con tipado estricto y validación de PostgreSQL 18, PostGIS 3.7 y search_path.

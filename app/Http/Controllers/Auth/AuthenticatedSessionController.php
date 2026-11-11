@@ -28,7 +28,8 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        // CEN-15: cada rol inicia en su módulo (docs/specs/auth/spec.md §4).
+        return redirect()->intended(route($request->user()->homeRoute(), absolute: false));
     }
 
     /**

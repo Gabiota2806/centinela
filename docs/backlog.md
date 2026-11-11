@@ -187,7 +187,7 @@
 ---
 
 #### 📌 CEN-15: [T2.5] Implementación de autenticación y autorización con roles (Laravel Breeze)
-- **Estado:** `[ ]` Por hacer
+- **Estado:** `[x]` Listo
 - **Responsable:** Valeria Budiño
 - **Estimación:** 4 Story Points (4 hs)
 - **Archivos Objetivo:**

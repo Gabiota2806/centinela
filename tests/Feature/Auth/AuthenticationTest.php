@@ -27,7 +27,8 @@ class AuthenticationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
+        // CEN-15: la pantalla de destino depende del rol del usuario.
+        $response->assertRedirect(route($user->homeRoute(), absolute: false));
     }
 
     public function test_users_can_not_authenticate_with_invalid_password(): void

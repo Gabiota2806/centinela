@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
-            $table->string('role')->default(\App\Enums\UserRole::Admision->value);
+            // Valor histórico: CEN-15 lo actualiza en update_role_values_on_users_table.
+            $table->string('role')->default('admision');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
