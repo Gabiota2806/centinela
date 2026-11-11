@@ -21,24 +21,24 @@ class PostgisConnectionTest extends TestCase
     }
 
     /**
-     * Test that PostgreSQL version is 16.x.
+     * Test that PostgreSQL version is 18.x.
      */
-    public function test_postgresql_version_is_16(): void
+    public function test_postgresql_version_is_18(): void
     {
         $version = DB::selectOne('SELECT version() as ver')->ver;
 
-        $this->assertStringContainsString('PostgreSQL 16', $version, 'The database must run on PostgreSQL 16.');
+        $this->assertStringContainsString('PostgreSQL 18', $version, 'The database must run on PostgreSQL 18.');
     }
 
     /**
-     * Test that the PostGIS extension is installed and returns version 3.4.x.
+     * Test that the PostGIS extension is installed and returns version 3.7.x.
      */
-    public function test_postgis_extension_is_installed_and_version_3_4(): void
+    public function test_postgis_extension_is_installed_and_version_3_7(): void
     {
         $postgisVersion = DB::selectOne('SELECT PostGIS_Version() as ver')->ver;
 
         $this->assertNotEmpty($postgisVersion, 'PostGIS version must not be empty.');
-        $this->assertStringStartsWith('3.4', $postgisVersion, 'PostGIS version must be 3.4.x.');
+        $this->assertStringStartsWith('3.7', $postgisVersion, 'PostGIS version must be 3.7.x.');
     }
 
     /**

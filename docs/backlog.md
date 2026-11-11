@@ -100,7 +100,7 @@
   * `.env` y `.env.example`
   * `config/database.php`
 - **Especificaciones Técnicas Obligatorias:**
-  1. **Contenedor Docker:** Imagen `postgis/postgis:16-3.4` (PostgreSQL 16 + PostGIS 3.4).
+  1. **Contenedor Docker:** Imagen `postgis/postgis:18-3.7` (PostgreSQL 18 + PostGIS 3.7).
   2. **Configuración de Red y Puertos:**
      * Puerto: `5432:5432`.
      * Contenedor: `centinela_postgis`.
@@ -118,7 +118,7 @@
      * Crear migración inicial o comando para ejecutar `CREATE EXTENSION IF NOT EXISTS postgis;`.
 - **Criterio de Aceptación (DoD):**
   * `php artisan migrate` conecta sin errores de timeout ni de autenticación.
-  * La consulta `SELECT PostGIS_Version();` devuelve la versión 3.4.x sobre PostgreSQL 16.
+  * La consulta `SELECT PostGIS_Version();` devuelve la versión 3.7.x sobre PostgreSQL 18.
 
 ---
 
