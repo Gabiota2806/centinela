@@ -1,9 +1,11 @@
 # 📦 Especificación Modular: Autenticación y Roles
 
 - **Módulo:** `auth`
-- **Estado:** `En Implementación`
-- **Última Actualización:** 2026-11-11
-- **Subtareas asociadas:** `CEN-15` (implementación), `CEN-16` (pruebas de modelos, enum y gates)
+- **Estado:** `Implementado`
+- **Última Actualización:** 2026-11-12
+- **Subtareas asociadas:**
+  - [x] `CEN-15` (implementación de autenticación y autorización por roles)
+  - [x] `CEN-16` (pruebas unitarias y de integración de modelos, PostGIS, inmutabilidad, enum y gates)
 
 ---
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Database;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
@@ -13,6 +14,8 @@ use Tests\TestCase;
  */
 class DatabaseMigrationsTest extends TestCase
 {
+    use RefreshDatabase;
+
     /**
      * Valida que las 5 tablas de la especificación existan en la base de datos.
      */
