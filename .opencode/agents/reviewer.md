@@ -9,7 +9,7 @@ permissions:
     resource: "*"
     effect: ask
   - action: shell
-    resource: "php artisan test*"
+    resource: "*php artisan test*"
     effect: allow
   - action: shell
     resource: "git diff*"
@@ -36,8 +36,8 @@ Evalúa la spec en `docs/specs/<modulo>/spec.md` buscando:
 *Solo detecta problemas; no propongas cambios de código.*
 
 ## 2. Si te piden validar la Implementación
-1. Lee `docs/specs/<modulo>/spec.md` y examina los cambios realizados con `git diff`.
-2. Ejecuta la suite de pruebas del proyecto: `php artisan test`.
+1. Lee `docs/specs/<modulo>/spec.md`, consulta solo el bloque de la tarea en `docs/backlog.md` (sin leer `docs/backlog_archive.md` salvo auditoría histórica) y examina los cambios con `git diff`.
+2. Ejecuta la suite de pruebas del proyecto: `docker compose exec app php artisan test`.
 3. Recorre la spec RF por RF:
    - Qué prueba cubre cada RF y cuál fue su resultado.
    - Si incluye interfaz, verifica ausencia de errores de consola o caídas de Livewire.

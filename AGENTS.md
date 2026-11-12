@@ -32,10 +32,15 @@ Este proyecto implementa el flujo de trabajo multiagente basado en especificacio
 - **Implementador**: Ejecuta tareas mediante TDD estricto con `docker compose exec app php artisan test`.
 - **Revisor (QA)**: Audita specs y valida la implementación RF por RF emitiendo veredictos (`APROBADO` / `CAMBIOS NECESARIOS`).
 
-## 4. Especificaciones Técnicas Modulares (SDD)
+## 4. Especificaciones Técnicas Modulares (SDD) y Gestión de Backlog
 - Toda funcionalidad pertenece a un módulo y se especifica en `docs/specs/<modulo>/spec.md` (ej. `triage`, `pacientes`, `consultas`, `telemetria`).
 - Las decisiones y convenciones transversales residen en `docs/specs/global_spec.md`.
 - No generes código sin contrastar antes contra la spec modular del componente afectado.
+- **Backlog Local Optimizado (`docs/backlog.md` y `docs/backlog_archive.md`)**:
+  * `docs/backlog.md` mantiene siempre en primer lugar el **Sprint Activo** seguido de los Sprints futuros.
+  * Para optimizar tokens al consultar una subtarea (`CEN-xxx`), localiza primero su línea con `grep -n "CEN-xxx" docs/backlog.md` y lee solo el rango de líneas de la tarea (o el bloque del Sprint Activo).
+  * Los Sprints finalizados residen en `docs/backlog_archive.md`; **no leas ese archivo** salvo que se solicite auditar o consultar tareas históricas cerradas.
+  * Al completar o aprobar en auditoría la última subtarea `[x]` del Sprint Activo, migra el Sprint finalizado a `docs/backlog_archive.md` y promueve el siguiente Sprint como `(ACTIVO)` al inicio de `docs/backlog.md`.
 
 ## 5. Convenciones de Código y Arquitectura
 - Sigue la arquitectura del proyecto: Models, Enums de dominio para tipos cerrados (`app/Enums/`), Policies para autorización.

@@ -24,19 +24,21 @@ Este skill guía a Antigravity en la ejecución paso a paso de la auditoría té
   git checkout <rama>
   git pull origin <rama>
   ```
+* **Consulta Quirúrgica del Backlog**:
+  - Busca la tarea con `grep -n "CEN-xxx" docs/backlog.md` y lee únicamente el rango de líneas de esa subtarea (no leas `docs/backlog_archive.md` salvo auditoría histórica).
 
 ---
 
 ### 2. Ejecución Inmediata de Tests
-* Ejecuta la suite de pruebas del proyecto: `{{EXEC_TEST}}`.
+* Ejecuta la suite de pruebas del proyecto: `docker compose exec app php artisan test`.
 * 🚫 **GUARDIA BLOQUEANTE**: Si falla alguna prueba, la auditoría se detiene y emite inmediatamente `VEREDICTO: CAMBIOS NECESARIOS` detallando el fallo.
 
 ---
 
 ### 3. Inspección Profunda de Código (Git Diff)
-* Inspecciona los cambios introducidos frente a `{{DEVELOP_BRANCH}}`:
+* Inspecciona los cambios introducidos frente a `develop`:
   ```bash
-  git diff origin/{{DEVELOP_BRANCH}}...HEAD
+  git diff origin/develop...HEAD
   ```
 * **Criterios de Evaluación**:
   1. **Apego a la Spec Modular**: ¿Cumple los Requerimientos Funcionales y escenarios Gherkin de `docs/specs/<modulo>/spec.md`?
@@ -63,14 +65,15 @@ Presenta el informe estructurado encabezado obligatoriamente por una de estas op
 ### 6. Fusión Asistida y Limpieza (Solo tras Veredicto Aprobado y OK Humano)
 * 🚫 **PAUSA OBLIGATORIA**: El asistente NUNCA debe fusionar automáticamente sin confirmación.
 * Tras el veredicto `APROBADO`, solicita el "OK" explícito del desarrollador.
+* Si la tarea auditada es la última subtarea pendiente del **Sprint Activo**, verifica que el Sprint completado se migre a `docs/backlog_archive.md` y que el siguiente Sprint quede como `(ACTIVO)` al principio de `docs/backlog.md`.
 * Con el "OK" confirmado:
   1. Si se usa GitHub CLI: `gh pr merge <id> --merge`.
   2. Si se usa GitHub MCP: `merge_pull_request`.
   3. Si es manual: Guiar en la web de GitHub para hacer clic en "Merge Pull Request".
 * Limpieza ordenada de ramas:
   ```bash
-  git checkout {{DEVELOP_BRANCH}}
-  git pull origin {{DEVELOP_BRANCH}}
+  git checkout develop
+  git pull origin develop
   git branch -d <rama>
   git fetch --prune
   ```

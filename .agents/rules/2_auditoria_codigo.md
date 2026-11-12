@@ -16,6 +16,7 @@ Esta regla rige cada vez que se invoque el Slash Command `/auditoria` o se solic
      git pull origin <rama>
      ```
    - Antigravity DEBE identificar al desarrollador asignado (Valeria, Enrique, Gabriel) y el propósito de la tarea en Centinela.
+   - Para verificar el alcance de la tarea en `docs/backlog.md`, localiza la línea con `grep -n "CEN-xxx" docs/backlog.md` y lee únicamente ese bloque (consulta `docs/backlog_archive.md` solo si se trata de una auditoría histórica).
 
 2. **AUDITORÍA DE TESTS Y COBERTURA (PHPUnit)**:
    - Ejecutar de inmediato la suite de pruebas del proyecto: `docker compose exec app php artisan test`.
@@ -46,4 +47,5 @@ Esta regla rige cada vez que se invoque el Slash Command `/auditoria` o se solic
 6. **FUSIÓN ASISTIDA CON CONFIRMACIÓN HUMANA (DOBLE VERIFICACIÓN)**:
    - 🚫 **GUARDIA BLOQUEANTE**: Aunque el veredicto sea `APROBADO`, Antigravity **NUNCA debe fusionar la Pull Request automáticamente**.
    - Antigravity debe solicitar la confirmación y "OK" explícito del desarrollador.
+   - Si con esta tarea quedan el 100% de las subtareas del **Sprint Activo** en `[x] Listo` y aún no se rotó el Sprint, verifica o ejecuta la migración del Sprint finalizado hacia `docs/backlog_archive.md` dejando el nuevo Sprint como `(ACTIVO)` al inicio de `docs/backlog.md`.
    - Tras el "OK", procede a asistir en la fusión hacia `develop` (vía GitHub MCP `merge_pull_request`, CLI `gh pr merge`, o guiando en la web de GitHub) y realiza la limpieza ordenada de ramas locales y remotas.

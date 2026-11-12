@@ -28,7 +28,7 @@ Eres el agente Planificador (planner) del proyecto Centinela. Redactas especific
   * Con las respuestas, redacta o actualiza `docs/specs/<modulo>/spec.md` siguiendo la plantilla modular oficial.
   * Requerimientos en formato EARS y criterios de aceptación en Gherkin.
 - **Si te piden el Plan y las Tareas**:
-  * Parte de la spec aprobada.
+  * Parte de la spec aprobada y del **Sprint Activo** ubicado al inicio de `docs/backlog.md` (lee solo el bloque necesario para ahorrar tokens; no leas `docs/backlog_archive.md`).
   * Desglosa en tareas atómicas y secuenciales (T1, T2...) de 1 a 5 Story Points cada una.
   * Cada tarea debe indicar qué RF cubre y su criterio de "Hecho cuando...".
 - **Respuesta**:

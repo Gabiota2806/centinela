@@ -6,7 +6,7 @@ argument: "[CLAVE] [desarrollador] [modo]"
 Ejecuta la auditoría y control de calidad de la tarea indicada ($ARGUMENTS) siguiendo rigurosamente las directivas de Centinela:
 
 1. **Lectura de la Skill y Reglas:**
-   - Consulta la tarea correspondiente en `docs/backlog.md` para conocer los resultados esperados y criterios de aceptación (DoD).
+   - Localiza la tarea en `docs/backlog.md` con `grep -n` y lee únicamente ese rango de líneas para ahorrar tokens (solo consulta `docs/backlog_archive.md` si auditas un Sprint histórico).
    - Lee el archivo `.agents/skills/auditoria/SKILL.md` y `.agents/rules/2_auditoria_codigo.md`.
    - Consulta la especificación del módulo en `docs/specs/<modulo>/spec.md` y `docs/specs/global_spec.md`.
 2. **Posicionamiento en Rama:**
@@ -18,7 +18,7 @@ Ejecuta la auditoría y control de calidad de la tarea indicada ($ARGUMENTS) sig
      git pull origin <rama>
      ```
 3. **Ejecución de Pruebas y Diff:**
-   - Corre la suite de pruebas del proyecto: `php artisan test`.
+   - Corre la suite de pruebas del proyecto: `docker compose exec app php artisan test`.
    - Si falla algún test, detén la auditoría de inmediato con `VEREDICTO: CAMBIOS NECESARIOS`.
    - Revisa el diff frente a `develop`: `git diff origin/develop...HEAD`.
    - Verifica concordancia con los criterios Gherkin, tipado, reglas de negocio MTS (5 colores Manchester) y que no existan emojis en vistas (solo SVGs vectoriales).
@@ -28,4 +28,5 @@ Ejecuta la auditoría y control de calidad de la tarea indicada ($ARGUMENTS) sig
      * `VEREDICTO: APROBADO` o `VEREDICTO: CAMBIOS NECESARIOS`.
    - Si el veredicto es APROBADO:
      * **Pausa obligatoria**: Solicita confirmación humana. NUNCA fusiones automáticamente.
+     * Si con esta tarea se completa el 100% del Sprint Activo, verifica la rotación del Sprint hacia `docs/backlog_archive.md` y la promoción del nuevo Sprint `(ACTIVO)` al tope de `docs/backlog.md`.
      * Con el "OK" explícito del usuario, asiste en la fusión hacia `develop` (vía `gh pr merge` o enlace web) y limpia las ramas.

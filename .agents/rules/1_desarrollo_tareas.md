@@ -14,7 +14,7 @@ Esta regla rige de forma permanente en todas las sesiones y conversaciones en Ce
      * **Invocación Vacía / Asistida**: Si Gabriel invoca `/desarrollo-tarea` sin argumentos, Antigravity **DEBE activar de inmediato la herramienta interactiva `ask_question`** presentando el modal (Clave de Jira y selector de Modo Local vs. Remoto).
    - NUNCA escribas código, modifiques archivos ni crees ramas sin antes presentar un Plan Técnico detallado en el chat.
    - **Consulta de la Tarea (Local First en docs/backlog.md)**:
-     * Antigravity DEBE consultar primero el archivo `docs/backlog.md` en el repositorio para extraer el detalle técnico exhaustivo de la tarea (`CEN-xxx`), responsable, archivos objetivo, criterios Gherkin y resultados esperados.
+     * Antigravity DEBE consultar primero `docs/backlog.md` (donde el **Sprint Activo** figura siempre al inicio). Para optimizar el consumo de tokens, debe localizar la tarea con `grep -n "CEN-xxx" docs/backlog.md` y leer únicamente el rango de líneas correspondiente, sin cargar el archivo completo ni leer `docs/backlog_archive.md` (reservado solo a Sprints finalizados).
      * Si el entorno cuenta con credenciales en `.env.jira` o servidor MCP de Jira activo, puede consultar opcionalmente Jira Cloud; en caso contrario, `docs/backlog.md` es la fuente de verdad definitiva y suficiente.
      * Estructura el nombre de rama estandarizado (ej. `CEN-xxx-nombre-tarea`).
    - **Consulta de Especificación Modular SDD**:
@@ -45,7 +45,8 @@ Esta regla rige de forma permanente en todas las sesiones y conversaciones en Ce
    - 🔄 **CICLO ITERATIVO ANTE OBSERVACIONES**: Si Gabriel plantea observaciones, Antigravity DEBE presentar un Plan Técnico de Ajuste, esperar el "OK", implementar, re-verificar y presentar la guía de re-validación.
 
 4. **REGISTRO EN DOCUMENTACIÓN Y COMMIT (SOLO TRAS EL OK DE QA)**:
-   - Marca la tarea técnica como completada `[x]` en `docs/specs/<modulo>/spec.md`.
+   - Marca la tarea técnica como completada `[x]` en `docs/specs/<modulo>/spec.md` y en `docs/backlog.md`.
+   - **Rotación de Sprint**: Si la tarea completada es la última subtarea pendiente del **Sprint Activo** en `docs/backlog.md`, migra el Sprint finalizado a `docs/backlog_archive.md` y promueve el siguiente Sprint como `(ACTIVO)` al inicio de `docs/backlog.md`.
    - Registra la entrada en `docs/changelog.md` bajo `## [Unreleased]`.
    - Realiza el commit en español con Conventional Commits (`feat: ...`, `fix: ...`, `test: ...`) referenciando únicamente la clave de la subtarea técnica (ej. `CEN-12`).
    - Sube la rama a GitHub (`git push origin <rama>`).

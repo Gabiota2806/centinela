@@ -14,9 +14,13 @@
 Este repositorio opera bajo una metodología multiagente:
 1. **Specs Modulares**: Las especificaciones funcionales se encuentran en `docs/specs/<modulo>/spec.md`.
 2. **Spec Global**: La arquitectura y convenciones transversales residen en `docs/specs/global_spec.md`.
-3. **Roles Operativos**:
+3. **Backlog Optimizado (`docs/backlog.md` y `docs/backlog_archive.md`)**:
+   - `docs/backlog.md` ubica siempre primero el **Sprint Activo**. Para ahorrar tokens, busca la clave con `grep -n "CEN-xxx" docs/backlog.md` y lee únicamente el bloque de esa subtarea.
+   - `docs/backlog_archive.md` almacena los Sprints finalizados (`[x] Listo`). No lo leas salvo consulta histórica explícita.
+   - Al cerrar o auditar la última subtarea `[x]` del Sprint Activo, mueve ese Sprint a `docs/backlog_archive.md` y promueve el siguiente Sprint como `(ACTIVO)` al tope de `docs/backlog.md`.
+4. **Roles Operativos**:
    - **Planificación**: Define o actualiza la spec modular antes de escribir código.
-   - **Implementación**: Sigue TDD estricto con `php artisan test` (tests primero, código después).
+   - **Implementación**: Sigue TDD estricto con `docker compose exec app php artisan test` (tests primero, código después).
    - **Revisión**: Comprueba que la suite pase al 100% y valida el diff frente a los criterios Gherkin.
 
 ---
