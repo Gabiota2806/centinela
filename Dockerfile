@@ -46,4 +46,4 @@ USER ${UID}:${GID}
 
 EXPOSE 8000 5173
 
-CMD ["sh", "-c", "trap 'rm -f public/hot; kill 0' INT TERM EXIT; rm -f public/hot && npm run dev -- --host 0.0.0.0 & php artisan serve --host=0.0.0.0 --port=8000 & wait"]
+CMD ["sh", "-c", "trap 'rm -f public/hot; kill 0' INT TERM EXIT; rm -f public/hot && npm run dev -- --host 0.0.0.0 & php artisan serve --host=0.0.0.0 --port=8000 --no-reload & wait"]

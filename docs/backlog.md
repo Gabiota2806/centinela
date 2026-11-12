@@ -123,7 +123,7 @@
 ---
 
 #### 📌 CEN-14: [T2.4] Diseño del diagrama entidad-relación y migraciones de base de datos
-- **Estado:** `[ ]` Por hacer
+- **Estado:** `[x]` Listo
 - **Responsable:** Enrique M. González
 - **Estimación:** 4 Story Points (4 hs)
 - **Archivos Objetivo:**

@@ -8,6 +8,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -58,5 +59,29 @@ class User extends Authenticatable
     public function homeRoute(): string
     {
         return ($this->role ?? UserRole::ADMISSION)->homeRoute();
+    }
+
+    /**
+     * @return HasMany<Triage, $this>
+     */
+    public function triages(): HasMany
+    {
+        return $this->hasMany(Triage::class);
+    }
+
+    /**
+     * @return HasMany<Consultation, $this>
+     */
+    public function consultations(): HasMany
+    {
+        return $this->hasMany(Consultation::class, 'doctor_id');
+    }
+
+    /**
+     * @return HasMany<TriageAuditLog, $this>
+     */
+    public function triageAuditLogs(): HasMany
+    {
+        return $this->hasMany(TriageAuditLog::class);
     }
 }
