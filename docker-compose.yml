@@ -15,6 +15,7 @@ services:
       - "5173:5173"
     environment:
       DB_HOST: postgres
+    command: sh -c "trap 'rm -f public/hot; kill 0' INT TERM EXIT; rm -f public/hot && npm run dev -- --host 0.0.0.0 & php artisan serve --host=0.0.0.0 --port=8000 --no-reload & wait"
     volumes:
       - .:/var/www/html
     depends_on:

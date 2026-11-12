@@ -32,8 +32,9 @@ Implementado mediante Enums nativos de PHP 8.3 (`App\Enums\UserRole`) desacoplad
 
 ### C. Base de Datos y Persistencia Espacial
 - Motor: **PostgreSQL 18 + PostGIS 3.7** (`postgis/postgis:18-3.7`).
-- Tipos de geometrías espaciales: coordenadas de CAPS y geometrías poligonales de barrios de Formosa Capital en SRID 4326.
+- Tipos de geometrías espaciales: coordenadas de CAPS y geometrías poligonales de barrios de Formosa Capital en SRID 4326 con índices espaciales GIST.
 - Convención de nombres: tablas en plural snake_case (`patients`, `triages`, `consultations`, `neighborhoods`, `triage_audit_logs`).
+- Especificación formal del esquema y diagrama Entidad-Relación (ERD): ver [database_dictionary.md](file:///opt/lampp/htdocs/centinela/docs/database_dictionary.md).
 
 ### D. Frontend, Estilos e Iconografía
 - Ecosistema: **Laravel Blade + Livewire + Alpine.js**.
