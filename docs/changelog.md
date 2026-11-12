@@ -7,6 +7,9 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
 
 ## [Unreleased]
 ### Added
+- `CEN-16`: Pruebas de integración espacial en `NeighborhoodSpatialTest` y scope `Neighborhood::containingPoint()` con funciones PostGIS (`ST_Contains`, `ST_SetSRID`, `ST_MakePoint` en SRID 4326) para asociar coordenadas geográficas de Formosa Capital a sus polígonos barriales.
+- `CEN-16`: Pruebas de integración en `TriageAuditLogImmutableTest` verificando que `triage_audit_logs` bloquee mutaciones (`update`) y eliminaciones (`delete`) sobre registros persistidos en PostgreSQL lanzando `LogicException`.
+- `CEN-16`: Pruebas unitarias en `UserRoleEnumTest` y pruebas de integración en `AuthRoleAccessTest` validando el Enum `UserRole`, métodos de rol en `User`, login y redirección de los 4 roles, bloqueo `403 Forbidden` en accesos cruzados y matriz de Gates RBAC.
 - `CEN-14`: Migraciones del esquema relacional y geoespacial en PostgreSQL 18 / PostGIS 3.7 para barrios con delimitación poligonal espacial e índice GIST (`neighborhoods`), padrón demográfico de pacientes con DNI único y soft deletes (`patients`), evaluaciones clínicas de triage con signos vitales en JSONB (`triages`), bitácora inmutable de auditoría para *Clinical Override* sin `updated_at` (`triage_audit_logs`) y consultas médicas de guardia (`consultations`).
 - `CEN-14`: Modelos Eloquent (`Neighborhood`, `Patient`, `Triage`, `TriageAuditLog`, `Consultation`) con relaciones, casteo de signos vitales, inmutabilidad estricta bloqueando modificaciones/borrados en `TriageAuditLog` y relaciones inversas en `User`.
 - `CEN-14`: Enums nativos PHP 8.3 de dominio: `TriagePriority` (5 colores Manchester, niveles 1-5, tiempos objetivo de espera y badges Tailwind), `TriageStatus` y `ConsultationStatus`.
