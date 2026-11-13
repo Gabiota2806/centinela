@@ -19,6 +19,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'sprint' => 'Sprint 3',
     ]))->middleware('can:access-admission')->name('patients.index');
 
+    // CEN-34: alta de pacientes (docs/specs/pacientes/spec.md).
+    Route::view('/pacientes/nuevo', 'patients.create')
+        ->middleware('can:access-admission')->name('patients.create');
+
     Route::get('/triage', fn () => view('triage.index'))
         ->middleware('can:access-triage')
         ->name('triage.index');

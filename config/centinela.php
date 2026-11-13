@@ -28,6 +28,7 @@ return [
     'navigation' => [
         ['label' => 'Inicio', 'route' => 'dashboard', 'icon' => 'home'],
         ['label' => 'Admisión', 'route' => 'patients.index', 'icon' => 'clipboard-list', 'can' => 'access-admission'],
+        ['label' => 'Nuevo paciente', 'route' => 'patients.create', 'icon' => 'user-plus', 'can' => 'access-admission'],
         ['label' => 'Triage MTS', 'route' => 'triage.index', 'icon' => 'activity', 'can' => 'access-triage'],
         ['label' => 'Consultas', 'route' => 'consultations.index', 'icon' => 'stethoscope', 'can' => 'access-doctor'],
         ['label' => 'Mi perfil', 'route' => 'profile.edit', 'icon' => 'user-circle'],
