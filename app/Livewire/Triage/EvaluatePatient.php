@@ -21,7 +21,7 @@ class EvaluatePatient extends Component
 {
     public ?int $patientId = null;
 
-    public Patient|int|null $patient = null;
+    public ?Patient $patient = null;
 
     // Signos vitales cuantitativos
     public ?float $temperature = null;
@@ -64,11 +64,15 @@ class EvaluatePatient extends Component
 
     public string $searchPatient = '';
 
-    public function mount(Patient|int|null $patient = null, ?int $patientId = null): void
+    public function mount(?Patient $patient = null, ?int $patientId = null): void
     {
-        $id = $patient instanceof Patient ? $patient->id : ($patient ?? $patientId ?? (is_int($this->patient) ? $this->patient : null));
-        if ($id !== null) {
-            $this->selectPatient((int) $id);
+        $this->authorize('access-triage');
+
+        $resolved = $patient ?? $this->patient;
+        if ($resolved instanceof Patient) {
+            $this->selectPatient($resolved->id);
+        } elseif ($patientId !== null) {
+            $this->selectPatient($patientId);
         }
 
         $this->recalculatePriority();
@@ -119,6 +123,8 @@ class EvaluatePatient extends Component
 
     public function save(): void
     {
+        $this->authorize('access-triage');
+
         $this->validate([
             'patientId' => ['required', 'exists:patients,id'],
             'symptoms' => ['required', 'string', 'min:3'],
@@ -207,7 +213,7 @@ class EvaluatePatient extends Component
 
         $patients = [];
         if ($this->patientId === null) {
-            $query = Patient::query()->latest('id');
+            $query = Patient::with('neighborhood')->latest('id');
             if (! empty($this->searchPatient)) {
                 $term = trim($this->searchPatient);
                 $query->where(function ($q) use ($term) {

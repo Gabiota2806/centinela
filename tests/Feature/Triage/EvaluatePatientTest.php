@@ -61,7 +61,7 @@ class EvaluatePatientTest extends TestCase
         $patient = Patient::factory()->create();
 
         Livewire::actingAs($nurse)
-            ->test(EvaluatePatient::class, ['patient' => $patient->id])
+            ->test(EvaluatePatient::class, ['patient' => $patient])
             ->assertSet('priorityValue', 'blue')
             ->assertSet('targetWaitMinutes', 240)
             ->set('spo2', 82)
@@ -77,7 +77,7 @@ class EvaluatePatientTest extends TestCase
         $patient = Patient::factory()->create();
 
         Livewire::actingAs($nurse)
-            ->test(EvaluatePatient::class, ['patient' => $patient->id])
+            ->test(EvaluatePatient::class, ['patient' => $patient])
             ->set('temperature', 39.5)
             ->set('discriminators.headache', true)
             ->assertSet('priorityValue', 'yellow')
@@ -92,7 +92,7 @@ class EvaluatePatientTest extends TestCase
         $patient = Patient::factory()->create();
 
         Livewire::actingAs($nurse)
-            ->test(EvaluatePatient::class, ['patient' => $patient->id])
+            ->test(EvaluatePatient::class, ['patient' => $patient])
             ->set('symptoms', 'Paciente refiere dolor torácico opresivo de inicio súbito')
             ->set('temperature', 37.2)
             ->set('systolic_bp', 130)
@@ -138,11 +138,45 @@ class EvaluatePatientTest extends TestCase
         $patient = Patient::factory()->create();
 
         Livewire::actingAs($nurse)
-            ->test(EvaluatePatient::class, ['patient' => $patient->id])
+            ->test(EvaluatePatient::class, ['patient' => $patient])
             ->set('symptoms', 'Consulta de guardia')
             ->set('temperature', 55.0) // Fuera de rango
             ->set('spo2', 150)         // Fuera de rango
             ->call('save')
             ->assertHasErrors(['temperature', 'spo2']);
+    }
+
+    public function test_personal_no_autorizado_es_rechazado_al_montar_componente(): void
+    {
+        $admission = User::factory()->admission()->create();
+
+        Livewire::actingAs($admission)
+            ->test(EvaluatePatient::class)
+            ->assertForbidden();
+    }
+
+    public function test_listado_de_pacientes_carga_relacion_neighborhood_con_eager_loading(): void
+    {
+        $nurse = User::factory()->triageNurse()->create();
+        Patient::factory()->create();
+
+        $component = Livewire::actingAs($nurse)
+            ->test(EvaluatePatient::class);
+
+        /** @var \Illuminate\Database\Eloquent\Collection<int, Patient> $patients */
+        $patients = $component->viewData('availablePatients');
+        $this->assertNotEmpty($patients);
+        $this->assertTrue($patients->first()->relationLoaded('neighborhood'));
+    }
+
+    public function test_soporta_montar_con_patient_id_o_modelo_patient(): void
+    {
+        $nurse = User::factory()->triageNurse()->create();
+        $patient = Patient::factory()->create();
+
+        Livewire::actingAs($nurse)
+            ->test(EvaluatePatient::class, ['patientId' => $patient->id])
+            ->assertSet('patientId', $patient->id)
+            ->assertSet('patient.id', $patient->id);
     }
 }
