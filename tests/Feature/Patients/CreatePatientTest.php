@@ -167,4 +167,75 @@ class CreatePatientTest extends TestCase
         Livewire::actingAs($user)->test(CreatePatient::class)
             ->assertSee('Circuito Cinco');
     }
+
+    public function test_autocompletado_filtra_barrios_reactivamente_por_nombre(): void
+    {
+        $user = User::factory()->admission()->create();
+        Neighborhood::factory()->create(['name' => 'San Martín']);
+        Neighborhood::factory()->create(['name' => 'San Miguel']);
+        Neighborhood::factory()->create(['name' => 'Fontana']);
+
+        Livewire::actingAs($user)->test(CreatePatient::class)
+            ->set('neighborhoodSearch', 'San')
+            ->assertSee('San Martín')
+            ->assertSee('San Miguel')
+            ->assertDontSee('Fontana');
+    }
+
+    public function test_seleccionar_barrio_desde_autocompletado_asigna_id_y_nombre(): void
+    {
+        $user = User::factory()->admission()->create();
+        $barrio = Neighborhood::factory()->create(['name' => 'Eva Perón']);
+
+        Livewire::actingAs($user)->test(CreatePatient::class)
+            ->call('selectNeighborhood', $barrio->id, 'Eva Perón')
+            ->assertSet('neighborhood_id', $barrio->id)
+            ->assertSet('selectedNeighborhoodName', 'Eva Perón')
+            ->assertSet('neighborhoodSearch', 'Eva Perón')
+            ->assertHasNoErrors(['neighborhood_id']);
+    }
+
+    public function test_limpiar_barrio_restablece_la_seleccion(): void
+    {
+        $user = User::factory()->admission()->create();
+        $barrio = Neighborhood::factory()->create(['name' => 'Don Bosco']);
+
+        Livewire::actingAs($user)->test(CreatePatient::class)
+            ->call('selectNeighborhood', $barrio->id, 'Don Bosco')
+            ->assertSet('neighborhood_id', $barrio->id)
+            ->call('clearNeighborhood')
+            ->assertSet('neighborhood_id', '')
+            ->assertSet('selectedNeighborhoodName', '')
+            ->assertSet('neighborhoodSearch', '');
+    }
+
+    public function test_carga_exitosa_seleccionando_barrio_con_autocompletado(): void
+    {
+        $user = User::factory()->admission()->create();
+        $barrio = Neighborhood::factory()->create(['name' => 'República Argentina']);
+
+        $datos = [
+            'dni' => '34567890',
+            'first_name' => 'Carlos',
+            'last_name' => 'Gómez',
+            'birth_date' => '1985-06-20',
+            'gender' => 'masculino',
+            'phone' => '370 411-2233',
+            'address' => 'Manzana 40 Casa 12',
+        ];
+
+        $component = Livewire::actingAs($user)->test(CreatePatient::class);
+
+        foreach ($datos as $campo => $valor) {
+            $component->set($campo, $valor);
+        }
+
+        $component->call('selectNeighborhood', $barrio->id, 'República Argentina')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $patient = Patient::where('dni', '34567890')->firstOrFail();
+        $this->assertSame($barrio->id, $patient->neighborhood_id);
+        $this->assertSame('Carlos Gómez', $patient->full_name);
+    }
 }
