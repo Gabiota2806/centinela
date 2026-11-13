@@ -109,23 +109,92 @@
                 @error('address') <p id="address-error" class="mt-1.5 text-sm text-danger">{{ $message }}</p> @enderror
             </div>
 
-            {{-- Barrio (selector simple; CEN-36 lo reemplaza por uno con autocompletado) --}}
-            <div class="sm:col-span-2">
-                <x-input-label for="neighborhood_id" value="Barrio de residencia" />
-                <select id="neighborhood_id" wire:model.live="neighborhood_id"
-                        aria-invalid="{{ $errors->has('neighborhood_id') ? 'true' : 'false' }}" aria-describedby="neighborhood_id-error"
-                        class="{{ $field('neighborhood_id') }}">
-                    <option value="">Seleccioná el barrio</option>
-                    @foreach ($neighborhoods as $neighborhood)
-                        <option value="{{ $neighborhood->id }}">{{ $neighborhood->name }}</option>
-                    @endforeach
-                </select>
+            {{-- Barrio con autocompletado y búsqueda reactiva (CEN-36) --}}
+            <div class="sm:col-span-2 relative" x-data="{ open: false }" @click.outside="open = false" @keydown.escape.window="open = false">
+                <x-input-label for="neighborhood_search" value="Barrio de residencia" />
+
+                <div class="relative mt-1.5">
+                    <div class="relative flex items-center">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-ink-subtle">
+                            <x-icon name="magnifying-glass" class="w-4 h-4" />
+                        </span>
+                        <input id="neighborhood_search"
+                               type="text"
+                               autocomplete="off"
+                               wire:model.live.debounce.250ms="neighborhoodSearch"
+                               @focus="open = true"
+                               @click="open = true"
+                               placeholder="Buscar barrio de Formosa Capital..."
+                               aria-invalid="{{ $errors->has('neighborhood_id') ? 'true' : 'false' }}"
+                               aria-describedby="neighborhood_id-error"
+                               class="pl-10 pr-20 block w-full h-11 rounded-lg shadow-sm text-ink placeholder:text-ink-subtle {{ $errors->has('neighborhood_id') ? 'border-danger focus:border-danger focus:ring-danger' : 'border-line focus:border-brand-turquesa focus:ring-brand-turquesa' }}"
+                        >
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-2 gap-1">
+                            @if ($neighborhood_id)
+                                <button type="button"
+                                        wire:click="clearNeighborhood"
+                                        @click="open = true"
+                                        title="Limpiar selección"
+                                        class="p-1 rounded-md text-ink-subtle hover:text-ink hover:bg-slate-100 transition-colors">
+                                    <x-icon name="x-mark" class="w-4 h-4" />
+                                    <span class="sr-only">Limpiar barrio</span>
+                                </button>
+                            @endif
+                            <button type="button"
+                                    @click="open = !open"
+                                    title="Desplegar lista"
+                                    class="p-1 rounded-md text-ink-subtle hover:text-ink hover:bg-slate-100 transition-colors">
+                                <x-icon name="chevron-down" class="w-4 h-4" />
+                                <span class="sr-only">Desplegar lista</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- Menú desplegable con autocompletado reactivo --}}
+                    <div x-show="open"
+                         x-cloak
+                         x-transition:enter="transition ease-out duration-100"
+                         x-transition:enter-start="transform opacity-0 scale-95"
+                         x-transition:enter-end="transform opacity-100 scale-100"
+                         x-transition:leave="transition ease-in duration-75"
+                         x-transition:leave-start="transform opacity-100 scale-100"
+                         x-transition:leave-end="transform opacity-0 scale-95"
+                         class="absolute z-50 mt-1 w-full bg-white rounded-xl border border-line shadow-lg max-h-60 overflow-y-auto focus:outline-none divide-y divide-line/40">
+
+                        @if ($neighborhood_id && $selectedNeighborhoodName)
+                            <div class="px-3.5 py-2 bg-brand-turquesa/10 flex items-center justify-between text-xs font-medium text-brand-petroleo">
+                                <span class="flex items-center gap-1.5">
+                                    <x-icon name="map-pin" class="w-3.5 h-3.5 text-brand-turquesa" />
+                                    Seleccionado: <strong class="text-ink">{{ $selectedNeighborhoodName }}</strong>
+                                </span>
+                                <span class="text-ink-muted">Formosa Capital</span>
+                            </div>
+                        @endif
+
+                        @forelse ($neighborhoods as $neighborhood)
+                            <button type="button"
+                                    wire:key="nh-{{ $neighborhood->id }}"
+                                    wire:click="selectNeighborhood({{ $neighborhood->id }}, '{{ addslashes($neighborhood->name) }}')"
+                                    @click="open = false"
+                                    class="w-full text-left px-3.5 py-2.5 text-sm flex items-center justify-between hover:bg-slate-50 focus:bg-slate-50 focus:outline-none transition-colors {{ (int)$neighborhood_id === (int)$neighborhood->id ? 'bg-brand-turquesa/10 font-medium text-brand-petroleo' : 'text-ink' }}">
+                                <span class="flex items-center gap-2">
+                                    <x-icon name="map-pin" class="w-4 h-4 {{ (int)$neighborhood_id === (int)$neighborhood->id ? 'text-brand-turquesa' : 'text-ink-subtle' }}" />
+                                    <span>{{ $neighborhood->name }}</span>
+                                </span>
+                                @if ((int)$neighborhood_id === (int)$neighborhood->id)
+                                    <x-icon name="check" class="w-4 h-4 text-brand-turquesa" />
+                                @endif
+                            </button>
+                        @empty
+                            <div class="px-4 py-3 text-sm text-ink-muted text-center">
+                                No se encontraron barrios con ese nombre en Formosa Capital.
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+
                 @error('neighborhood_id')
                     <p id="neighborhood_id-error" class="mt-1.5 text-sm text-danger">{{ $message }}</p>
-                @else
-                    @if ($neighborhoods->isEmpty())
-                        <p class="mt-1.5 text-sm text-warn">Todavía no hay barrios cargados en este nodo.</p>
-                    @endif
                 @enderror
             </div>
         </div>

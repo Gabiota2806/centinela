@@ -91,7 +91,7 @@
 ---
 
 #### 📌 CEN-36: [T3.3] Mapeo de barrios de Formosa Capital en el formulario de admisión
-- **Estado:** `[ ]` Por hacer
+- **Estado:** `[x]` Listo
 - **Responsable:** Enrique M. González
 - **Estimación:** 4 Story Points (4 hs)
 - **Archivos Objetivo:**

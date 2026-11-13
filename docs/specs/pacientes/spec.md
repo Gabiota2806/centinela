@@ -11,7 +11,7 @@
 ## 1. Alcance y Propósito del Módulo
 Registro demográfico de pacientes en la mesa de entrada del CAPS (nodo local). Los datos identificatorios (DNI, nombre, domicilio, teléfono) **nunca salen del nodo** (Ley N° 25.326).
 
-Fuera de esta especificación: selector de barrios con autocompletado y carga de polígonos (`CEN-36`), evaluación de triage (`CEN-35`), búsqueda de pacientes por DNI y lista de espera de triage (no planificadas en el backlog).
+Fuera de esta especificación: evaluación de triage (`CEN-35`), búsqueda de pacientes por DNI y lista de espera de triage (no planificadas en el backlog).
 
 ---
 
@@ -20,6 +20,7 @@ Fuera de esta especificación: selector de barrios con autocompletado y carga de
 - [x] **RF-PAC-02:** Mientras el usuario completa el formulario, el sistema debe validar cada campo en tiempo real y mostrar el error debajo del campo (`@error`).
 - [x] **RF-PAC-03:** Cuando el formulario es válido y se envía, el sistema debe persistir el paciente en `patients`, mostrar un aviso de éxito y ofrecer iniciar el triage de ese paciente.
 - [x] **RF-PAC-04:** Si el DNI ya está registrado, el sistema debe rechazar el alta e informar el error en el campo DNI.
+- [x] **RF-PAC-05:** El formulario debe incluir un selector reactivo con autocompletado y búsqueda rápida en tiempo real para seleccionar el barrio de residencia dentro del nomenclador oficial de Formosa Capital con delimitación poligonal PostGIS (SRID 4326).
 
 ---
 
