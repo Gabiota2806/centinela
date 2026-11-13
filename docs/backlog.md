@@ -61,7 +61,7 @@
 ---
 
 #### 📌 CEN-35: [T3.2] Programación de la lógica del árbol de decisión clínico Manchester (MTS)
-- **Estado:** `[ ]` Por hacer
+- **Estado:** `[x]` Listo
 - **Responsable:** Enrique M. González
 - **Estimación:** 4 Story Points (4 hs)
 - **Archivos Objetivo:**

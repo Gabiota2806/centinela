@@ -80,6 +80,11 @@ class CreatePatient extends Component
         ];
     }
 
+    public function mount(): void
+    {
+        $this->authorize('access-admission');
+    }
+
     /**
      * Validación en tiempo real del campo que se acaba de modificar.
      */
@@ -92,6 +97,8 @@ class CreatePatient extends Component
 
     public function save(): void
     {
+        $this->authorize('access-admission');
+
         $data = $this->validate();
         $data['phone'] = $data['phone'] ?: null;
 

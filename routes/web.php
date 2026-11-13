@@ -23,10 +23,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('/pacientes/nuevo', 'patients.create')
         ->middleware('can:access-admission')->name('patients.create');
 
-    Route::get('/triage', fn () => view('modules.placeholder', [
-        'title' => 'Triage MTS',
-        'sprint' => 'Sprint 3',
-    ]))->middleware('can:access-triage')->name('triage.index');
+    Route::get('/triage', fn () => view('triage.index'))
+        ->middleware('can:access-triage')
+        ->name('triage.index');
 
     Route::get('/consultas', fn () => view('modules.placeholder', [
         'title' => 'Consultas',
