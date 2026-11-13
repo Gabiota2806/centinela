@@ -32,6 +32,23 @@ class Neighborhood extends Model
     }
 
     /**
+     * Filtra barrios por coincidencia parcial en el nombre (búsqueda insensible a mayúsculas/minúsculas).
+     *
+     * @param  Builder<Neighborhood>  $query
+     * @return Builder<Neighborhood>
+     */
+    public function scopeSearch(Builder $query, ?string $term): Builder
+    {
+        $term = trim((string) $term);
+
+        if ($term === '') {
+            return $query;
+        }
+
+        return $query->where('name', 'ILIKE', "%{$term}%");
+    }
+
+    /**
      * @return HasMany<Patient, $this>
      */
     public function patients(): HasMany

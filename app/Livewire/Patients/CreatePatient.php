@@ -38,6 +38,12 @@ class CreatePatient extends Component
     /** @var int|string */
     public $neighborhood_id = '';
 
+    /** Término de búsqueda para el autocompletado reactivo de barrios. */
+    public string $neighborhoodSearch = '';
+
+    /** Nombre del barrio seleccionado para visualización en la interfaz. */
+    public string $selectedNeighborhoodName = '';
+
     /** Paciente recién registrado, para ofrecer el inicio del triage. */
     public ?int $createdPatientId = null;
 
@@ -114,11 +120,60 @@ class CreatePatient extends Component
     }
 
     /**
+     * Selección reactiva de barrio desde el autocompletado.
+     */
+    public function selectNeighborhood(int $id, string $name): void
+    {
+        $this->neighborhood_id = $id;
+        $this->selectedNeighborhoodName = $name;
+        $this->neighborhoodSearch = $name;
+        $this->resetValidation('neighborhood_id');
+    }
+
+    /**
+     * Restablece la selección del barrio para permitir una nueva búsqueda.
+     */
+    public function clearNeighborhood(): void
+    {
+        $this->neighborhood_id = '';
+        $this->selectedNeighborhoodName = '';
+        $this->neighborhoodSearch = '';
+    }
+
+    /**
+     * Sincroniza el nombre del barrio si neighborhood_id cambia externamente.
+     */
+    public function updatedNeighborhoodId($value): void
+    {
+        if ($value) {
+            $barrio = Neighborhood::find($value);
+            if ($barrio) {
+                $this->selectedNeighborhoodName = $barrio->name;
+                $this->neighborhoodSearch = $barrio->name;
+            }
+        } else {
+            $this->selectedNeighborhoodName = '';
+            $this->neighborhoodSearch = '';
+        }
+    }
+
+    /**
      * Vacía el formulario y sus errores.
      */
     public function clear(): void
     {
-        $this->reset(['dni', 'first_name', 'last_name', 'birth_date', 'gender', 'phone', 'address', 'neighborhood_id']);
+        $this->reset([
+            'dni',
+            'first_name',
+            'last_name',
+            'birth_date',
+            'gender',
+            'phone',
+            'address',
+            'neighborhood_id',
+            'neighborhoodSearch',
+            'selectedNeighborhoodName',
+        ]);
         $this->resetValidation();
     }
 
@@ -132,8 +187,14 @@ class CreatePatient extends Component
 
     public function render(): View
     {
+        $query = Neighborhood::query()->orderBy('name');
+
+        if (trim($this->neighborhoodSearch) !== '' && $this->neighborhoodSearch !== $this->selectedNeighborhoodName) {
+            $query->search($this->neighborhoodSearch);
+        }
+
         return view('livewire.patients.create-patient', [
-            'neighborhoods' => Neighborhood::query()->orderBy('name')->get(['id', 'name']),
+            'neighborhoods' => $query->get(['id', 'name']),
             'genders' => self::GENDERS,
         ]);
     }
