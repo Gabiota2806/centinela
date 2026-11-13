@@ -174,7 +174,7 @@
 ---
 
 #### 📌 CEN-40: [T3.6] Desarrollo de la tabla inmutable triage_audit_logs y lógica de reclasificación
-- **Estado:** `[ ]` Por hacer
+- **Estado:** `[x]` Listo
 - **Responsable:** Enrique M. González
 - **Estimación:** 4 Story Points (4 hs)
 - **Archivos Objetivo:**

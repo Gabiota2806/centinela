@@ -13,6 +13,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
 #[Fillable([
     'patient_id',
@@ -77,5 +79,47 @@ class Triage extends Model
     public function consultation(): HasOne
     {
         return $this->hasOne(Consultation::class);
+    }
+
+    /**
+     * Aplica un Clinical Override manual sobre la prioridad del paciente,
+     * actualizando final_priority, activando is_override = true, recalculando
+     * target_wait_minutes y persistiendo el registro inmutable en triage_audit_logs.
+     *
+     * @throws InvalidArgumentException Si la justificación está vacía en un override no diferido.
+     */
+    public function overridePriority(
+        TriagePriority $newPriority,
+        string $reason,
+        User $user,
+        bool $deferred = false
+    ): TriageAuditLog {
+        $trimmedReason = trim($reason);
+
+        if (! $deferred && $trimmedReason === '') {
+            throw new InvalidArgumentException(
+                'Debe proporcionar una justificación clínica válida para el Clinical Override.'
+            );
+        }
+
+        $effectiveReason = $trimmedReason !== ''
+            ? ($deferred ? "[JUSTIFICACIÓN DIFERIDA] {$trimmedReason}" : $trimmedReason)
+            : '[JUSTIFICACIÓN DIFERIDA] Pendiente de redacción por emergencia clínica.';
+
+        return DB::transaction(function () use ($newPriority, $effectiveReason, $user): TriageAuditLog {
+            $originalPriority = $this->final_priority ?? $this->algorithmic_priority ?? $newPriority;
+
+            $this->final_priority = $newPriority;
+            $this->is_override = true;
+            $this->target_wait_minutes = $newPriority->targetWaitMinutes();
+            $this->save();
+
+            return $this->auditLogs()->create([
+                'user_id' => $user->id,
+                'original_priority' => $originalPriority,
+                'overridden_priority' => $newPriority,
+                'override_reason' => $effectiveReason,
+            ]);
+        });
     }
 }
