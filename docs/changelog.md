@@ -7,6 +7,7 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
 
 ## [Unreleased]
 ### Added
+- `CEN-34`: Formulario reactivo de admisión de pacientes en `/pacientes/nuevo` (componente Livewire 4 `CreatePatient`, Gate `access-admission`) con validación en tiempo real en español, aviso de alta exitosa con acceso directo a triage, ítem «Nuevo paciente» en el menú lateral y spec modular `docs/specs/pacientes/spec.md`.
 - `CEN-16`: Pruebas de integración espacial en `NeighborhoodSpatialTest` y scope `Neighborhood::containingPoint()` con funciones PostGIS (`ST_Contains`, `ST_SetSRID`, `ST_MakePoint` en SRID 4326) para asociar coordenadas geográficas de Formosa Capital a sus polígonos barriales.
 - `CEN-16`: Pruebas de integración en `TriageAuditLogImmutableTest` verificando que `triage_audit_logs` bloquee mutaciones (`update`) y eliminaciones (`delete`) sobre registros persistidos en PostgreSQL lanzando `LogicException`.
 - `CEN-16`: Pruebas unitarias en `UserRoleEnumTest` y pruebas de integración en `AuthRoleAccessTest` validando el Enum `UserRole`, métodos de rol en `User`, login y redirección de los 4 roles, bloqueo `403 Forbidden` en accesos cruzados y matriz de Gates RBAC.
