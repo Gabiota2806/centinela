@@ -7,6 +7,7 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
 
 ## [Unreleased]
 ### Added
+- `CEN-34`: Formulario reactivo de admisión de pacientes en `/pacientes/nuevo` (componente Livewire 4 `CreatePatient`, Gate `access-admission`) con validación en tiempo real en español, aviso de alta exitosa con acceso directo a triage, ítem «Nuevo paciente» en el menú lateral y spec modular `docs/specs/pacientes/spec.md`.
 - `CEN-35`: Servicio determinístico `ManchesterTriageService` (`app/Services/ManchesterTriageService.php`) implementando el árbol de decisión clínico Manchester (MTS) de 5 niveles por colores (Rojo 0 min, Naranja 10 min, Amarillo 60 min, Verde 120 min, Azul 240 min) evaluando signos vitales cuantitativos (temperatura, PAS, PAD, FC, FR, SpO2) y discriminadores clínicos, con reglas prioritarias críticas (SpO2 < 85%, vía aérea obstruida, apnea, shock) y sospecha febril de dengue (> 39°C con cefalea/mialgias).
 - `CEN-35`: Componente reactivo Livewire `EvaluatePatient` (`app/Livewire/Triage/EvaluatePatient.php`) y vista Blade (`resources/views/livewire/triage/evaluate-patient.blade.php`, `resources/views/triage/index.blade.php`) con selección/búsqueda de paciente, cálculo reactivo en tiempo real de prioridad y tiempo objetivo de espera, badges estandarizados de Tailwind v3, iconografía SVG Heroicons y persistencia en tabla `triages`.
 - `CEN-35`: Especificación técnica modular SDD del módulo de Triage en `docs/specs/triage/spec.md` con requerimientos EARS y criterios de aceptación Gherkin.

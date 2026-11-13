@@ -73,6 +73,8 @@ class EvaluatePatient extends Component
             $this->selectPatient($resolved->id);
         } elseif ($patientId !== null) {
             $this->selectPatient($patientId);
+        } elseif (request()->filled('patient')) {
+            $this->selectPatient(request()->integer('patient'));
         }
 
         $this->recalculatePriority();

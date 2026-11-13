@@ -26,7 +26,7 @@
 - **Spec Modular:** `docs/specs/triage/spec.md` y `docs/specs/ui/spec.md`
 
 #### 📌 CEN-34: [T3.1] Maquetación del formulario reactivo de admisión en Livewire y TailwindCSS
-- **Estado:** `[ ]` Por hacer
+- **Estado:** `[x]` Listo
 - **Responsable:** Valeria Budiño
 - **Estimación:** 4 Story Points (4 hs)
 - **Archivos Objetivo:**
@@ -35,7 +35,7 @@
   * `resources/views/patients/create.blade.php`
   * `routes/web.php`
 - **Especificaciones Técnicas Obligatorias:**
-  1. **Componente Livewire 3:** Manejo reactivo de campos demográficos:
+  1. **Componente Livewire 4:** Manejo reactivo de campos demográficos:
      * `dni`: string(20), requerido, único, solo dígitos numéricos.
      * `first_name`: string(100), requerido.
      * `last_name`: string(100), requerido.
