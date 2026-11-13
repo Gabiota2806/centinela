@@ -131,7 +131,7 @@
 ---
 
 #### 📌 CEN-38: [T3.7] Pruebas de integración de clasificación clínica automatizada
-- **Estado:** `[ ]` Por hacer
+- **Estado:** `[x]` Listo
 - **Responsable:** Gabriel Pineda
 - **Estimación:** 4 Story Points (4 hs)
 - **Archivos Objetivo:**
