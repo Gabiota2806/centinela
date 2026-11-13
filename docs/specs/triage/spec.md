@@ -2,11 +2,11 @@
 
 - **Módulo:** `triage`
 - **Estado:** `En Implementación`
-- **Última Actualización:** 2026-11-12
+- **Última Actualización:** 2026-11-13
 - **Subtareas asociadas:**
   - [x] `CEN-35` (Programación de la lógica del árbol de decisión clínico Manchester - MTS)
   - [ ] `CEN-37` (Emisión y visualización de ticket digital con color de prioridad asignado)
-  - [ ] `CEN-38` (Pruebas de integración de clasificación clínica automatizada)
+  - [x] `CEN-38` (Pruebas de integración de clasificación clínica automatizada)
   - [ ] `CEN-39` (Componentes UX y modal de Clinical Override rápido con justificación diferida)
   - [x] `CEN-40` (Desarrollo de la tabla inmutable triage_audit_logs y lógica de reclasificación)
   - [ ] `CEN-41` (Testing de casos de discrepancia y reordenamiento de cola por override clínico)
@@ -98,7 +98,7 @@ Escenario: Evaluación reactiva de triage en pantalla
 
 - [x] `CEN-35` / `T3.2`: Programación de la lógica del árbol de decisión clínico Manchester (MTS) (SP: 4) — Cubre: `RF-TRIAGE-01`, `RF-TRIAGE-02`, `RF-TRIAGE-03`, `RF-TRIAGE-04`, `RF-TRIAGE-05`, `RF-TRIAGE-06`.
 - [ ] `CEN-37` / `T3.4`: Emisión y visualización de ticket digital con color de prioridad asignado (SP: 4).
-- [ ] `CEN-38` / `T3.7`: Pruebas de integración de clasificación clínica automatizada (SP: 4).
+- [x] `CEN-38` / `T3.7`: Pruebas de integración de clasificación clínica automatizada (SP: 4).
 - [ ] `CEN-39` / `T3.5`: Componentes UX y modal de Clinical Override rápido con justificación diferida (SP: 4).
 - [x] `CEN-40` / `T3.6`: Desarrollo de la tabla inmutable triage_audit_logs y lógica de reclasificación (SP: 4).
 - [ ] `CEN-41` / `T3.8`: Testing de casos de discrepancia y reordenamiento de cola por override clínico (SP: 8).

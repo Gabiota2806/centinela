@@ -7,6 +7,7 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
 
 ## [Unreleased]
 ### Added
+- `CEN-38`: Suite de pruebas de integración `ManchesterTriageCalculationTest` (`tests/Feature/ManchesterTriageCalculationTest.php`) en PHPUnit 12 con DataProviders exhaustivos cubriendo el 100% de los métodos y ramas de cálculo de prioridad en los 5 niveles del Sistema Manchester (MTS), garantizando la asignación ineludible de prioridad ROJO con 0 minutos de espera ante signos de riesgo vital inminente (SpO2 < 85%, apnea, vía aérea obstruida, colapso hemodinámico, convulsión activa) y la integración reactiva completa entre Livewire `EvaluatePatient`, `ManchesterTriageService`, `TriagePriority` y PostgreSQL.
 - `CEN-40`: Excepción especializada de dominio `ImmutableModelException` (`app/Exceptions/ImmutableModelException.php`) para violaciones de inmutabilidad estricta en registros de auditoría clínica de Clinical Override.
 - `CEN-40`: Método `Triage::overridePriority()` (`app/Models/Triage.php`) bajo transacción atómica `DB::transaction` que actualiza `final_priority`, activa flag `is_override = true`, recalcula el tiempo objetivo de espera (`target_wait_minutes`) según los estándares Manchester MTS y persiste el registro inmutable en `triage_audit_logs`.
 - `CEN-40`: Soporte para justificación diferida (`$deferred = true`) con motivo estandarizado de emergencia para salvaguardar la vida del paciente en paro o shock en 1 segundo, junto con validación obligatoria de motivo en casos regulares.
