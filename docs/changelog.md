@@ -30,3 +30,6 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
 - Especificación técnica global (`docs/specs/global_spec.md`) y plantilla modular SDD.
 - Configuración de subagentes en `.opencode/agents/` (Coordinator, Planner, Implementer, Reviewer).
 - Reglas y skills de desarrollo y auditoría en `.agents/` configuradas para PHPUnit, Livewire y Tailwind v3.
+
+### Fixed
+- Unificación de instancia de Alpine.js con Livewire 4: se incorporaron `@livewireStyles` y `@livewireScripts` en `resources/views/layouts/app.blade.php` y se eliminó la importación e inicialización manual (`Alpine.start()`) en `resources/js/app.js` para evitar conflictos de doble instancia entre vistas Blade tradicionales y componentes Livewire del Sprint 3.

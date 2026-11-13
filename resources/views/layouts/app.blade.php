@@ -8,6 +8,7 @@
         <title>{{ config('app.name', 'Centinela') }}</title>
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @livewireStyles
     </head>
     <body class="font-sans text-ink antialiased bg-canvas">
         {{-- Estado de la barra lateral: `collapsed` (escritorio, persistido) y `sidebarOpen` (menú deslizable en tablet/celular). --}}
@@ -43,5 +44,7 @@
                 </div>
             </div>
         </div>
+
+        @livewireScripts
     </body>
 </html>
