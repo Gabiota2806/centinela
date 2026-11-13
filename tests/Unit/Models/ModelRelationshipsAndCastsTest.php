@@ -7,6 +7,7 @@ namespace Tests\Unit\Models;
 use App\Enums\ConsultationStatus;
 use App\Enums\TriagePriority;
 use App\Enums\TriageStatus;
+use App\Exceptions\ImmutableModelException;
 use App\Models\Consultation;
 use App\Models\Neighborhood;
 use App\Models\Patient;
@@ -162,7 +163,7 @@ class ModelRelationshipsAndCastsTest extends TestCase
 
     public function test_triage_audit_log_throws_exception_on_update(): void
     {
-        $this->expectException(LogicException::class);
+        $this->expectException(ImmutableModelException::class);
         $this->expectExceptionMessage('Los registros de auditoría de Clinical Override son estrictamente inmutables y no pueden modificarse.');
 
         $log = new TriageAuditLog();
@@ -173,7 +174,7 @@ class ModelRelationshipsAndCastsTest extends TestCase
 
     public function test_triage_audit_log_throws_exception_on_delete(): void
     {
-        $this->expectException(LogicException::class);
+        $this->expectException(ImmutableModelException::class);
         $this->expectExceptionMessage('Los registros de auditoría de Clinical Override son estrictamente inmutables y no pueden eliminarse.');
 
         $log = new TriageAuditLog();

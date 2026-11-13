@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\TriagePriority;
+use App\Exceptions\ImmutableModelException;
 use Database\Factories\TriageAuditLogFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use LogicException;
 
 #[Fillable([
     'triage_id',
@@ -35,15 +35,11 @@ class TriageAuditLog extends Model
     protected static function booted(): void
     {
         static::updating(function (): void {
-            throw new LogicException(
-                'Los registros de auditoría de Clinical Override son estrictamente inmutables y no pueden modificarse.'
-            );
+            throw ImmutableModelException::cannotUpdate();
         });
 
         static::deleting(function (): void {
-            throw new LogicException(
-                'Los registros de auditoría de Clinical Override son estrictamente inmutables y no pueden eliminarse.'
-            );
+            throw ImmutableModelException::cannotDelete();
         });
     }
 
