@@ -110,7 +110,7 @@
 ---
 
 #### 📌 CEN-37: [T3.4] Emisión y visualización de ticket digital con color de prioridad asignado
-- **Estado:** `[ ]` Por hacer
+- **Estado:** `[x]` Listo
 - **Responsable:** Valeria Budiño
 - **Estimación:** 4 Story Points (4 hs)
 - **Archivos Objetivo:**

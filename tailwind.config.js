@@ -13,6 +13,8 @@ export default {
         './storage/framework/views/*.php',
         './resources/views/**/*.blade.php',
         './config/centinela.php',
+        // Enums con clases de Tailwind (p. ej. TriagePriority::badgeClasses()).
+        './app/Enums/**/*.php',
     ],
 
     theme: {

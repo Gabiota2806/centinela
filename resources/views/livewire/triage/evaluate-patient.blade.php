@@ -1,27 +1,22 @@
-<div class="space-y-6">
-    {{-- Banner de Notificación Flash --}}
-    @if (session()->has('status'))
-        <div class="p-4 rounded-xl border border-green-200 bg-green-50 text-green-800 flex items-start gap-3">
-            <svg class="w-5 h-5 text-green-600 shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-            </svg>
+<div class="space-y-6 scroll-mt-24"
+     x-data
+     x-on:triage-saved.window="$el.scrollIntoView({ block: 'start' })">
+    {{-- Confirmación del último triage registrado (CEN-37: persiste en propiedades, no en flash) --}}
+    @if ($savedSuccessfully)
+        <div role="status" class="p-4 rounded-xl border border-green-200 bg-green-50 text-green-800 flex items-start gap-3">
+            <x-icon name="check-circle" class="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
             <div class="flex-1">
-                <p class="text-sm font-semibold">{{ session('status') }}</p>
-                @if ($savedSuccessfully)
-                    <div class="mt-2">
-                        <button
-                            type="button"
-                            wire:click="resetEvaluation"
-                            class="inline-flex items-center gap-1.5 text-xs font-semibold text-green-700 hover:text-green-900 underline"
-                        >
-                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                            </svg>
-                            Evaluar nuevo paciente
-                        </button>
-                    </div>
-                @endif
+                <p class="text-sm font-semibold">{{ $savedMessage }}</p>
+                <p class="text-xs mt-1">La pantalla quedó lista para evaluar al siguiente paciente.</p>
             </div>
+            <button
+                type="button"
+                wire:click="showTicket"
+                class="shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold text-green-700 hover:text-green-900 underline"
+            >
+                <x-icon name="printer" class="w-4 h-4" />
+                Ver ticket
+            </button>
         </div>
     @endif
 
@@ -29,7 +24,7 @@
     <div class="bg-white border border-line rounded-2xl shadow-card p-5 sm:p-6">
         <div class="flex items-center justify-between pb-4 border-b border-line mb-4">
             <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-lg bg-brand-azul/10 text-brand-azul flex items-center justify-center font-bold text-sm">
+                <div class="w-8 h-8 rounded-lg bg-brand-50 text-brand-petroleo flex items-center justify-center font-bold text-sm">
                     1
                 </div>
                 <h2 class="text-lg font-bold text-ink">Identificación del Paciente</h2>
@@ -78,7 +73,7 @@
                         type="text"
                         wire:model.live.debounce.300ms="searchPatient"
                         placeholder="Buscar paciente por DNI, nombre o apellido..."
-                        class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-line focus:ring-2 focus:ring-brand-azul focus:border-brand-azul text-sm"
+                        class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-line focus:ring-2 focus:ring-brand-turquesa focus:border-brand-turquesa text-sm"
                     />
                     <svg class="w-5 h-5 text-ink-muted absolute left-3 top-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
@@ -91,7 +86,7 @@
                             <div
                                 wire:key="patient-{{ $item->id }}"
                                 wire:click="selectPatient({{ $item->id }})"
-                                class="p-3 rounded-xl border border-line bg-white hover:border-brand-azul hover:bg-slate-50 cursor-pointer transition flex flex-col justify-between"
+                                class="p-3 rounded-xl border border-line bg-white hover:border-brand-turquesa hover:bg-slate-50 cursor-pointer transition flex flex-col justify-between"
                             >
                                 <div>
                                     <div class="flex items-center justify-between">
@@ -102,7 +97,7 @@
                                         {{ $item->neighborhood?->name ?? 'Barrio no especificado' }}
                                     </p>
                                 </div>
-                                <div class="mt-3 flex items-center justify-end text-xs font-semibold text-brand-azul gap-1">
+                                <div class="mt-3 flex items-center justify-end text-xs font-semibold text-brand-petroleo gap-1">
                                     <span>Seleccionar para triage</span>
                                     <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
@@ -131,7 +126,7 @@
             {{-- Paso 2: Signos Vitales --}}
             <div class="bg-white border border-line rounded-2xl shadow-card p-5 sm:p-6">
                 <div class="flex items-center gap-2 pb-4 border-b border-line mb-4">
-                    <div class="w-8 h-8 rounded-lg bg-brand-azul/10 text-brand-azul flex items-center justify-center font-bold text-sm">
+                    <div class="w-8 h-8 rounded-lg bg-brand-50 text-brand-petroleo flex items-center justify-center font-bold text-sm">
                         2
                     </div>
                     <div>
@@ -149,11 +144,15 @@
                         <div class="relative">
                             <input
                                 id="vital-temp"
-                                type="number"
-                                step="0.1"
-                                wire:model.live.debounce.250ms="temperature"
+                                type="text"
+                                inputmode="decimal"
+                                autocomplete="off"
+                                {{-- Acepta coma o punto decimal sin depender del idioma del navegador --}}
+                                x-data
+                                x-on:input.capture="$el.value = $el.value.replace(',', '.').replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1')"
+                                wire:model.live.blur="temperature"
                                 placeholder="Ej: 36.8"
-                                class="w-full rounded-xl border border-line px-3 py-2 text-sm focus:ring-2 focus:ring-brand-azul"
+                                class="w-full rounded-xl border border-line px-3 py-2 text-sm focus:ring-2 focus:ring-brand-turquesa"
                             />
                             <span class="absolute right-3 top-2.5 text-xs text-ink-muted">°C</span>
                         </div>
@@ -168,10 +167,14 @@
                         <div class="relative">
                             <input
                                 id="vital-pas"
-                                type="number"
+                                type="text"
+                                inputmode="numeric"
+                                autocomplete="off"
+                                x-data
+                                x-on:input.capture="$el.value = $el.value.replace(/[^0-9]/g, '')"
                                 wire:model.live.debounce.250ms="systolic_bp"
                                 placeholder="Ej: 120"
-                                class="w-full rounded-xl border border-line px-3 py-2 text-sm focus:ring-2 focus:ring-brand-azul"
+                                class="w-full rounded-xl border border-line px-3 py-2 text-sm focus:ring-2 focus:ring-brand-turquesa"
                             />
                             <span class="absolute right-3 top-2.5 text-xs text-ink-muted">mmHg</span>
                         </div>
@@ -186,10 +189,14 @@
                         <div class="relative">
                             <input
                                 id="vital-pad"
-                                type="number"
+                                type="text"
+                                inputmode="numeric"
+                                autocomplete="off"
+                                x-data
+                                x-on:input.capture="$el.value = $el.value.replace(/[^0-9]/g, '')"
                                 wire:model.live.debounce.250ms="diastolic_bp"
                                 placeholder="Ej: 80"
-                                class="w-full rounded-xl border border-line px-3 py-2 text-sm focus:ring-2 focus:ring-brand-azul"
+                                class="w-full rounded-xl border border-line px-3 py-2 text-sm focus:ring-2 focus:ring-brand-turquesa"
                             />
                             <span class="absolute right-3 top-2.5 text-xs text-ink-muted">mmHg</span>
                         </div>
@@ -204,10 +211,14 @@
                         <div class="relative">
                             <input
                                 id="vital-hr"
-                                type="number"
+                                type="text"
+                                inputmode="numeric"
+                                autocomplete="off"
+                                x-data
+                                x-on:input.capture="$el.value = $el.value.replace(/[^0-9]/g, '')"
                                 wire:model.live.debounce.250ms="heart_rate"
                                 placeholder="Ej: 75"
-                                class="w-full rounded-xl border border-line px-3 py-2 text-sm focus:ring-2 focus:ring-brand-azul"
+                                class="w-full rounded-xl border border-line px-3 py-2 text-sm focus:ring-2 focus:ring-brand-turquesa"
                             />
                             <span class="absolute right-3 top-2.5 text-xs text-ink-muted">lpm</span>
                         </div>
@@ -222,10 +233,14 @@
                         <div class="relative">
                             <input
                                 id="vital-rr"
-                                type="number"
+                                type="text"
+                                inputmode="numeric"
+                                autocomplete="off"
+                                x-data
+                                x-on:input.capture="$el.value = $el.value.replace(/[^0-9]/g, '')"
                                 wire:model.live.debounce.250ms="respiratory_rate"
                                 placeholder="Ej: 16"
-                                class="w-full rounded-xl border border-line px-3 py-2 text-sm focus:ring-2 focus:ring-brand-azul"
+                                class="w-full rounded-xl border border-line px-3 py-2 text-sm focus:ring-2 focus:ring-brand-turquesa"
                             />
                             <span class="absolute right-3 top-2.5 text-xs text-ink-muted">rpm</span>
                         </div>
@@ -240,10 +255,14 @@
                         <div class="relative">
                             <input
                                 id="vital-spo2"
-                                type="number"
+                                type="text"
+                                inputmode="numeric"
+                                autocomplete="off"
+                                x-data
+                                x-on:input.capture="$el.value = $el.value.replace(/[^0-9]/g, '')"
                                 wire:model.live.debounce.250ms="spo2"
                                 placeholder="Ej: 98"
-                                class="w-full rounded-xl border border-line px-3 py-2 text-sm focus:ring-2 focus:ring-brand-azul font-bold @if($spo2 !== null && $spo2 < 85) text-red-600 @elseif($spo2 !== null && $spo2 <= 92) text-orange-600 @endif"
+                                class="w-full rounded-xl border border-line px-3 py-2 text-sm focus:ring-2 focus:ring-brand-turquesa font-bold @if($spo2 !== null && $spo2 < 85) text-red-600 @elseif($spo2 !== null && $spo2 <= 92) text-orange-600 @endif"
                             />
                             <span class="absolute right-3 top-2.5 text-xs text-ink-muted">%</span>
                         </div>
@@ -255,7 +274,7 @@
             {{-- Paso 3: Discriminadores Clínicos Manchester --}}
             <div class="bg-white border border-line rounded-2xl shadow-card p-5 sm:p-6">
                 <div class="flex items-center gap-2 pb-4 border-b border-line mb-4">
-                    <div class="w-8 h-8 rounded-lg bg-brand-azul/10 text-brand-azul flex items-center justify-center font-bold text-sm">
+                    <div class="w-8 h-8 rounded-lg bg-brand-50 text-brand-petroleo flex items-center justify-center font-bold text-sm">
                         3
                     </div>
                     <div>
@@ -282,7 +301,7 @@
                                         <input
                                             type="checkbox"
                                             wire:model.live="discriminators.{{ $itemKey }}"
-                                            class="mt-0.5 rounded border-line text-brand-azul focus:ring-brand-azul"
+                                            class="mt-0.5 rounded border-line text-brand-petroleo focus:ring-brand-turquesa"
                                         />
                                         <span class="text-xs text-ink leading-tight">{{ $itemLabel }}</span>
                                     </label>
@@ -296,7 +315,7 @@
             {{-- Paso 4: Motivo de Consulta y Síntomas --}}
             <div class="bg-white border border-line rounded-2xl shadow-card p-5 sm:p-6">
                 <div class="flex items-center gap-2 pb-4 border-b border-line mb-4">
-                    <div class="w-8 h-8 rounded-lg bg-brand-azul/10 text-brand-azul flex items-center justify-center font-bold text-sm">
+                    <div class="w-8 h-8 rounded-lg bg-brand-50 text-brand-petroleo flex items-center justify-center font-bold text-sm">
                         4
                     </div>
                     <div>
@@ -314,7 +333,7 @@
                         rows="3"
                         wire:model.live.debounce.300ms="symptoms"
                         placeholder="Describa el motivo de consulta, tiempo de evolución y síntomas asociados..."
-                        class="w-full rounded-xl border border-line p-3 text-sm focus:ring-2 focus:ring-brand-azul"
+                        class="w-full rounded-xl border border-line p-3 text-sm focus:ring-2 focus:ring-brand-turquesa"
                     ></textarea>
                     @error('symptoms')
                         <p class="text-xs text-red-600 mt-1 font-semibold">{{ $message }}</p>
@@ -362,13 +381,25 @@
                         </p>
                     </div>
 
+                    {{-- CEN-37: errores de validación visibles junto al botón (los de cada campo pueden quedar fuera de pantalla) --}}
+                    @if ($errors->any())
+                        <div id="triage-save-errors" role="alert" class="p-3 rounded-xl border border-red-200 bg-red-50 text-red-700">
+                            <p class="text-xs font-bold">No se pudo registrar el triage:</p>
+                            <ul class="mt-1 list-disc ps-4 text-xs space-y-0.5">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
                     {{-- Botón de Acción Principal --}}
                     <div class="pt-2">
                         <button
                             type="button"
                             wire:click="save"
                             wire:loading.attr="disabled"
-                            class="w-full py-3 px-4 rounded-xl bg-brand-azul hover:bg-brand-azul-dark text-white font-bold text-sm shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-50"
+                            class="w-full py-3 px-4 rounded-xl bg-brand-petroleo hover:bg-brand-noche text-white font-bold text-sm shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-50"
                         >
                             <svg wire:loading.remove class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />

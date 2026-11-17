@@ -16,6 +16,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Zona horaria de visualización
+    |--------------------------------------------------------------------------
+    |
+    | Las fechas se guardan en UTC (config/app.php) y se muestran al personal en
+    | la hora local del CAPS. La zona IANA de Formosa es America/Argentina/Cordoba.
+    |
+    */
+
+    'timezone' => env('CENTINELA_TIMEZONE', 'America/Argentina/Cordoba'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Navegación lateral
     |--------------------------------------------------------------------------
     |

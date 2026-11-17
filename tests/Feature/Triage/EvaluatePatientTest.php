@@ -179,4 +179,43 @@ class EvaluatePatientTest extends TestCase
             ->assertSet('patientId', $patient->id)
             ->assertSet('patient.id', $patient->id);
     }
+
+    public function test_la_temperatura_admite_decimales_y_se_sincroniza_al_salir_del_campo(): void
+    {
+        $nurse = User::factory()->triageNurse()->create();
+        $patient = Patient::factory()->create();
+
+        // Con sincronización "live" el valor parcial "38." llegaba vacío y borraba el campo (QA CEN-37).
+        Livewire::actingAs($nurse)
+            ->test(EvaluatePatient::class)
+            ->assertSeeHtml('wire:model.live.blur="temperature"')
+            // type="number" descarta "38.9" si el navegador está en español (espera coma).
+            ->assertSeeHtml('inputmode="decimal"')
+            ->assertSeeHtml("replace(',', '.')")
+            ->call('selectPatient', $patient->id)
+            ->set('symptoms', 'Fiebre')
+            ->set('temperature', 38.9)
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertSame(38.9, (float) Triage::query()->latest('id')->value('vital_signs')['temperature']);
+    }
+
+    public function test_los_signos_vitales_no_usan_campos_numericos_con_flechas_ni_rueda(): void
+    {
+        // type="number" muestra flechas y cambia el valor con la rueda del mouse (QA CEN-37).
+        Livewire::actingAs(User::factory()->triageNurse()->create())
+            ->test(EvaluatePatient::class)
+            ->assertDontSeeHtml('type="number"')
+            ->assertSeeHtml('inputmode="numeric"');
+    }
+
+    public function test_la_vista_solo_usa_colores_de_marca_definidos_en_la_paleta(): void
+    {
+        // brand-azul no existe en tailwind.config.js: el botón "Registrar Triage Clínico" quedaba blanco sobre blanco.
+        Livewire::actingAs(User::factory()->triageNurse()->create())
+            ->test(EvaluatePatient::class)
+            ->assertDontSeeHtml('brand-azul')
+            ->assertSeeHtml('bg-brand-petroleo');
+    }
 }
