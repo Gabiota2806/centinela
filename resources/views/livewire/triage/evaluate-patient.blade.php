@@ -9,14 +9,25 @@
                 <p class="text-sm font-semibold">{{ $savedMessage }}</p>
                 <p class="text-xs mt-1">La pantalla quedó lista para evaluar al siguiente paciente.</p>
             </div>
-            <button
-                type="button"
-                wire:click="showTicket"
-                class="shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold text-green-700 hover:text-green-900 underline"
-            >
-                <x-icon name="printer" class="w-4 h-4" />
-                Ver ticket
-            </button>
+            <div class="shrink-0 flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-4">
+                <button
+                    type="button"
+                    wire:click="showTicket"
+                    class="inline-flex items-center gap-1.5 text-xs font-semibold text-green-700 hover:text-green-900 underline"
+                >
+                    <x-icon name="printer" class="w-4 h-4" />
+                    Ver ticket
+                </button>
+                {{-- CEN-39: Clinical Override sobre el triage recién registrado --}}
+                <button
+                    type="button"
+                    wire:click="openOverride"
+                    class="inline-flex items-center gap-1.5 text-xs font-semibold text-green-700 hover:text-green-900 underline"
+                >
+                    <x-icon name="arrows-up-down" class="w-4 h-4" />
+                    Reclasificar prioridad
+                </button>
+            </div>
         </div>
     @endif
 

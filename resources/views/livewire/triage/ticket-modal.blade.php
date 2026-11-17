@@ -73,6 +73,13 @@
                         Imprimir
                     </x-primary-button>
                 </div>
+
+                {{-- CEN-39: Clinical Override desde el ticket --}}
+                <button type="button" wire:click="reclassify"
+                        class="mt-3 w-full inline-flex items-center justify-center gap-1.5 text-sm font-semibold text-white/90 hover:text-white underline print:hidden">
+                    <x-icon name="arrows-up-down" class="w-4 h-4" />
+                    Reclasificar prioridad (Override)
+                </button>
             </div>
         </div>
     @endif

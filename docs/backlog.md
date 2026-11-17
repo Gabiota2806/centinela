@@ -150,7 +150,7 @@
 - **Spec Modular:** `docs/specs/triage/spec.md`
 
 #### 📌 CEN-39: [T3.5] Componentes UX y modal de Clinical Override rápido con justificación diferida
-- **Estado:** `[ ]` Por hacer
+- **Estado:** `[x]` Listo
 - **Responsable:** Valeria Budiño
 - **Estimación:** 4 Story Points (4 hs)
 - **Archivos Objetivo:**

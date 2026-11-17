@@ -11,6 +11,7 @@ use App\Models\Triage;
 use App\Services\ManchesterTriageService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 /**
@@ -205,6 +206,34 @@ class EvaluatePatient extends Component
         if ($this->lastSavedTriageId !== null) {
             $this->dispatch('triage-saved', triageId: $this->lastSavedTriageId);
         }
+    }
+
+    /**
+     * CEN-39: abre el modal de Clinical Override sobre el último triage registrado.
+     */
+    public function openOverride(): void
+    {
+        if ($this->lastSavedTriageId !== null) {
+            $this->dispatch('open-clinical-override', triageId: $this->lastSavedTriageId);
+        }
+    }
+
+    /**
+     * CEN-39: refleja en la confirmación la prioridad reclasificada por Clinical Override.
+     */
+    #[On('triage-overridden')]
+    public function onTriageOverridden(int $triageId): void
+    {
+        if ($triageId !== $this->lastSavedTriageId) {
+            return;
+        }
+
+        $triage = Triage::with('patient')->find($triageId);
+        if ($triage === null) {
+            return;
+        }
+
+        $this->savedMessage = "Triage de {$triage->patient->full_name} reclasificado por Clinical Override a prioridad {$triage->final_priority->label()} (Espera máxima: {$triage->target_wait_minutes} min).";
     }
 
     public function resetEvaluation(): void
