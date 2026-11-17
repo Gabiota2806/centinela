@@ -1,7 +1,7 @@
 # 📦 Especificación Modular: Módulo de Triage Clínico (Sistema Manchester - MTS)
 
 - **Módulo:** `triage`
-- **Estado:** `En Implementación`
+- **Estado:** `Implementado`
 - **Última Actualización:** 2026-11-17
 - **Subtareas asociadas:**
   - [x] `CEN-35` (Programación de la lógica del árbol de decisión clínico Manchester - MTS)
@@ -9,7 +9,7 @@
   - [x] `CEN-38` (Pruebas de integración de clasificación clínica automatizada)
   - [x] `CEN-39` (Componentes UX y modal de Clinical Override rápido con justificación diferida)
   - [x] `CEN-40` (Desarrollo de la tabla inmutable triage_audit_logs y lógica de reclasificación)
-  - [ ] `CEN-41` (Testing de casos de discrepancia y reordenamiento de cola por override clínico)
+  - [x] `CEN-41` (Testing de casos de discrepancia y reordenamiento de cola por override clínico)
 
 ---
 
@@ -140,4 +140,4 @@ Escenario: Override clínico regular con justificación (CEN-39)
 - [x] `CEN-38` / `T3.7`: Pruebas de integración de clasificación clínica automatizada (SP: 4).
 - [x] `CEN-39` / `T3.5`: Componentes UX y modal de Clinical Override rápido con justificación diferida (SP: 4).
 - [x] `CEN-40` / `T3.6`: Desarrollo de la tabla inmutable triage_audit_logs y lógica de reclasificación (SP: 4).
-- [ ] `CEN-41` / `T3.8`: Testing de casos de discrepancia y reordenamiento de cola por override clínico (SP: 8).
+- [x] `CEN-41` / `T3.8`: Testing de casos de discrepancia y reordenamiento de cola por override clínico (SP: 8).
