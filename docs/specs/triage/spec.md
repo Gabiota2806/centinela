@@ -2,10 +2,10 @@
 
 - **Módulo:** `triage`
 - **Estado:** `En Implementación`
-- **Última Actualización:** 2026-11-13
+- **Última Actualización:** 2026-11-16
 - **Subtareas asociadas:**
   - [x] `CEN-35` (Programación de la lógica del árbol de decisión clínico Manchester - MTS)
-  - [ ] `CEN-37` (Emisión y visualización de ticket digital con color de prioridad asignado)
+  - [x] `CEN-37` (Emisión y visualización de ticket digital con color de prioridad asignado)
   - [x] `CEN-38` (Pruebas de integración de clasificación clínica automatizada)
   - [ ] `CEN-39` (Componentes UX y modal de Clinical Override rápido con justificación diferida)
   - [x] `CEN-40` (Desarrollo de la tabla inmutable triage_audit_logs y lógica de reclasificación)
@@ -29,6 +29,9 @@ Asimismo, contempla el mecanismo de **Clinical Override** (reclasificación méd
 - **RF-TRIAGE-04:** Ante sospecha febril de dengue (fiebre persistente > 39°C asociada a cefalea o mialgias) en contexto endémico de Formosa Capital, o SpO2 entre 93-94%, el sistema debe clasificar al paciente en prioridad **AMARILLO (Urgente / 60 min)**.
 - **RF-TRIAGE-05:** La interfaz reactiva de triage debe permitir al personal de enfermería o médico cargar signos vitales, seleccionar discriminadores clínicos y previsualizar en tiempo real el cálculo de prioridad y tiempo de espera sin recargas de página.
 - **RF-TRIAGE-06:** La persistencia de la evaluación debe registrarse en la tabla `triages` con `patient_id`, `user_id`, signos vitales en formato JSONB, prioridad algorítmica, prioridad final y estado `pending_consultation`.
+- **RF-TRIAGE-07 (CEN-37):** Cuando se registra un triage, el sistema debe mostrar de inmediato un ticket digital con: número de turno `TR-` seguido del id con 5 dígitos, badge del nivel MTS (número, nombre y color oficial), nombre, DNI y barrio del paciente, fecha y hora exacta de ingreso, tiempo máximo de espera y nombre del profesional evaluador.
+- **RF-TRIAGE-08 (CEN-37):** El ticket debe poder imprimirse en ticketeras térmicas de 80 mm (`@media print`), imprimiendo solo el ticket. En papel el nivel se identifica por número y nombre (no solo por color), ya que la impresión térmica es monocromática.
+- **RF-TRIAGE-09 (CEN-37):** Tras registrar el triage, el formulario debe quedar limpio para el siguiente paciente (evita duplicados) y la confirmación debe persistir en pantalla con la opción "Ver ticket" para reimprimir. Si la validación falla, los errores deben mostrarse junto al botón "Registrar Triage Clínico". Los signos vitales usan campos de texto con teclado numérico (sin flechas ni cambio por rueda del mouse) y la temperatura acepta coma o punto decimal.
 
 ---
 
@@ -60,6 +63,24 @@ Escenario: Evaluación reactiva de triage en pantalla
   Cuando ingresa los signos vitales y síntomas del paciente
   Entonces la interfaz actualiza reactivamente el badge con el color MTS correspondiente
   Y al presionar "Registrar Triage" el registro se persiste con estado "pending_consultation".
+
+Escenario: Ticket digital al concluir la evaluación (CEN-37)
+  Dado un usuario con rol "triage_nurse" que registra el triage de un paciente
+  Cuando el triage se guarda
+  Entonces se muestra de inmediato el ticket con el número "TR-" del triage, el color y nivel MTS asignado y la espera máxima
+  Y el ticket puede imprimirse en formato de 80 mm.
+
+Escenario: Pantalla lista para el siguiente paciente (CEN-37)
+  Dado que el profesional registró el triage de un paciente
+  Cuando cierra el ticket
+  Entonces el formulario queda vacío y sin paciente seleccionado
+  Y se mantiene visible la confirmación con la opción "Ver ticket".
+
+Escenario: Registro con datos faltantes (CEN-37)
+  Dado que el profesional no seleccionó paciente ni cargó el motivo de consulta
+  Cuando presiona "Registrar Triage Clínico"
+  Entonces junto al botón se muestra "No se pudo registrar el triage" con los errores
+  Y no se emite ningún ticket.
 ```
 
 ---
@@ -87,17 +108,19 @@ Escenario: Evaluación reactiva de triage en pantalla
 - **Servicios:**
   - `App\Services\ManchesterTriageService`: Motor determinístico del árbol de decisión MTS.
 - **Componentes Livewire:**
-  - `App\Livewire\Triage\EvaluatePatient`: Formulario reactivo de toma de signos vitales, selección de discriminadores y persistencia.
+  - `App\Livewire\Triage\EvaluatePatient`: Formulario reactivo de toma de signos vitales, selección de discriminadores y persistencia. Al guardar emite el evento `triage-saved` (`triageId`).
+  - `App\Livewire\Triage\PrintTicket` (CEN-37): escucha `triage-saved` y muestra el ticket digital imprimible (Gate `access-triage`).
 - **Vistas:**
   - `resources/views/livewire/triage/evaluate-patient.blade.php`: Plantilla Blade con Tailwind v3, badges MTS e iconografía SVG Heroicons.
   - `resources/views/triage/index.blade.php`: Contenedor principal del módulo en layout de Centinela.
+  - `resources/views/livewire/triage/ticket-modal.blade.php` (CEN-37): Modal del ticket digital con estilos de impresión de 80 mm.
 
 ---
 
 ## 6. Subtareas Técnicas Atómicas Asociadas
 
 - [x] `CEN-35` / `T3.2`: Programación de la lógica del árbol de decisión clínico Manchester (MTS) (SP: 4) — Cubre: `RF-TRIAGE-01`, `RF-TRIAGE-02`, `RF-TRIAGE-03`, `RF-TRIAGE-04`, `RF-TRIAGE-05`, `RF-TRIAGE-06`.
-- [ ] `CEN-37` / `T3.4`: Emisión y visualización de ticket digital con color de prioridad asignado (SP: 4).
+- [x] `CEN-37` / `T3.4`: Emisión y visualización de ticket digital con color de prioridad asignado (SP: 4).
 - [x] `CEN-38` / `T3.7`: Pruebas de integración de clasificación clínica automatizada (SP: 4).
 - [ ] `CEN-39` / `T3.5`: Componentes UX y modal de Clinical Override rápido con justificación diferida (SP: 4).
 - [x] `CEN-40` / `T3.6`: Desarrollo de la tabla inmutable triage_audit_logs y lógica de reclasificación (SP: 4).

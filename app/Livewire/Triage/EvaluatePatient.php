@@ -62,6 +62,8 @@ class EvaluatePatient extends Component
 
     public ?int $lastSavedTriageId = null;
 
+    public string $savedMessage = '';
+
     public string $searchPatient = '';
 
     public function mount(?Patient $patient = null, ?int $patientId = null): void
@@ -181,10 +183,28 @@ class EvaluatePatient extends Component
             'status' => TriageStatus::PENDING_CONSULTATION,
         ]);
 
+        $patientName = $this->patient?->full_name ?? '';
+
+        // CEN-37: la pantalla queda limpia para el siguiente paciente, la confirmación
+        // persiste en propiedades (un flash de sesión se pierde en el próximo re-render)
+        // y el ticket digital se muestra apenas se registra el triage.
+        $this->resetEvaluation();
+
         $this->savedSuccessfully = true;
         $this->lastSavedTriageId = $triage->id;
+        $this->savedMessage = "Triage registrado con éxito para {$patientName} en prioridad {$priority->label()} (Espera máxima: {$evaluation['target_wait_minutes']} min).";
 
-        session()->flash('status', "Triage registrado con éxito en prioridad {$priority->label()} (Espera máxima: {$evaluation['target_wait_minutes']} min).");
+        $this->dispatch('triage-saved', triageId: $triage->id);
+    }
+
+    /**
+     * CEN-37: vuelve a abrir el ticket del último triage registrado (reimpresión).
+     */
+    public function showTicket(): void
+    {
+        if ($this->lastSavedTriageId !== null) {
+            $this->dispatch('triage-saved', triageId: $this->lastSavedTriageId);
+        }
     }
 
     public function resetEvaluation(): void
@@ -202,8 +222,10 @@ class EvaluatePatient extends Component
             'discriminators',
             'savedSuccessfully',
             'lastSavedTriageId',
+            'savedMessage',
             'searchPatient',
         ]);
+        $this->resetValidation();
 
         $this->recalculatePriority();
     }

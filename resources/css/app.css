@@ -12,3 +12,42 @@
 [x-cloak] {
     display: none !important;
 }
+
+/*
+ * CEN-37: impresión del ticket de triage en ticketeras térmicas de 80 mm.
+ * Solo se imprime `.ticket-80mm`; el nivel MTS se lee por número y nombre
+ * porque la impresión térmica es monocromática.
+ */
+@media print {
+    @page {
+        size: 80mm auto;
+        margin: 0;
+    }
+
+    body * {
+        visibility: hidden !important;
+    }
+
+    .ticket-80mm,
+    .ticket-80mm * {
+        visibility: visible !important;
+    }
+
+    .ticket-80mm {
+        position: absolute;
+        inset: 0 auto auto 0;
+        width: 80mm;
+        padding: 4mm;
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        background: #fff !important;
+        color: #000 !important;
+    }
+
+    .ticket-80mm .ticket-badge {
+        background: #fff !important;
+        color: #000 !important;
+        border: 3px solid #000;
+    }
+}

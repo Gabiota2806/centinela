@@ -17,4 +17,8 @@
     <div class="p-4 sm:p-6 lg:p-8">
         <livewire:triage.evaluate-patient />
     </div>
+
+    {{-- CEN-37: ticket digital del triage registrado --}}
+    <livewire:triage.print-ticket />
+
 </x-app-layout>
