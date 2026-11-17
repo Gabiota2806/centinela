@@ -8,6 +8,7 @@ use App\Enums\TriagePriority;
 use App\Enums\TriageStatus;
 use Database\Factories\TriageFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -79,6 +80,40 @@ class Triage extends Model
     public function consultation(): HasOne
     {
         return $this->hasOne(Consultation::class);
+    }
+
+    /**
+     * Ordena los registros de triage según jerarquía clínica Manchester (MTS)
+     * de mayor a menor gravedad (Rojo a Azul) y por orden de llegada (FIFO).
+     *
+     * @param  Builder<Triage>  $query
+     * @return Builder<Triage>
+     */
+    public function scopeOrderedByPriority(Builder $query): Builder
+    {
+        return $query->orderByRaw(
+            "CASE final_priority
+                WHEN 'red' THEN 1
+                WHEN 'orange' THEN 2
+                WHEN 'yellow' THEN 3
+                WHEN 'green' THEN 4
+                WHEN 'blue' THEN 5
+                ELSE 6
+            END ASC"
+        )->orderBy('created_at', 'asc')->orderBy('id', 'asc');
+    }
+
+    /**
+     * Filtra la cola médica activa (pacientes en espera de consulta) ordenada por prioridad MTS.
+     *
+     * @param  Builder<Triage>  $query
+     * @return Builder<Triage>
+     */
+    public function scopeMedicalQueue(Builder $query): Builder
+    {
+        return $query
+            ->where('status', TriageStatus::PENDING_CONSULTATION)
+            ->orderedByPriority();
     }
 
     /**

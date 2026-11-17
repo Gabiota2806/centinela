@@ -47,13 +47,13 @@ Implementado mediante Enums nativos de PHP 8.3 (`App\Enums\UserRole`) desacoplad
 ## 3. Registro de Módulos del Sistema
 
 - **Tablero de Backlog Activo:** [backlog.md](file:///mnt/Datos/Documentos/TUP/Cuarto Cuatrimestre/TIF/centinela/docs/backlog.md) (Sprint Activo siempre al inicio).
-- **Archivo Histórico de Sprints:** [backlog_archive.md](file:///mnt/Datos/Documentos/TUP/Cuarto Cuatrimestre/TIF/centinela/docs/backlog_archive.md) (Sprints 1 y 2 finalizados).
+- **Archivo Histórico de Sprints:** [backlog_archive.md](file:///mnt/Datos/Documentos/TUP/Cuarto Cuatrimestre/TIF/centinela/docs/backlog_archive.md) (Sprints 1, 2 y 3 finalizados).
 
 | Módulo | Directorio de la Spec | Estado | Subtareas / HUs Asociadas |
 | :--- | :--- | :--- | :--- |
 | **Autenticación y Roles** | `docs/specs/auth/spec.md` | *Implementado* | `CEN-10`, `CEN-14`, `CEN-15`, `CEN-16` (Sprint 2) |
 | **Design System y Layouts** | `docs/specs/ui/spec.md` | *Implementado* | `CEN-12` (Sprint 2) |
-| **Pacientes y Admisión** | `docs/specs/pacientes/spec.md` | *En Progreso* | `CEN-24` (Sprint 3 Activo), `CEN-34` |
-| **Triage MTS y Auditoría** | `docs/specs/triage/spec.md` | *En Progreso* | `CEN-24`, `CEN-25` (Sprint 3 Activo) |
-| **Consultas Médicas** | `docs/specs/consultas/spec.md` | *Planificado* | `CEN-26`, `CEN-27` (Sprint 4) |
+| **Pacientes y Admisión** | `docs/specs/pacientes/spec.md` | *Implementado* | `CEN-24`, `CEN-34`, `CEN-36` (Sprint 3) |
+| **Triage MTS y Auditoría** | `docs/specs/triage/spec.md` | *Implementado* | `CEN-24`, `CEN-25`, `CEN-35` a `CEN-41` (Sprint 3) |
+| **Consultas Médicas** | `docs/specs/consultas/spec.md` | *En Progreso* | `CEN-26`, `CEN-27` (Sprint 4 Activo) |
 | **Geoespacial y Telemetría** | `docs/specs/geo/spec.md` | *Planificado* | `CEN-28` a `CEN-31` (Sprints 5 a 7) |
