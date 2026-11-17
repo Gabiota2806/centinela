@@ -2,12 +2,12 @@
 
 - **Módulo:** `triage`
 - **Estado:** `En Implementación`
-- **Última Actualización:** 2026-11-16
+- **Última Actualización:** 2026-11-17
 - **Subtareas asociadas:**
   - [x] `CEN-35` (Programación de la lógica del árbol de decisión clínico Manchester - MTS)
   - [x] `CEN-37` (Emisión y visualización de ticket digital con color de prioridad asignado)
   - [x] `CEN-38` (Pruebas de integración de clasificación clínica automatizada)
-  - [ ] `CEN-39` (Componentes UX y modal de Clinical Override rápido con justificación diferida)
+  - [x] `CEN-39` (Componentes UX y modal de Clinical Override rápido con justificación diferida)
   - [x] `CEN-40` (Desarrollo de la tabla inmutable triage_audit_logs y lógica de reclasificación)
   - [ ] `CEN-41` (Testing de casos de discrepancia y reordenamiento de cola por override clínico)
 
@@ -32,6 +32,8 @@ Asimismo, contempla el mecanismo de **Clinical Override** (reclasificación méd
 - **RF-TRIAGE-07 (CEN-37):** Cuando se registra un triage, el sistema debe mostrar de inmediato un ticket digital con: número de turno `TR-` seguido del id con 5 dígitos, badge del nivel MTS (número, nombre y color oficial), nombre, DNI y barrio del paciente, fecha y hora exacta de ingreso, tiempo máximo de espera y nombre del profesional evaluador.
 - **RF-TRIAGE-08 (CEN-37):** El ticket debe poder imprimirse en ticketeras térmicas de 80 mm (`@media print`), imprimiendo solo el ticket. En papel el nivel se identifica por número y nombre (no solo por color), ya que la impresión térmica es monocromática.
 - **RF-TRIAGE-09 (CEN-37):** Tras registrar el triage, el formulario debe quedar limpio para el siguiente paciente (evita duplicados) y la confirmación debe persistir en pantalla con la opción "Ver ticket" para reimprimir. Si la validación falla, los errores deben mostrarse junto al botón "Registrar Triage Clínico". Los signos vitales usan campos de texto con teclado numérico (sin flechas ni cambio por rueda del mouse) y la temperatura acepta coma o punto decimal.
+- **RF-TRIAGE-10 (CEN-39):** Los roles con Gate `access-triage` (enfermero de triage, médico y dirección) deben poder reclasificar la prioridad de un triage (*Clinical Override*) desde un modal con selector de los 5 niveles MTS estandarizados. El nivel actual no es seleccionable. Sin justificación diferida, `override_reason` es obligatorio con un mínimo de 10 caracteres.
+- **RF-TRIAGE-11 (CEN-39):** El modal debe ofrecer "Justificación diferida (emergencia crítica)" para guardar el nuevo nivel en un clic, sin redactar el motivo. La auditoría inmutable registra el motivo como pendiente de redacción. La persistencia usa `Triage::overridePriority()` (CEN-40), conservando `algorithmic_priority` y recalculando `target_wait_minutes`. En la pantalla de triage el override se ofrece desde la confirmación del último registro y desde el ticket, y ambos reflejan la nueva prioridad.
 
 ---
 
@@ -81,6 +83,18 @@ Escenario: Registro con datos faltantes (CEN-37)
   Cuando presiona "Registrar Triage Clínico"
   Entonces junto al botón se muestra "No se pudo registrar el triage" con los errores
   Y no se emite ningún ticket.
+
+Escenario: Override clínico de emergencia en un clic con justificación diferida (CEN-39)
+  Dado un paciente evaluado inicialmente con prioridad "Verde"
+  Cuando el profesional activa el Clinical Override a "Rojo" marcando "Justificación Diferida"
+  Entonces el paciente pasa inmediatamente a prioridad "Rojo" en la cola
+  Y se registra en auditoría con estado de motivo pendiente de redacción.
+
+Escenario: Override clínico regular con justificación (CEN-39)
+  Dado un paciente evaluado con prioridad "Amarillo"
+  Cuando el profesional lo reclasifica a "Naranja" sin marcar "Justificación Diferida"
+  Entonces debe escribir un motivo clínico de al menos 10 caracteres
+  Y la auditoría guarda el motivo, el profesional, la prioridad original y la nueva.
 ```
 
 ---
@@ -110,10 +124,12 @@ Escenario: Registro con datos faltantes (CEN-37)
 - **Componentes Livewire:**
   - `App\Livewire\Triage\EvaluatePatient`: Formulario reactivo de toma de signos vitales, selección de discriminadores y persistencia. Al guardar emite el evento `triage-saved` (`triageId`).
   - `App\Livewire\Triage\PrintTicket` (CEN-37): escucha `triage-saved` y muestra el ticket digital imprimible (Gate `access-triage`).
+  - `App\Livewire\Triage\ClinicalOverrideModal` (CEN-39): escucha `open-clinical-override` (`triageId`), aplica `Triage::overridePriority()` y emite `triage-overridden` (`triageId`). Reutilizable desde la cola médica (CEN-42).
 - **Vistas:**
   - `resources/views/livewire/triage/evaluate-patient.blade.php`: Plantilla Blade con Tailwind v3, badges MTS e iconografía SVG Heroicons.
   - `resources/views/triage/index.blade.php`: Contenedor principal del módulo en layout de Centinela.
   - `resources/views/livewire/triage/ticket-modal.blade.php` (CEN-37): Modal del ticket digital con estilos de impresión de 80 mm.
+  - `resources/views/livewire/triage/clinical-override-modal.blade.php` (CEN-39): Modal de Clinical Override con selector de 5 niveles MTS y justificación diferida.
 
 ---
 
@@ -122,6 +138,6 @@ Escenario: Registro con datos faltantes (CEN-37)
 - [x] `CEN-35` / `T3.2`: Programación de la lógica del árbol de decisión clínico Manchester (MTS) (SP: 4) — Cubre: `RF-TRIAGE-01`, `RF-TRIAGE-02`, `RF-TRIAGE-03`, `RF-TRIAGE-04`, `RF-TRIAGE-05`, `RF-TRIAGE-06`.
 - [x] `CEN-37` / `T3.4`: Emisión y visualización de ticket digital con color de prioridad asignado (SP: 4).
 - [x] `CEN-38` / `T3.7`: Pruebas de integración de clasificación clínica automatizada (SP: 4).
-- [ ] `CEN-39` / `T3.5`: Componentes UX y modal de Clinical Override rápido con justificación diferida (SP: 4).
+- [x] `CEN-39` / `T3.5`: Componentes UX y modal de Clinical Override rápido con justificación diferida (SP: 4).
 - [x] `CEN-40` / `T3.6`: Desarrollo de la tabla inmutable triage_audit_logs y lógica de reclasificación (SP: 4).
 - [ ] `CEN-41` / `T3.8`: Testing de casos de discrepancia y reordenamiento de cola por override clínico (SP: 8).

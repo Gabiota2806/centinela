@@ -21,4 +21,7 @@
     {{-- CEN-37: ticket digital del triage registrado --}}
     <livewire:triage.print-ticket />
 
+    {{-- CEN-39: Clinical Override con justificación diferida --}}
+    <livewire:triage.clinical-override-modal />
+
 </x-app-layout>

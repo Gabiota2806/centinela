@@ -37,6 +37,18 @@ class PrintTicket extends Component
         unset($this->triage);
     }
 
+    /**
+     * CEN-39: cierra el ticket y abre el modal de Clinical Override del mismo triage.
+     */
+    public function reclassify(): void
+    {
+        $this->show = false;
+
+        if ($this->triageId !== null) {
+            $this->dispatch('open-clinical-override', triageId: $this->triageId);
+        }
+    }
+
     public function close(): void
     {
         $this->show = false;

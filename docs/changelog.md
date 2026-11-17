@@ -7,6 +7,8 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
 
 ## [Unreleased]
 ### Added
+- `CEN-39`: Modal de Clinical Override (`app/Livewire/Triage/ClinicalOverrideModal.php` y `resources/views/livewire/triage/clinical-override-modal.blade.php`) con selector de los 5 niveles MTS, justificación diferida en un clic para emergencias críticas y motivo obligatorio de al menos 10 caracteres en el caso regular; persiste con `Triage::overridePriority()` en la auditoría inmutable y es reutilizable vía el evento `open-clinical-override`.
+- `CEN-39`: Acceso a «Reclasificar prioridad» desde la confirmación del último triage y desde el ticket digital, que reflejan la nueva prioridad tras el override.
 - `CEN-37`: Ticket digital de triage (`app/Livewire/Triage/PrintTicket.php` y `resources/views/livewire/triage/ticket-modal.blade.php`) que se abre al registrar el triage (evento `triage-saved`), con número `TR-00000`, badge MTS (nivel, nombre y color oficial), paciente, DNI, barrio, hora de ingreso local (`CENTINELA_TIMEZONE`), espera máxima y profesional evaluador; estilos `@media print` para ticketeras térmicas de 80 mm (solo el ticket, monocromático).
 - `CEN-37`: Pantalla de triage lista para el siguiente paciente: formulario limpio tras registrar, confirmación persistente con «Ver ticket» y resumen de errores de validación junto al botón «Registrar Triage Clínico».
 ### Fixed
