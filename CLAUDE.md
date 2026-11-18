@@ -27,6 +27,11 @@ Este repositorio opera bajo una metodología multiagente:
 
 ## Reglas Inviolables
 - **Cero Auto-Merge**: Nunca fusiones ramas automáticamente a `develop`. Deja la Pull Request creada para revisión humana.
+- **Clave Jira Única (`CEN-xxx`) en Ramas, Commits y PRs**: El repositorio tiene automatizaciones de Jira Cloud que cambian el estado de cualquier tarjeta cuya clave `CEN-<número>` aparezca en el **nombre de rama**, en el **título o cuerpo de los commits** o en el **título o descripción de la Pull Request**.
+  - En una tarea con ticket, **solo** puede aparecer la clave `CEN-xxx` de la subtarea activa (y **ninguna** en ramas de mantenimiento/docs sin ticket).
+  - **PROHIBIDO** escribir cualquier otra clave `CEN-xxx` (ni épicas, ni HUs padre, ni dependencias previas, ni tareas futuras, ni archivos de otra tarea, ni rangos al cerrar un Sprint).
+  - Para explicar contexto o dependencias en el cuerpo del commit o la descripción de la PR, usa nombres técnicos/funcionales (ej. "sobre `Triage::overridePriority()`", "paleta corporativa", "cola médica", "Sprint 3") o códigos locales (`RF-TRIAGE-10`, `T4.x`) **sin el prefijo `CEN-`**.
+  - El incumplimiento falla el check bloqueante de GitHub Actions (`jira-key-guard`) y frena `/auditoria`. (En los archivos de `docs/` las referencias cruzadas siguen permitidas).
 - **TDD Obligatorio**: Todo cambio de lógica debe contar con su correspondiente prueba en PHPUnit (`php artisan test`).
 - **Iconografía**: En vistas y componentes UI usa únicamente SVGs vectoriales (Heroicons / Lucide) con clases CSS. No uses emojis de texto.
 - **Protocolo MTS**: Respetar los 5 colores Manchester y la auditoría clínica inmutable (*Clinical Override*).

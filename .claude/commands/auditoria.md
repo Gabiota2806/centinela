@@ -22,6 +22,7 @@ Ejecuta la auditoría y control de calidad de la tarea indicada ($ARGUMENTS) sig
    - Si falla algún test, detén la auditoría de inmediato con `VEREDICTO: CAMBIOS NECESARIOS`.
    - Revisa el diff frente a `develop`: `git diff origin/develop...HEAD`.
    - Verifica concordancia con los criterios Gherkin, tipado, reglas de negocio MTS (5 colores Manchester) y que no existan emojis en vistas (solo SVGs vectoriales).
+   - **Integridad de Claves Jira (Bloqueante):** Revisa el nombre de rama, los commits propios (`git log origin/develop..HEAD --no-merges --format=%B`), el título y la descripción de la PR y el check `jira-key-guard`. Si aparece cualquier clave `CEN-xxx` ajena a la subtarea (épicas, HUs, dependencias, rangos de Sprint) —o cualquier clave `CEN-xxx` en una rama sin ticket—, detén la aprobación y emite `VEREDICTO: CAMBIOS NECESARIOS`.
    - Si hay cambios de UI, navega y valida consola y `laravel.log`.
 4. **Veredicto y Fusión:**
    - Emite el informe estructurado encabezado por:

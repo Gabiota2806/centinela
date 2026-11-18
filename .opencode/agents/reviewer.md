@@ -41,6 +41,7 @@ Evalúa la spec en `docs/specs/<modulo>/spec.md` buscando:
 3. Recorre la spec RF por RF:
    - Qué prueba cubre cada RF y cuál fue su resultado.
    - Si incluye interfaz, verifica ausencia de errores de consola o caídas de Livewire.
+   - **Integridad de Claves Jira (Bloqueante):** Verifica nombre de rama, commits propios (`git log origin/develop..HEAD --no-merges --format=%B`), título y descripción de la PR. Si detectas cualquier clave `CEN-xxx` ajena a la subtarea activa (épicas, HUs, dependencias, rangos de Sprint) —o cualquier clave `CEN-xxx` en una rama sin ticket—, debes emitir `VEREDICTO: CAMBIOS NECESARIOS`.
 4. Empieza SIEMPRE tu veredicto con una de estas dos líneas:
    - **`VEREDICTO: APROBADO`**
    - **`VEREDICTO: CAMBIOS NECESARIOS`**
