@@ -45,6 +45,7 @@ Este skill guía a Antigravity en la ejecución paso a paso de la auditoría té
   2. **Calidad y Arquitectura**: Código limpio, tipado estricto, buenas prácticas Laravel y principios SOLID/DDD.
   3. **Seguridad y Rendimiento**: Autorización correcta con Policies/Gates, ausencia de queries N+1 en Eloquent y validación adecuada.
   4. **Iconografía**: Verificación estricta de ausencia de emojis de texto en vistas o componentes.
+  5. **Integridad de Claves Jira (Bloqueante)**: Verificar nombre de rama, commits propios (`git log origin/develop..HEAD --no-merges --format=%B`), título y descripción de la PR y el check `jira-key-guard`. No debe existir ninguna clave `CEN-xxx` ajena a la subtarea (ni épicas, ni HUs, ni dependencias, ni rangos de Sprint; cero claves en ramas de mantenimiento). Si se detecta alguna, emitir `VEREDICTO: CAMBIOS NECESARIOS`.
 
 ---
 

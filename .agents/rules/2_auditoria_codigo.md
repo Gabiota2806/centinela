@@ -33,6 +33,7 @@ Esta regla rige cada vez que se invoque el Slash Command `/auditoria` o se solic
      3. **Protocolo MTS**: Respeto a los 5 colores Manchester y registros de auditoría clínica (*Clinical Override*).
      4. **Seguridad y Rendimiento**: Prevención de consultas N+1 en Eloquent, autorización en Policies/Gates, validación estricta de inputs.
      5. **Estándar de Iconografía**: Prohibición absoluta de emojis en vistas Blade o componentes Livewire. Uso exclusivo de SVGs vectoriales.
+     6. **Integridad de Claves Jira (Bloqueante)**: Verificar que el nombre de la rama, todos los commits propios (`git log origin/develop..HEAD --no-merges --format=%B`), el título y la descripción de la PR contengan **únicamente** la clave `CEN-xxx` de la tarea auditada (o ninguna en ramas de mantenimiento/docs), sin claves ajenas (épicas, HUs, dependencias ni rangos de Sprint) y con el check de CI `jira-key-guard` en verde. Cualquier clave ajena obliga a emitir `VEREDICTO: CAMBIOS NECESARIOS` hasta corregir la PR y/o reescribir el commit afectado.
 
 4. **SMOKE TESTING Y VERIFICACIÓN VISUAL**:
    - Si la tarea incluye componentes de interfaz o vistas Livewire, navegar a la pantalla en `http://localhost:8000` con `/browser` o Playwright.

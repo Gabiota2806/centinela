@@ -78,6 +78,12 @@ Para detener y dar de baja todos los contenedores y procesos en segundo plano (`
 docker compose down
 ```
 
+### 8. Activar Hooks Locales de Git (Protección de Claves Jira)
+Para evitar que un commit o push incluya accidentalmente claves `CEN-xxx` de otras tareas y dispare automatizaciones erróneas en Jira, activá los hooks versionados del repositorio una sola vez (compatibles con Linux y Git Bash en Windows):
+```bash
+git config core.hooksPath .githooks
+```
+
 ---
 
 ## About Laravel

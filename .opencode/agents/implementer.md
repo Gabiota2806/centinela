@@ -29,4 +29,5 @@ Eres el agente Implementador (implementer) del proyecto Centinela. Ejecutas UNA 
    - Marca la tarea como completada `[x]` en la spec modular y en `docs/backlog.md` (si es la última tarea del Sprint Activo, migra el Sprint a `docs/backlog_archive.md` y promueve el siguiente como `(ACTIVO)` al inicio de `docs/backlog.md`) y **PARA**.
 6. **Pull Request**:
    - Si es la última tarea del lote, sube la rama y deja la PR preparada hacia `develop`.
+   - **Regla estricta de clave Jira única (bloqueante en CI):** En el nombre de rama, el título y cuerpo de cada commit y el título y descripción de la PR solo puede figurar la clave `CEN-xxx` de la subtarea activa (o ninguna en ramas de mantenimiento/docs). **PROHIBIDO** incluir otras claves `CEN-xxx` (épicas, HUs padre, dependencias, tareas futuras ni rangos de Sprint); referencia trabajo relacionado por nombre técnico/funcional o códigos locales (`RF-xxx`, `T4.x`).
    - 🚫 **PROHIBIDO EL AUTO-MERGE**: La PR queda abierta para revisión humana o del auditor.

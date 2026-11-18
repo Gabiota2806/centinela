@@ -24,10 +24,12 @@ Esta regla rige de forma permanente en todas las sesiones y conversaciones en Ce
    - DEBES pausar y esperar el "OK" explícito de Gabriel sobre el plan antes de tocar código.
    - Tras el "OK" de Gabriel, sincroniza `develop`, crea la rama en Git y súbela a GitHub para vincular con Jira.
 
-2. **REGLA ESTRICTA DE JIRA EN COMMITS Y PULL REQUESTS**:
+2. **REGLA ESTRICTA DE CLAVE JIRA ÚNICA EN RAMAS, COMMITS Y PULL REQUESTS**:
    - Antigravity **NO debe modificar el estado de las tarjetas en Jira Cloud mediante transitions API** a menos que el usuario lo solicite. Las transiciones las manejan las automatizaciones de Jira.
-   - NUNCA incluyas la clave de la Historia de Usuario (`HU-xx` / clave padre) en mensajes de commit ni títulos de PR para evitar cierres prematuros de la historia en Jira.
-   - SOLO debes referenciar la clave de la Subtarea específica (`CEN-xxx`).
+   - **Clave única obligatoria:** En el **nombre de rama**, el **título y cuerpo (body) de cada commit** y el **título y descripción (body) de la Pull Request**, SOLO puede aparecer la clave `CEN-xxx` de la subtarea activa (o **ninguna** en ramas de mantenimiento/docs sin ticket).
+   - **PROHIBIDO mencionar cualquier otra clave `CEN-xxx`**: ni épicas, ni Historias de Usuario padre, ni dependencias previas, ni tareas siguientes, ni rangos de cierre de Sprint (ej. escribir "cierre del Sprint 3" en lugar de citar un rango de claves `CEN-`).
+   - Para dar contexto sobre otras funcionalidades o dependencias, usa nombres técnicos/funcionales o códigos locales (`RF-xxx`, `T4.x`) sin el prefijo `CEN-`. (Dentro de archivos de `docs/` las referencias cruzadas siguen permitidas).
+   - El check de CI `jira-key-guard` y los hooks locales `.githooks/` validan esta regla de forma bloqueante.
 
 3. **TDD, SMOKE TESTING Y PRE-VERIFICACIÓN TÉCNICA EN NAVEGADOR**:
    - **TDD Estricto**: Escribe o actualiza las pruebas unitarias y de integración cubriendo los criterios Gherkin en PHPUnit antes o en paralelo al código de producción.
@@ -48,7 +50,7 @@ Esta regla rige de forma permanente en todas las sesiones y conversaciones en Ce
    - Marca la tarea técnica como completada `[x]` en `docs/specs/<modulo>/spec.md` y en `docs/backlog.md`.
    - **Rotación de Sprint**: Si la tarea completada es la última subtarea pendiente del **Sprint Activo** en `docs/backlog.md`, migra el Sprint finalizado a `docs/backlog_archive.md` y promueve el siguiente Sprint como `(ACTIVO)` al inicio de `docs/backlog.md`.
    - Registra la entrada en `docs/changelog.md` bajo `## [Unreleased]`.
-   - Realiza el commit en español con Conventional Commits (`feat: ...`, `fix: ...`, `test: ...`) referenciando únicamente la clave de la subtarea técnica (ej. `CEN-12`).
+   - Realiza el commit en español con Conventional Commits (`feat: ...`, `fix: ...`, `test: ...`) referenciando únicamente la clave de la subtarea técnica (ej. `CEN-12`), verificando que ni el título ni el cuerpo contengan otras claves `CEN-xxx`.
    - Sube la rama a GitHub (`git push origin <rama>`).
 
 5. **CREACIÓN DE PULL REQUEST (PROHIBIDO AUTO-MERGE)**:
@@ -57,7 +59,7 @@ Esta regla rige de forma permanente en todas las sesiones y conversaciones en Ce
      1. Si el servidor MCP de GitHub está autenticado y activo, invocar `create_pull_request` apuntando a `develop`.
      2. Si el CLI `gh` está disponible y autenticado en el sistema, ejecutar:
         ```bash
-        gh pr create --base develop --head <rama> --title "feat(CEN-xxx): [Título]" --body "[Cuerpo Markdown con tareas cubiertas y checklist de QA]"
+        gh pr create --base develop --head <rama> --title "feat(CEN-xxx): [Título]" --body "[Cuerpo Markdown con tareas cubiertas y checklist de QA, sin ninguna otra clave CEN-xxx]"
         ```
      3. Si ni el MCP ni el CLI de GitHub están autenticados:
         * Generar y mostrar en el chat la URL directa de comparación de GitHub:

@@ -26,7 +26,7 @@ Este skill guía a Antigravity en la ejecución paso a paso del ciclo de vida de
   - Inspeccionar el esquema de base de datos viva (vía Laravel Boost MCP si está instalado, o leyendo migraciones en `database/migrations/` y modelos en `app/Models/`).
 * **Plan Técnico Estructurado**:
   1. Modo de Trabajo (Local o Remoto).
-  2. Nombre de rama estandarizado (ej. `CEN-xxx-nombre-tarea`).
+  2. Nombre de rama estandarizado con una única clave Jira (ej. `CEN-xxx-nombre-tarea`, o sin clave `CEN-` en mantenimiento/docs).
   3. Clases, modelos, enums, migraciones o vistas a crear o modificar.
   4. Estrategia de pruebas TDD.
 * 🚫 **PAUSA**: Espera el "OK" explícito del desarrollador antes de codificar o crear ramas.
@@ -53,15 +53,16 @@ Este skill guía a Antigravity en la ejecución paso a paso del ciclo de vida de
 ### 3. Registro en Documentación y Commit
 Tras el "OK" humano de QA:
 * Marca la subtarea como completada `[x]` en `docs/specs/<modulo>/spec.md` y en `docs/backlog.md`.
-* **Rotación de Sprint**: Si con esta subtarea se completa el 100% del **Sprint Activo**, mueve el Sprint finalizado a `docs/backlog_archive.md` y promueve el siguiente Sprint como `(ACTIVO)` al inicio de `docs/backlog.md`.
+* **Rotación de Sprint**: Si con esta subtarea se completa el 100% del **Sprint Activo**, mueve el Sprint finalizado a `docs/backlog_archive.md` y promueve el siguiente Sprint como `(ACTIVO)` al inicio de `docs/backlog.md`. Al describir la rotación en el commit o en la PR, menciona solo el número de Sprint (ej. "Sprint 4") sin escribir otras claves `CEN-xxx`.
 * Registra la entrada en `docs/changelog.md` bajo `## [Unreleased]`.
-* Realiza el commit en español con Conventional Commits referenciando únicamente la clave de la subtarea técnica.
+* Realiza el commit en español con Conventional Commits referenciando únicamente la clave de la subtarea técnica; verifica que **ni el título ni el cuerpo** del commit incluyan claves `CEN-xxx` de otras tareas, épicas, HUs o dependencias (usa nombres técnicos/funcionales o códigos `RF-`/`T`).
 * Sube la rama a GitHub (`git push origin <rama>`).
 
 ---
 
 ### 4. Creación de Pull Request (Sin Auto-Merge)
 * 🚫 **PROHIBIDO EL AUTO-MERGE**: La Pull Request NO debe fusionarse automáticamente; debe quedar abierta para revisión.
+* 🚫 **CLAVE JIRA ÚNICA EN TÍTULO Y DESCRIPCIÓN DE PR**: Revisa el título y todo el cuerpo Markdown de la PR antes de crearla para asegurar que no aparezca ninguna clave `CEN-xxx` distinta a la subtarea activa (ni épicas, ni HUs, ni dependencias, ni rangos de Sprint). En tareas sin ticket Jira, no incluyas ninguna clave `CEN-xxx`.
 * **Creación Asistida**:
   1. Si GitHub MCP está disponible: Invocar `create_pull_request` apuntando a `develop`.
   2. Si CLI `gh` está autenticado: Ejecutar `gh pr create`.

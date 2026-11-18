@@ -1,0 +1,113 @@
+name: Jira Key Guard
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  validate-jira-keys:
+    name: Validar clave Jira única en rama, commits y PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verificar ausencia de claves CEN-xxx ajenas
+        shell: bash
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          BASE_REF: ${{ github.base_ref }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          set -euo pipefail
+
+          if [ "$BASE_REF" = "main" ] && [ "$HEAD_REF" = "develop" ]; then
+            echo "PR de release (develop -> main): validación de clave Jira única omitida."
+            exit 0
+          fi
+
+          extract_keys() {
+            LC_ALL=C awk '
+            {
+              line = toupper($0)
+              while (match(line, /CEN-[0-9]+/)) {
+                before = (RSTART > 1) ? substr(line, RSTART - 1, 1) : ""
+                after  = substr(line, RSTART + RLENGTH, 1)
+                if (before !~ /[A-Z0-9]/ && after !~ /[A-Z0-9]/) {
+                  print substr(line, RSTART, RLENGTH)
+                }
+                line = substr(line, RSTART + RLENGTH)
+              }
+            }' | sort -u
+          }
+
+          find_foreign_keys() {
+            local allowed="$1"
+            extract_keys | while IFS= read -r key; do
+              [ -z "$key" ] && continue
+              if [ -z "$allowed" ] || [ "$key" != "$allowed" ]; then
+                printf '%s\n' "$key"
+              fi
+            done
+          }
+
+          ERRORS=0
+          BRANCH_KEYS=$(printf '%s\n' "$HEAD_REF" | extract_keys || true)
+          BRANCH_KEY_COUNT=$(printf '%s\n' "$BRANCH_KEYS" | LC_ALL=C awk 'NF { c++ } END { print c + 0 }')
+
+          if [ "$BRANCH_KEY_COUNT" -gt 1 ]; then
+            JOINED=$(printf '%s\n' "$BRANCH_KEYS" | paste -sd ', ' -)
+            echo "::error::El nombre de la rama '${HEAD_REF}' contiene múltiples claves Jira (${JOINED}). Solo se permite una clave por rama."
+            ERRORS=1
+            ALLOWED_KEY=$(printf '%s\n' "$BRANCH_KEYS" | head -n 1)
+          elif [ "$BRANCH_KEY_COUNT" -eq 1 ]; then
+            ALLOWED_KEY="$BRANCH_KEYS"
+            echo "Clave Jira autorizada para esta PR: ${ALLOWED_KEY}"
+          else
+            ALLOWED_KEY=""
+            echo "Rama de mantenimiento/documentación sin clave Jira: no se permite ninguna clave CEN-<número>."
+          fi
+
+          TITLE_FOREIGN=$(printf '%s\n' "$PR_TITLE" | find_foreign_keys "$ALLOWED_KEY" || true)
+          if [ -n "$TITLE_FOREIGN" ]; then
+            JOINED=$(printf '%s\n' "$TITLE_FOREIGN" | paste -sd ', ' -)
+            echo "::error::El título de la PR contiene clave(s) Jira ajena(s): ${JOINED} (permitida: ${ALLOWED_KEY:-ninguna})."
+            ERRORS=1
+          fi
+
+          BODY_FOREIGN=$(printf '%s\n' "$PR_BODY" | find_foreign_keys "$ALLOWED_KEY" || true)
+          if [ -n "$BODY_FOREIGN" ]; then
+            JOINED=$(printf '%s\n' "$BODY_FOREIGN" | paste -sd ', ' -)
+            echo "::error::La descripción de la PR contiene clave(s) Jira ajena(s): ${JOINED} (permitida: ${ALLOWED_KEY:-ninguna})."
+            ERRORS=1
+          fi
+
+          git fetch origin "$BASE_SHA" "$HEAD_SHA" >/dev/null 2>&1 || true
+          COMMITS=$(git rev-list --no-merges "${BASE_SHA}..${HEAD_SHA}")
+          for sha in $COMMITS; do
+            short_sha=$(git rev-parse --short "$sha")
+            msg=$(git log -1 --format=%B "$sha")
+            commit_foreign=$(printf '%s\n' "$msg" | find_foreign_keys "$ALLOWED_KEY" || true)
+            if [ -n "$commit_foreign" ]; then
+              JOINED=$(printf '%s\n' "$commit_foreign" | paste -sd ', ' -)
+              echo "::error::El commit ${short_sha} contiene clave(s) Jira ajena(s): ${JOINED} (permitida: ${ALLOWED_KEY:-ninguna})."
+              ERRORS=1
+            fi
+          done
+
+          if [ "$ERRORS" -ne 0 ]; then
+            echo ""
+            echo "Bloqueado para evitar transiciones accidentales en las automatizaciones de Jira."
+            echo "Eliminá las claves CEN-<número> ajenas y referenciá tareas relacionadas por nombre técnico/funcional o código local (RF-xxx, T4.x)."
+            exit 1
+          fi
+
+          echo "OK: rama, commits, título y descripción de la PR cumplen la regla de clave Jira única."

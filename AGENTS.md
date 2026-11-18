@@ -74,6 +74,11 @@ Este proyecto implementa el flujo de trabajo multiagente basado en especificacio
 # Regla Estricta de Pull Requests y Control de Versiones
 - **PROHIBIDO EL AUTO-MERGE**: Bajo ninguna circunstancia el agente debe fusionar automáticamente ramas hacia `develop` o `main`.
 - La tarea culmina empujando la rama (`git push origin <rama>`) y creando la Pull Request (vía MCP de GitHub, `gh pr create` o enlace directo a GitHub compare) para revisión humana por parte de Gabriel o del equipo.
-- Los commits deben seguir el estándar Conventional Commits en español referenciando únicamente la clave de la subtarea técnica (ej. `CEN-12`, `CEN-13`).
+- **REGLA INVIOLABLE DE CLAVE JIRA ÚNICA (`CEN-xxx`)**: Jira Cloud ejecuta automatizaciones sobre cada `CEN-<número>` que detecta en GitHub. Por eso, en el **nombre de la rama**, el **título y cuerpo de cada commit** y el **título y descripción de la PR**:
+  * Solo puede figurar la clave `CEN-xxx` de la subtarea activa (o **ninguna** en ramas de mantenimiento/docs sin ticket).
+  * Queda **TERMINANTEMENTE PROHIBIDO** escribir otras claves `CEN-xxx` (épicas, HUs padre, dependencias previas, tareas futuras ni rangos de cierre de Sprint).
+  * Para mencionar trabajo relacionado, usá el nombre funcional/técnico (ej. "lógica de reclasificación", "Sprint 3") o códigos locales (`RF-xxx`, `T4.x`) sin el prefijo `CEN-`.
+  * Ver especificación completa en `docs/specs/global_spec.md` (sección `2.E`). El incumplimiento falla el check de CI `jira-key-guard` y bloquea `/auditoria`.
+- Los commits deben seguir el estándar Conventional Commits en español (`feat(CEN-xxx): ...`, `fix(CEN-xxx): ...`, `test(CEN-xxx): ...`, o sin clave en tareas de mantenimiento).
 
 </laravel-guidelines>

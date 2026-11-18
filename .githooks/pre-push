@@ -1,0 +1,93 @@
+#!/bin/sh
+set -eu
+
+ZERO_SHA="0000000000000000000000000000000000000000"
+
+extract_keys() {
+  LC_ALL=C awk '
+  {
+    line = toupper($0)
+    while (match(line, /CEN-[0-9]+/)) {
+      before = (RSTART > 1) ? substr(line, RSTART - 1, 1) : ""
+      after  = substr(line, RSTART + RLENGTH, 1)
+      if (before !~ /[A-Z0-9]/ && after !~ /[A-Z0-9]/) {
+        print substr(line, RSTART, RLENGTH)
+      }
+      line = substr(line, RSTART + RLENGTH)
+    }
+  }' | sort -u
+}
+
+ERRORS=0
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ -z "${local_ref:-}" ] && continue
+  [ "$local_sha" = "$ZERO_SHA" ] && continue
+
+  case "$local_ref" in
+    refs/heads/*)
+      BRANCH=${local_ref#refs/heads/}
+      ;;
+    *)
+      continue
+      ;;
+  esac
+
+  if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "develop" ]; then
+    continue
+  fi
+
+  BRANCH_KEYS=$(printf '%s\n' "$BRANCH" | extract_keys || true)
+  BRANCH_KEY_COUNT=$(printf '%s\n' "$BRANCH_KEYS" | LC_ALL=C awk 'NF { c++ } END { print c + 0 }')
+
+  if [ "$BRANCH_KEY_COUNT" -gt 1 ]; then
+    JOINED=$(printf '%s\n' "$BRANCH_KEYS" | paste -sd ', ' -)
+    printf '%s\n' "[jira-key-guard] Push bloqueado: la rama '${BRANCH}' contiene múltiples claves Jira (${JOINED})." >&2
+    ERRORS=1
+    ALLOWED_KEY=$(printf '%s\n' "$BRANCH_KEYS" | head -n 1)
+  elif [ "$BRANCH_KEY_COUNT" -eq 1 ]; then
+    ALLOWED_KEY="$BRANCH_KEYS"
+  else
+    ALLOWED_KEY=""
+  fi
+
+  EXCLUDES=""
+  for base in origin/develop develop origin/main main; do
+    if git rev-parse --verify --quiet "$base" >/dev/null 2>&1; then
+      EXCLUDES="${EXCLUDES} ${base}"
+    fi
+  done
+
+  if [ -n "$EXCLUDES" ]; then
+    # shellcheck disable=SC2086
+    COMMITS=$(git rev-list --no-merges "$local_sha" --not $EXCLUDES)
+  elif [ "$remote_sha" != "$ZERO_SHA" ]; then
+    COMMITS=$(git rev-list --no-merges "${remote_sha}..${local_sha}")
+  else
+    COMMITS=$(git rev-list --no-merges "$local_sha")
+  fi
+
+  for sha in $COMMITS; do
+    short_sha=$(git rev-parse --short "$sha")
+    msg=$(git log -1 --format=%B "$sha")
+    FOREIGN_KEYS=$(printf '%s\n' "$msg" | extract_keys | while IFS= read -r key; do
+      [ -z "$key" ] && continue
+      if [ -z "$ALLOWED_KEY" ] || [ "$key" != "$ALLOWED_KEY" ]; then
+        printf '%s\n' "$key"
+      fi
+    done)
+
+    if [ -n "$FOREIGN_KEYS" ]; then
+      JOINED=$(printf '%s\n' "$FOREIGN_KEYS" | paste -sd ', ' -)
+      printf '%s\n' "[jira-key-guard] Push bloqueado: el commit ${short_sha} en '${BRANCH}' contiene clave(s) Jira ajena(s): ${JOINED} (permitida: ${ALLOWED_KEY:-ninguna})." >&2
+      ERRORS=1
+    fi
+  done
+done
+
+if [ "$ERRORS" -ne 0 ]; then
+  printf '%s\n' "Corregí el nombre de rama o reescribí el mensaje del commit antes de empujar para evitar transiciones erróneas en Jira." >&2
+  exit 1
+fi
+
+exit 0

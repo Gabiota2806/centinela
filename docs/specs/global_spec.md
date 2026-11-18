@@ -42,6 +42,15 @@ Implementado mediante Enums nativos de PHP 8.3 (`App\Enums\UserRole`) desacoplad
 - Iconografía: **SVGs vectoriales exclusivos** (Heroicons / Lucide) con clases `w-4 h-4` o `w-5 h-5`. **TERMINANTEMENTE PROHIBIDO** el uso de emojis de texto en vistas o modales.
 - Design System (tokens, tipografía local Plus Jakarta Sans, logo y layouts): ver `docs/specs/ui/spec.md`.
 
+### E. Control de Versiones, Pull Requests e Integración con Jira
+- **Regla estricta de clave Jira única (`CEN-xxx`)**: El repositorio está vinculado a Jira Cloud con automatizaciones que transicionan el estado de cualquier tarjeta cuya clave `CEN-<número>` aparezca en metadatos Git/GitHub.
+  * **Superficies alcanzadas:** Nombre de rama, título y **cuerpo** de commits, y título y **descripción** de Pull Requests.
+  * **En tareas con subtarea Jira:** Solo puede figurar la clave `CEN-xxx` de la subtarea activa. Queda **PROHIBIDO** mencionar cualquier otra clave `CEN-xxx` (épicas, Historias de Usuario padre, dependencias previas, tareas futuras o rangos de cierre de Sprint).
+  * **En tareas sin ticket Jira** (mantenimiento, documentación, hotfixes de infraestructura): **cero** claves `CEN-<número>`.
+  * **Cómo citar contexto relacionado:** Utilizar nombres técnicos o funcionales (p. ej. "lógica de reclasificación", "paleta corporativa", "Sprint 3") o códigos locales del proyecto (`RF-TRIAGE-10`, `T4.x`) sin el prefijo `CEN-`.
+  * **Archivos del repositorio:** Dentro de `docs/specs/`, `docs/backlog.md` y `docs/changelog.md` las referencias cruzadas siguen permitidas porque Jira no escanea el contenido de archivos.
+- **Controles automáticos y auditoría:** El workflow `.github/workflows/jira-key-guard.yml` valida de forma bloqueante cada PR (omitiendo únicamente el merge de release `develop -> main`). Además, el repositorio provee hooks locales portables en `.githooks/` (`git config core.hooksPath .githooks`) para frenar infracciones antes del push. En `/auditoria` y `@reviewer`, cualquier clave `CEN-xxx` ajena implica `VEREDICTO: CAMBIOS NECESARIOS`.
+
 ---
 
 ## 3. Registro de Módulos del Sistema
