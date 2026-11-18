@@ -2,10 +2,11 @@
 
 - **Módulo:** `auth`
 - **Estado:** `Implementado`
-- **Última Actualización:** 2026-11-12
+- **Última Actualización:** 2026-11-18
 - **Subtareas asociadas:**
   - [x] `CEN-15` (implementación de autenticación y autorización por roles)
   - [x] `CEN-16` (pruebas unitarias y de integración de modelos, PostGIS, inmutabilidad, enum y gates)
+  - [ ] `CEN-73` / `T4.B1` (habilitación de `triage_nurse` en `access-admission` según relevamiento CAPS Codda)
 
 ---
 
@@ -49,7 +50,7 @@ Escenario: Denegación de acceso cruzado
 | Rol (`value`) | Etiqueta | Pantalla post-login | `access-admission` | `access-triage` | `access-doctor` | `access-analytics` |
 | :--- | :--- | :--- | :---: | :---: | :---: | :---: |
 | `admission` | Admisión / Mesa de Entrada | `/pacientes` | ✔ | | | |
-| `triage_nurse` | Enfermero de Triage | `/triage` | | ✔ | | |
+| `triage_nurse` | Enfermero de Triage | `/triage` | ✔ | ✔ | | |
 | `doctor` | Médico de Guardia | `/consultas` | | ✔ | ✔ | |
 | `director` | Dirección de CAPS | `/dashboard` | ✔ | ✔ | ✔ | ✔ |
 

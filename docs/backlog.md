@@ -18,26 +18,58 @@
 
 ## 🏃 Sprint 4: Cola de Atención Médica en Tiempo Real y Dashboard (ACTIVO)
 - **Épica:** `CEN-19`
-- **Estado:** 🚧 **En curso (In Progress)** (Inicio: 18/11/2026 - Fin: 21/11/2026) | **Puntos:** 36 SP
-- **Alcance:** Cola de espera médica dinámica con ordenamiento MTS, llamada a consultorio y cierre de consulta.
+- **Estado:** 🚧 **En curso (In Progress)** (Inicio: 18/11/2026 - Fin: 21/11/2026) | **Puntos:** 57 SP (21 SP Bugfix de entrada + 36 SP Cola/Consultorio)
+- **Alcance:** Remediación de flujo unificado Admisión+Triage/RBAC/UI y cola de espera médica dinámica con ordenamiento MTS, llamada a consultorio y cierre de consulta.
+
+### 🐛 CEN-72: [BUGFIX S4] Admisión con Signos Vitales en /pacientes/nuevo, RBAC de Enfermería, Gestión en /triage y Correcciones UI (21 SP)
+
+#### 📌 CEN-73: [T4.B1] RBAC de enfermería en admisión (access-admission), PrintTicket en admisión y Padrón /pacientes
+- **Estado:** `[ ]` Por hacer | **Responsable:** Enrique M. González | **Estimación:** 3 SP
+- **Archivos Objetivo:** `app/Providers/AppServiceProvider.php`, `routes/web.php`, `app/Livewire/Triage/PrintTicket.php`, `resources/views/livewire/triage/ticket-modal.blade.php`, `app/Livewire/Patients/PatientDirectory.php`, `resources/views/livewire/patients/patient-directory.blade.php`, `resources/views/patients/index.blade.php`.
+- **Detalle Técnico:** Sumar `UserRole::TRIAGE_NURSE` a `access-admission` (alineado con `admit-patient` y relevamiento CAPS Codda). Habilitar `PrintTicket` para `access-admission` || `access-triage` manteniendo `ClinicalOverrideModal` solo bajo `access-triage`. Reemplazar el placeholder de `/pacientes` por el componente `PatientDirectory` (padrón/buscador por DNI/nombre con enlace directo a `/pacientes/nuevo?dni=...`).
+
+#### 📌 CEN-74: [T4.B2] Admisión + Triage unificados en /pacientes/nuevo (DNI recurrente, bloqueo activo y signos obligatorios)
+- **Estado:** `[ ]` Por hacer | **Responsable:** Gabriel Pineda | **Estimación:** 5 SP
+- **Archivos Objetivo:** `app/Livewire/Patients/CreatePatient.php`, `resources/views/livewire/patients/create-patient.blade.php`, `resources/views/patients/create.blade.php`.
+- **Detalle Técnico:** Búsqueda/precarga editable por DNI (incluyendo `withTrashed()`), bloqueo si el paciente posee triage activo (`pending_consultation`, `called`, `in_consultation`) alertando con el `#TR-XXXXX` activo. Carga obligatoria de los 6 signos vitales y motivo de consulta ubicado antes de los discriminadores MTS opcionales, con panel sticky MTS en vivo y persistencia atómica `Patient` + `Triage` en `DB::transaction`.
+
+#### 📌 CEN-75: [T4.B3] Cálculo y visualización de posición estimada en lista de espera (#N) en confirmación y ticket 80 mm
+- **Estado:** `[ ]` Por hacer | **Responsable:** Gabriel Pineda | **Estimación:** 3 SP
+- **Archivos Objetivo:** `app/Models/Triage.php`, `app/Livewire/Patients/CreatePatient.php`, `app/Livewire/Triage/PrintTicket.php`, `resources/views/livewire/triage/ticket-modal.blade.php`.
+- **Detalle Técnico:** Método en `Triage` para calcular la posición estimada `#N` dentro de `pending_consultation` (jerarquía MTS + FIFO `created_at`/`id`), mostrado en la confirmación de alta de `/pacientes/nuevo` y en el ticket digital/80 mm con nota de posición dinámica al ingreso, recalculando tras override/edición.
+
+#### 📌 CEN-76: [T4.B4] Evolución de /triage: buscador por DNI, pestaña "En espera" con edición auditada y pestaña "Historial"
+- **Estado:** `[ ]` Por hacer | **Responsable:** Gabriel Pineda | **Estimación:** 5 SP
+- **Archivos Objetivo:** `app/Livewire/Triage/EvaluatePatient.php`, `resources/views/livewire/triage/evaluate-patient.blade.php`, `app/Models/Triage.php`.
+- **Detalle Técnico:** Buscador por DNI/nombre; pestaña "En espera" (`pending_consultation` con `#N` y `called` con badge "Llamado") con acciones Editar signos/motivo/discriminadores (recalcula MTS y registra en `triage_audit_logs` si cambia la prioridad), Clinical Override y Ver ticket; pestaña "Historial" (`in_consultation`, `completed`, `cancelled`).
+
+#### 📌 CEN-77: [T4.B5] Remediación UI/UX de campos de signos vitales, estados de carga y tokens MTS
+- **Estado:** `[ ]` Por hacer | **Responsable:** Valeria Budiño | **Estimación:** 2 SP
+- **Archivos Objetivo:** `resources/views/livewire/patients/create-patient.blade.php`, `resources/views/livewire/triage/evaluate-patient.blade.php`, `tailwind.config.js`.
+- **Detalle Técnico:** Padding derecho reservado (`pr-9`, `pr-12`, `pr-14`) + `pointer-events-none` en unidades (`°C`, `mmHg`, `lpm`, `rpm`, `%`), `wire:target="save"` en botones de guardado, bordes `border-danger` / `aria-invalid` / `aria-describedby` según `docs/specs/ui/spec.md` y verificación de compilación CSS de los 5 colores MTS.
+
+#### 📌 CEN-78: [T4.B6] Suite de pruebas Feature/Livewire para flujo unificado, RBAC actualizado, bloqueo activo y gestión en /triage
+- **Estado:** `[ ]` Por hacer | **Responsable:** Gabriel Pineda | **Estimación:** 3 SP
+- **Archivos Objetivo:** `tests/Feature/Patients/CreatePatientTest.php`, `tests/Feature/Patients/PatientDirectoryTest.php`, `tests/Feature/AuthRoleAccessTest.php`, `tests/Feature/Triage/EvaluatePatientTest.php`, `tests/Feature/Triage/PrintTicketTest.php`.
+- **Detalle Técnico:** Cobertura Feature/Livewire completa de los criterios Gherkin del Bugfix Sprint 4 (`CEN-72`).
 
 ### 📖 HU03: Gestión de Cola Médica en Tiempo Real (`CEN-26`, 20 SP)
 
 #### 📌 CEN-42: [T4.1] Diseño y maquetación del panel médico con ordenamiento dinámico por MTS
 - **Estado:** `[ ]` Por hacer | **Responsable:** Valeria Budiño | **Estimación:** 4 SP
 - **Archivos Objetivo:** `app/Livewire/Doctor/MedicalQueue.php`, `resources/views/livewire/doctor/medical-queue.blade.php`.
-- **Detalle Técnico:** Tarjetas de espera ordenadas por color MTS (Rojo al frente, luego Naranja, Amarillo, Verde, Azul). Cronómetro regresivo con tiempo restante antes del límite máximo de espera. Botón "Llamar a Consultorio" con SVG Heroicons.
+- **Detalle Técnico:** Tarjetas de espera ordenadas por color MTS (Rojo al frente, luego Naranja, Amarillo, Verde, Azul) mostrando posición `#N` y ticket `TR-XXXXX`. Cronómetro regresivo con tiempo restante antes del límite máximo de espera. Botón "Llamar a Consultorio", botón de Clinical Override (`open-clinical-override`) y acciones selectivas sobre pacientes en estado `called`: "Ingresar a consulta", "Volver a espera" o "Cancelar / Ausente".
 
 #### 📌 CEN-43: [T4.2] Implementación de eventos y actualización reactiva de colas en Livewire
 - **Estado:** `[ ]` Por hacer | **Responsable:** Gabriel Pineda | **Estimación:** 4 SP
 - **Archivos Objetivo:** `app/Livewire/Doctor/MedicalQueue.php`.
-- **Detalle Técnico:** Actualización reactiva mediante eventos Livewire (`#[On('patient-triaged')]`, `wire:poll.5s`). Ordenamiento SQL nativo:
+- **Detalle Técnico:** Actualización reactiva mediante eventos Livewire (`#[On('patient-triaged')]`, `#[On('triage-overridden')]`, `wire:poll.5s` para sincronización entre terminales). Ordenamiento SQL nativo:
   `ORDER BY CASE final_priority WHEN 'red' THEN 1 WHEN 'orange' THEN 2 WHEN 'yellow' THEN 3 WHEN 'green' THEN 4 WHEN 'blue' THEN 5 END, created_at ASC`.
 
 #### 📌 CEN-44: [T4.3] Lógica de cambio de estados del paciente (Llamado, En Consulta, Atendido)
 - **Estado:** `[ ]` Por hacer | **Responsable:** Enrique M. González | **Estimación:** 4 SP
 - **Archivos Objetivo:** `app/Models/Triage.php`, `app/Models/Consultation.php`, `app/Enums/TriageStatus.php`.
-- **Detalle Técnico:** Transiciones válidas: `pending_consultation` ➔ `called` ➔ `in_consultation` ➔ `completed` / `referred_sipec`. Registro de timestamps `started_at` y `completed_at`.
+- **Detalle Técnico:** Agregar `CALLED = 'called'` en `TriageStatus`. Transiciones válidas: `pending_consultation` ➔ `called` ➔ `in_consultation` ➔ `completed` (con `Consultation` en `completed` / `referred_sipec`), más transiciones selectivas desde `called`: ➔ `pending_consultation` (devolver a cola conservando `created_at` FIFO) o ➔ `cancelled` (ausente/retirado, habilitando re-admisión futura). Registro de timestamps `started_at` y `completed_at`.
 
 #### 📌 CEN-45: [T4.5] Optimización de consultas a la cola de espera mediante índices compuestos
 - **Estado:** `[ ]` Por hacer | **Responsable:** Enrique M. González | **Estimación:** 3 SP
@@ -47,14 +79,14 @@
 #### 📌 CEN-46: [T4.6] Testing de flujo completo de sala de espera desde admisión hasta alta médica
 - **Estado:** `[ ]` Por hacer | **Responsable:** Gabriel Pineda | **Estimación:** 5 SP
 - **Archivos Objetivo:** `tests/Feature/MedicalQueueWorkflowTest.php`.
-- **Detalle Técnico:** Test E2E de ciclo de vida completo: Admisión ➔ Evaluación MTS ➔ Cola de Espera ➔ Llamado Médico ➔ Atención ➔ Cierre.
+- **Detalle Técnico:** Test E2E del flujo unificado real: Admisión+Triage (`/pacientes/nuevo`) ➔ Edición/Override en `/triage` ➔ Cola de Espera (`/consultas`) ➔ Llamado (`called` con retorno a espera y ausente) ➔ Atención (`in_consultation`) ➔ Cierre (`completed`).
 
 ### 📖 HU04: Registro Diagnóstico al Cierre de Consulta (`CEN-27`, 16 SP)
 
 #### 📌 CEN-47: [T4.4] Formulario de registro de diagnóstico presuntivo y cierre de consulta
 - **Estado:** `[ ]` Por hacer | **Responsable:** Valeria Budiño | **Estimación:** 8 SP
 - **Archivos Objetivo:** `app/Livewire/Doctor/ConsultationRoom.php`, `resources/views/livewire/doctor/consultation-room.blade.php`.
-- **Detalle Técnico:** Selección obligatoria de diagnóstico presuntivo estandarizado (Síndrome Febril Agudo inespecífico, Sospecha de Dengue, IRA, Gastroenteritis), campo de notas clínicas y prescripción. Al guardar, el paciente sale de la cola médica activa y se emite evento para telemetría.
+- **Detalle Técnico:** Visualización clínica de signos vitales, discriminadores y motivo de consulta cargados en `/pacientes/nuevo` (o editados en `/triage`), selección obligatoria de diagnóstico presuntivo estandarizado (Síndrome Febril Agudo inespecífico, Sospecha de Dengue, IRA, Gastroenteritis), campo de notas clínicas y prescripción. Al guardar, el triage pasa a `completed` (saliendo de la cola activa hacia el historial de `/triage`) y se emite evento para telemetría.
 
 ---
 

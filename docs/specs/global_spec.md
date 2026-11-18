@@ -16,8 +16,8 @@
 
 ### A. Autenticación y Matriz RBAC (4 Roles)
 Implementado mediante Enums nativos de PHP 8.3 (`App\Enums\UserRole`) desacoplados con Laravel Policies y Gates:
-1. **Admisión / Mesa de Entrada**: Registro demográfico de pacientes y apertura de guardia/consulta.
-2. **Enfermero de Triage (MTS)**: Clasificación clínica Manchester (5 niveles de prioridad).
+1. **Admisión / Mesa de Entrada**: Registro demográfico de pacientes junto con signos vitales iniciales y apertura de triage/guardia.
+2. **Enfermero de Triage (MTS)**: Admisión de pacientes, toma/edición de signos vitales, clasificación clínica Manchester (5 niveles de prioridad), seguimiento de espera/historial y reclasificación auditada.
 3. **Médico de Guardia**: Atención de la consulta médica, diagnóstico, prescripción y *Clinical Override*.
 4. **Autoridad Sanitaria / Director de CAPS**: Visualización epidemiológica agregada y métricas de atención.
 
@@ -51,9 +51,9 @@ Implementado mediante Enums nativos de PHP 8.3 (`App\Enums\UserRole`) desacoplad
 
 | Módulo | Directorio de la Spec | Estado | Subtareas / HUs Asociadas |
 | :--- | :--- | :--- | :--- |
-| **Autenticación y Roles** | `docs/specs/auth/spec.md` | *Implementado* | `CEN-10`, `CEN-14`, `CEN-15`, `CEN-16` (Sprint 2) |
+| **Autenticación y Roles** | `docs/specs/auth/spec.md` | *En Progreso* | `CEN-10`, `CEN-14`, `CEN-15`, `CEN-16` (Sprint 2), `CEN-73` (Sprint 4 Bugfix) |
 | **Design System y Layouts** | `docs/specs/ui/spec.md` | *Implementado* | `CEN-12` (Sprint 2) |
-| **Pacientes y Admisión** | `docs/specs/pacientes/spec.md` | *Implementado* | `CEN-24`, `CEN-34`, `CEN-36` (Sprint 3) |
-| **Triage MTS y Auditoría** | `docs/specs/triage/spec.md` | *Implementado* | `CEN-24`, `CEN-25`, `CEN-35` a `CEN-41` (Sprint 3) |
+| **Pacientes y Admisión** | `docs/specs/pacientes/spec.md` | *En Progreso* | `CEN-24`, `CEN-34`, `CEN-36` (Sprint 3), `CEN-72`–`CEN-78` (Sprint 4 Bugfix) |
+| **Triage MTS y Auditoría** | `docs/specs/triage/spec.md` | *En Progreso* | `CEN-24`, `CEN-25`, `CEN-35` a `CEN-41` (Sprint 3), `CEN-72`–`CEN-78` (Sprint 4 Bugfix) |
 | **Consultas Médicas** | `docs/specs/consultas/spec.md` | *En Progreso* | `CEN-26`, `CEN-27` (Sprint 4 Activo) |
 | **Geoespacial y Telemetría** | `docs/specs/geo/spec.md` | *Planificado* | `CEN-28` a `CEN-31` (Sprints 5 a 7) |
