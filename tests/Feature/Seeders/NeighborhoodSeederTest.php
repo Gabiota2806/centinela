@@ -103,7 +103,7 @@ class NeighborhoodSeederTest extends TestCase
 
         // Verificamos que contenga puntos representativos dentro de barrios oficiales
         $lote4 = Neighborhood::where('name', 'Lote 4')->firstOrFail();
-        
+
         // Obtenemos el centroide del polígono cargado y validamos que containingPoint lo resuelva
         $centroid = DB::selectOne(
             'SELECT ST_X(ST_Centroid(geometry)) as lon, ST_Y(ST_Centroid(geometry)) as lat FROM neighborhoods WHERE id = ?',

@@ -17,7 +17,6 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use LogicException;
 use Tests\TestCase;
 
 /**
@@ -68,7 +67,7 @@ class ModelRelationshipsAndCastsTest extends TestCase
 
     public function test_neighborhood_model_relationships(): void
     {
-        $neighborhood = new Neighborhood();
+        $neighborhood = new Neighborhood;
         $this->assertInstanceOf(HasMany::class, $neighborhood->patients());
         $this->assertInstanceOf(Patient::class, $neighborhood->patients()->getRelated());
     }
@@ -89,7 +88,7 @@ class ModelRelationshipsAndCastsTest extends TestCase
 
     public function test_triage_model_relationships_and_casts(): void
     {
-        $triage = new Triage();
+        $triage = new Triage;
 
         $this->assertInstanceOf(BelongsTo::class, $triage->patient());
         $this->assertInstanceOf(Patient::class, $triage->patient()->getRelated());
@@ -114,7 +113,7 @@ class ModelRelationshipsAndCastsTest extends TestCase
 
     public function test_consultation_model_relationships_and_casts(): void
     {
-        $consultation = new Consultation();
+        $consultation = new Consultation;
 
         $this->assertInstanceOf(BelongsTo::class, $consultation->triage());
         $this->assertInstanceOf(Triage::class, $consultation->triage()->getRelated());
@@ -131,7 +130,7 @@ class ModelRelationshipsAndCastsTest extends TestCase
 
     public function test_user_model_has_relationships_to_triage_and_consultations(): void
     {
-        $user = new User();
+        $user = new User;
 
         $this->assertInstanceOf(HasMany::class, $user->triages());
         $this->assertInstanceOf(Triage::class, $user->triages()->getRelated());
@@ -146,7 +145,7 @@ class ModelRelationshipsAndCastsTest extends TestCase
 
     public function test_triage_audit_log_model_relationships_and_casts(): void
     {
-        $log = new TriageAuditLog();
+        $log = new TriageAuditLog;
 
         $this->assertInstanceOf(BelongsTo::class, $log->triage());
         $this->assertInstanceOf(Triage::class, $log->triage()->getRelated());
@@ -166,7 +165,7 @@ class ModelRelationshipsAndCastsTest extends TestCase
         $this->expectException(ImmutableModelException::class);
         $this->expectExceptionMessage('Los registros de auditoría de Clinical Override son estrictamente inmutables y no pueden modificarse.');
 
-        $log = new TriageAuditLog();
+        $log = new TriageAuditLog;
         $log->exists = true; // Simular que ya está persistido
         $log->override_reason = 'Nueva justificación intentada';
         $log->save();
@@ -177,7 +176,7 @@ class ModelRelationshipsAndCastsTest extends TestCase
         $this->expectException(ImmutableModelException::class);
         $this->expectExceptionMessage('Los registros de auditoría de Clinical Override son estrictamente inmutables y no pueden eliminarse.');
 
-        $log = new TriageAuditLog();
+        $log = new TriageAuditLog;
         $log->exists = true; // Simular que ya está persistido
         $log->delete();
     }

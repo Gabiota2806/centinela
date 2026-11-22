@@ -12,6 +12,7 @@ use App\Models\Patient;
 use App\Models\Triage;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -87,7 +88,7 @@ class PrintTicketTest extends TestCase
 
     public function test_la_hora_de_ingreso_se_muestra_en_hora_local_de_formosa(): void
     {
-        $this->travelTo(\Illuminate\Support\Carbon::parse('2026-11-16 21:28:00', 'UTC'));
+        $this->travelTo(Carbon::parse('2026-11-16 21:28:00', 'UTC'));
         $triage = $this->triage();
 
         Livewire::actingAs(User::factory()->triageNurse()->create())

@@ -10,6 +10,7 @@ use App\Livewire\Triage\EvaluatePatient;
 use App\Models\Patient;
 use App\Models\Triage;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -163,7 +164,7 @@ class EvaluatePatientTest extends TestCase
         $component = Livewire::actingAs($nurse)
             ->test(EvaluatePatient::class);
 
-        /** @var \Illuminate\Database\Eloquent\Collection<int, Patient> $patients */
+        /** @var Collection<int, Patient> $patients */
         $patients = $component->viewData('availablePatients');
         $this->assertNotEmpty($patients);
         $this->assertTrue($patients->first()->relationLoaded('neighborhood'));

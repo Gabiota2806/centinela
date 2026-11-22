@@ -10,6 +10,7 @@ use App\Models\Neighborhood;
 use App\Models\Patient;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -38,7 +39,7 @@ class CreatePatientTest extends TestCase
         ];
     }
 
-    private function completar(\Livewire\Features\SupportTesting\Testable $form, array $datos): \Livewire\Features\SupportTesting\Testable
+    private function completar(Testable $form, array $datos): Testable
     {
         foreach ($datos as $campo => $valor) {
             $form->set($campo, $valor);

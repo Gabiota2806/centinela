@@ -7,6 +7,7 @@ namespace Tests\Feature\Triage;
 use App\Enums\TriagePriority;
 use App\Livewire\Triage\ClinicalOverrideModal;
 use App\Livewire\Triage\EvaluatePatient;
+use App\Livewire\Triage\PrintTicket;
 use App\Models\Patient;
 use App\Models\Triage;
 use App\Models\TriageAuditLog;
@@ -177,7 +178,7 @@ class ClinicalOverrideModalTest extends TestCase
         $triage = $this->triage();
 
         Livewire::actingAs(User::factory()->triageNurse()->create())
-            ->test(\App\Livewire\Triage\PrintTicket::class)
+            ->test(PrintTicket::class)
             ->dispatch('triage-saved', triageId: $triage->id)
             ->assertSee('Reclasificar prioridad')
             ->call('reclassify')

@@ -47,7 +47,7 @@ class PostgisConnectionTest extends TestCase
     public function test_postgis_spatial_geometry_functions_work(): void
     {
         // Coordinates for Formosa Capital (-58.1739, -26.1849)
-        $point = DB::selectOne("SELECT ST_AsText(ST_SetSRID(ST_MakePoint(-58.1739, -26.1849), 4326)) as wkt")->wkt;
+        $point = DB::selectOne('SELECT ST_AsText(ST_SetSRID(ST_MakePoint(-58.1739, -26.1849), 4326)) as wkt')->wkt;
 
         $this->assertSame('POINT(-58.1739 -26.1849)', $point);
     }
