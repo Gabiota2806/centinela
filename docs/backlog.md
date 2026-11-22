@@ -29,7 +29,7 @@
 - **Detalle Técnico:** Sumar `UserRole::TRIAGE_NURSE` a `access-admission` (alineado con `admit-patient` y relevamiento CAPS Codda). Habilitar `PrintTicket` para `access-admission` || `access-triage` manteniendo `ClinicalOverrideModal` solo bajo `access-triage`. Reemplazar el placeholder de `/pacientes` por el componente `PatientDirectory` (padrón/buscador por DNI/nombre con enlace directo a `/pacientes/nuevo?dni=...`).
 
 #### 📌 CEN-74: [T4.B2] Admisión + Triage unificados en /pacientes/nuevo (DNI recurrente, bloqueo activo y signos obligatorios)
-- **Estado:** `[ ]` Por hacer | **Responsable:** Gabriel Pineda | **Estimación:** 5 SP
+- **Estado:** `[x]` Listo | **Responsable:** Gabriel Pineda | **Estimación:** 5 SP
 - **Archivos Objetivo:** `app/Livewire/Patients/CreatePatient.php`, `resources/views/livewire/patients/create-patient.blade.php`, `resources/views/patients/create.blade.php`.
 - **Detalle Técnico:** Búsqueda/precarga editable por DNI (incluyendo `withTrashed()`), bloqueo si el paciente posee triage activo (`pending_consultation`, `called`, `in_consultation`) alertando con el `#TR-XXXXX` activo. Carga obligatoria de los 6 signos vitales y motivo de consulta ubicado antes de los discriminadores MTS opcionales, con panel sticky MTS en vivo y persistencia atómica `Patient` + `Triage` en `DB::transaction`.
 
