@@ -11,7 +11,6 @@ use App\Models\TriageAuditLog;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use InvalidArgumentException;
-use LogicException;
 use Tests\TestCase;
 
 /**

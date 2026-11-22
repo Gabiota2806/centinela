@@ -21,7 +21,7 @@ class NeighborhoodFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->city() . ' Centro',
+            'name' => fake()->city().' Centro',
             'geometry' => DB::raw("ST_SetSRID(ST_GeomFromText('POLYGON((-58.18 -26.18, -58.17 -26.18, -58.17 -26.19, -58.18 -26.19, -58.18 -26.18))'), 4326)"),
             'risk_level' => 'normal',
         ];

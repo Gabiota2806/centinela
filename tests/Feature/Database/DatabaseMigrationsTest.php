@@ -4,6 +4,14 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Database;
 
+use App\Enums\ConsultationStatus;
+use App\Enums\TriagePriority;
+use App\Models\Consultation;
+use App\Models\Neighborhood;
+use App\Models\Patient;
+use App\Models\Triage;
+use App\Models\TriageAuditLog;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -58,7 +66,7 @@ class DatabaseMigrationsTest extends TestCase
         ");
 
         $this->assertNotNull($geomInfo, "La columna 'geometry' debe estar registrada en geometry_columns de PostGIS.");
-        $this->assertEquals(4326, $geomInfo->srid, "El SRID de la geometría de neighborhoods debe ser 4326.");
+        $this->assertEquals(4326, $geomInfo->srid, 'El SRID de la geometría de neighborhoods debe ser 4326.');
 
         // Verificar que exista el índice espacial GIST sobre geometry
         $indexInfo = DB::selectOne("
@@ -97,7 +105,7 @@ class DatabaseMigrationsTest extends TestCase
               AND indexdef LIKE '%UNIQUE%(dni)%'
         ");
 
-        $this->assertNotNull($dniIndex, "Debe existir un índice UNIQUE en patients.dni.");
+        $this->assertNotNull($dniIndex, 'Debe existir un índice UNIQUE en patients.dni.');
     }
 
     /**
@@ -176,51 +184,51 @@ class DatabaseMigrationsTest extends TestCase
      */
     public function test_can_persist_and_retrieve_all_models_with_relationships(): void
     {
-        $nurse = \App\Models\User::factory()->triageNurse()->create();
-        $doctor = \App\Models\User::factory()->doctor()->create();
+        $nurse = User::factory()->triageNurse()->create();
+        $doctor = User::factory()->doctor()->create();
 
-        $neighborhood = \App\Models\Neighborhood::factory()->create([
+        $neighborhood = Neighborhood::factory()->create([
             'name' => 'San Miguel',
             'risk_level' => 'alto',
         ]);
 
-        $patient = \App\Models\Patient::factory()->create([
+        $patient = Patient::factory()->create([
             'dni' => '12345678',
             'first_name' => 'María',
             'last_name' => 'González',
             'neighborhood_id' => $neighborhood->id,
         ]);
 
-        $triage = \App\Models\Triage::factory()->create([
+        $triage = Triage::factory()->create([
             'patient_id' => $patient->id,
             'user_id' => $nurse->id,
-            'algorithmic_priority' => \App\Enums\TriagePriority::GREEN,
-            'final_priority' => \App\Enums\TriagePriority::ORANGE,
+            'algorithmic_priority' => TriagePriority::GREEN,
+            'final_priority' => TriagePriority::ORANGE,
             'is_override' => true,
             'target_wait_minutes' => 10,
         ]);
 
-        $auditLog = \App\Models\TriageAuditLog::factory()->create([
+        $auditLog = TriageAuditLog::factory()->create([
             'triage_id' => $triage->id,
             'user_id' => $doctor->id,
-            'original_priority' => \App\Enums\TriagePriority::GREEN,
-            'overridden_priority' => \App\Enums\TriagePriority::ORANGE,
+            'original_priority' => TriagePriority::GREEN,
+            'overridden_priority' => TriagePriority::ORANGE,
             'override_reason' => 'Signos de dificultad respiratoria aguda constatados por guardia.',
         ]);
 
-        $consultation = \App\Models\Consultation::factory()->create([
+        $consultation = Consultation::factory()->create([
             'triage_id' => $triage->id,
             'doctor_id' => $doctor->id,
-            'status' => \App\Enums\ConsultationStatus::IN_PROGRESS,
+            'status' => ConsultationStatus::IN_PROGRESS,
         ]);
 
         // Cargar desde la base de datos con relaciones
-        $freshTriage = \App\Models\Triage::with(['patient.neighborhood', 'user', 'auditLogs', 'consultation.doctor'])
+        $freshTriage = Triage::with(['patient.neighborhood', 'user', 'auditLogs', 'consultation.doctor'])
             ->findOrFail($triage->id);
 
         $this->assertSame('María González', $freshTriage->patient->full_name);
         $this->assertSame('San Miguel', $freshTriage->patient->neighborhood->name);
-        $this->assertSame(\App\Enums\TriagePriority::ORANGE, $freshTriage->final_priority);
+        $this->assertSame(TriagePriority::ORANGE, $freshTriage->final_priority);
         $this->assertTrue($freshTriage->is_override);
         $this->assertCount(1, $freshTriage->auditLogs);
         $this->assertSame($auditLog->id, $freshTriage->auditLogs->first()->id);

@@ -1,0 +1,122 @@
+name: CI — Calidad, Build y Pruebas
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Estándar de código PHP (Laravel Pint)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar PHP 8.5 y Composer
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          tools: composer:v2
+          coverage: none
+
+      - name: Instalar dependencias PHP
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Verificar estilo de código con Laravel Pint
+        run: ./vendor/bin/pint --test -v
+
+  build:
+    name: Build de assets frontend (Vite + Tailwind)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Instalar dependencias JS
+        run: npm ci
+
+      - name: Compilar assets de producción
+        run: npm run build
+
+      - name: Publicar artefacto de build frontend
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: public/build
+          retention-days: 1
+
+  tests:
+    name: Suite PHPUnit 12 + PostgreSQL 18 / PostGIS 3.7
+    runs-on: ubuntu-latest
+    needs: [build]
+
+    services:
+      postgres:
+        image: postgis/postgis:18-3.7
+        env:
+          POSTGRES_DB: centinela
+          POSTGRES_USER: centinela
+          POSTGRES_PASSWORD: centinela_secret
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U centinela -d centinela"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar PHP 8.5 y extensiones requeridas
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: pdo_pgsql, pgsql, mbstring, xml, curl, zip, intl, bcmath, opcache
+          ini-values: opcache.enable_cli=1
+          tools: composer:v2
+          coverage: none
+
+      - name: Instalar dependencias PHP
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Descargar artefacto de build frontend
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: public/build
+
+      - name: Preparar entorno de aplicación
+        run: |
+          cp .env.example .env
+          sed -i 's/^DB_HOST=.*/DB_HOST=127.0.0.1/' .env
+          php artisan key:generate
+
+      - name: Inicializar base de datos aislada de testing (PostGIS + esquema centinela)
+        env:
+          PGPASSWORD: centinela_secret
+        run: |
+          command -v psql >/dev/null 2>&1 || (sudo apt-get update && sudo apt-get install -y postgresql-client)
+          psql -h 127.0.0.1 -U centinela -d centinela -f docker/init-testing-db.sql
+
+      - name: Ejecutar suite completa de pruebas (PHPUnit 12)
+        env:
+          DB_HOST: 127.0.0.1
+        run: php artisan test
