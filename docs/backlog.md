@@ -34,7 +34,7 @@
 - **Detalle Técnico:** Búsqueda/precarga editable por DNI (incluyendo `withTrashed()`), bloqueo si el paciente posee triage activo (`pending_consultation`, `called`, `in_consultation`) alertando con el `#TR-XXXXX` activo. Carga obligatoria de los 6 signos vitales y motivo de consulta ubicado antes de los discriminadores MTS opcionales, con panel sticky MTS en vivo y persistencia atómica `Patient` + `Triage` en `DB::transaction`.
 
 #### 📌 CEN-75: [T4.B3] Cálculo y visualización de posición estimada en lista de espera (#N) en confirmación y ticket 80 mm
-- **Estado:** `[ ]` Por hacer | **Responsable:** Gabriel Pineda | **Estimación:** 3 SP
+- **Estado:** `[x]` Listo | **Responsable:** Gabriel Pineda | **Estimación:** 3 SP
 - **Archivos Objetivo:** `app/Models/Triage.php`, `app/Livewire/Patients/CreatePatient.php`, `app/Livewire/Triage/PrintTicket.php`, `resources/views/livewire/triage/ticket-modal.blade.php`.
 - **Detalle Técnico:** Método en `Triage` para calcular la posición estimada `#N` dentro de `pending_consultation` (jerarquía MTS + FIFO `created_at`/`id`), mostrado en la confirmación de alta de `/pacientes/nuevo` y en el ticket digital/80 mm con nota de posición dinámica al ingreso, recalculando tras override/edición.
 

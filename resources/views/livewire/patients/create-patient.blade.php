@@ -25,6 +25,11 @@
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold {{ $createdPriorityBadgeClasses }}">
                         {{ $createdPriorityLabel }}
                     </span>
+                    @if ($createdQueuePosition !== null)
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-brand-50 text-brand-petroleo border border-brand-turquesa/40">
+                            Posición estimada en espera: #{{ $createdQueuePosition }}
+                        </span>
+                    @endif
                 </div>
                 <p class="mt-1 text-sm text-ink">
                     {{ $createdPatientName }} · DNI {{ $createdPatientDni }} · Espera máxima: {{ $createdTargetWaitMinutes }} min

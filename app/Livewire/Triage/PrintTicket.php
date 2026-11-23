@@ -34,7 +34,17 @@ class PrintTicket extends Component
 
         $this->triageId = $triageId;
         $this->show = true;
-        unset($this->triage);
+        unset($this->triage, $this->queuePosition);
+    }
+
+    /**
+     * Recalcula datos y posición estimada en cola tras un Clinical Override o edición.
+     */
+    #[On('triage-overridden')]
+    #[On('triage-updated')]
+    public function refreshTicket(?int $triageId = null): void
+    {
+        unset($this->triage, $this->queuePosition);
     }
 
     /**
@@ -65,6 +75,15 @@ class PrintTicket extends Component
         }
 
         return Triage::with(['patient.neighborhood', 'user'])->find($this->triageId);
+    }
+
+    /**
+     * Posición estimada (#N) dentro de la lista de espera activa (pending_consultation).
+     */
+    #[Computed]
+    public function queuePosition(): ?int
+    {
+        return $this->triage?->estimatedQueuePosition();
     }
 
     /**

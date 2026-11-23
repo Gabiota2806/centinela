@@ -11,7 +11,7 @@
   - [x] `CEN-40` (Desarrollo de la tabla inmutable triage_audit_logs y lógica de reclasificación)
   - [x] `CEN-41` (Testing de casos de discrepancia y reordenamiento de cola por override clínico)
   - [ ] `CEN-73` / `T4.B1` (Permiso de PrintTicket desde admisión manteniendo Override bajo `access-triage`)
-  - [ ] `CEN-75` / `T4.B3` (Cálculo y visualización de posición estimada `#N` en cola y ticket 80 mm)
+  - [x] `CEN-75` / `T4.B3` (Cálculo y visualización de posición estimada `#N` en cola y ticket 80 mm)
   - [ ] `CEN-76` / `T4.B4` (Evolución de `/triage`: búsqueda por DNI, pestaña "En espera" con edición auditada y pestaña "Historial")
   - [ ] `CEN-77` / `T4.B5` (Remediación UI de unidades `pr-*`/`pointer-events-none`, `wire:target="save"` y tokens de error)
   - [ ] `CEN-78` / `T4.B6` (Suite de pruebas Feature/Livewire para flujo unificado y gestión en `/triage`)
@@ -41,7 +41,7 @@ Asimismo, contempla el mecanismo de **Clinical Override** (reclasificación méd
 - **RF-TRIAGE-11 (CEN-39):** El modal debe ofrecer "Justificación diferida (emergencia crítica)" para guardar el nuevo nivel en un clic, sin redactar el motivo. La auditoría inmutable registra el motivo como pendiente de redacción. La persistencia usa `Triage::overridePriority()` (CEN-40), conservando `algorithmic_priority` y recalculando `target_wait_minutes`. En la pantalla de triage el override se ofrece desde la confirmación del último registro y desde el ticket, y ambos reflejan la nueva prioridad.
 - [ ] **RF-TRIAGE-12 (CEN-76):** La vista `/triage` debe ofrecer un buscador reactivo por DNI o nombre y dos pestañas: **"En espera"** (registros `pending_consultation` con su posición `#N` y registros `called` con badge "Llamado") e **"Historial"** (registros `in_consultation`, `completed` y `cancelled` filtrables por DNI/nombre).
 - [ ] **RF-TRIAGE-13 (CEN-76):** Desde la pestaña **"En espera"**, los roles con `access-triage` deben poder editar los signos vitales, el motivo de consulta y los discriminadores de un triage pendiente (`pending_consultation`), recalculando la prioridad MTS; si la prioridad final cambia, el sistema debe registrar una entrada inmutable en `triage_audit_logs` conservando la trazabilidad.
-- [ ] **RF-TRIAGE-14 (CEN-75):** El sistema debe calcular y exponer la posición estimada en lista de espera (`#N` dentro de `pending_consultation` según jerarquía MTS y FIFO `created_at`/`id`) en la confirmación de `/pacientes/nuevo`, en el ticket digital/80 mm (`PrintTicket`) —aclarando que puede variar según urgencias entrantes— y actualizarla tras un override o edición.
+- [x] **RF-TRIAGE-14 (CEN-75):** El sistema debe calcular y exponer la posición estimada en lista de espera (`#N` dentro de `pending_consultation` según jerarquía MTS y FIFO `created_at`/`id`) en la confirmación de `/pacientes/nuevo`, en el ticket digital/80 mm (`PrintTicket`) —aclarando que puede variar según urgencias entrantes— y actualizarla tras un override o edición.
 - [ ] **RF-TRIAGE-15 (CEN-77):** Los campos de signos vitales en `/pacientes/nuevo` y `/triage` deben reservar padding derecho (`pr-9` para `°C`/`%`, `pr-12` para `lpm`/`rpm`, `pr-14` para `mmHg`) con `pointer-events-none` en la unidad, aislar el estado de carga del botón principal con `wire:target="save"` y utilizar los tokens de error de `docs/specs/ui/spec.md`.
 
 ---
@@ -164,7 +164,7 @@ Escenario: Posición estimada en lista de espera y corrección UI en signos vita
 - [x] `CEN-40` / `T3.6`: Desarrollo de la tabla inmutable triage_audit_logs y lógica de reclasificación (SP: 4).
 - [x] `CEN-41` / `T3.8`: Testing de casos de discrepancia y reordenamiento de cola por override clínico (SP: 8).
 - [ ] `CEN-73` / `T4.B1`: Permiso de `PrintTicket` para `access-admission` manteniendo Override bajo `access-triage` (SP: 3).
-- [ ] `CEN-75` / `T4.B3`: Cálculo y visualización de posición estimada `#N` en cola y ticket 80 mm (SP: 3).
+- [x] `CEN-75` / `T4.B3`: Cálculo y visualización de posición estimada `#N` en cola y ticket 80 mm (SP: 3).
 - [ ] `CEN-76` / `T4.B4`: Evolución de `/triage` con buscador por DNI, pestaña "En espera" (edición con auditoría) y pestaña "Historial" (SP: 5).
 - [ ] `CEN-77` / `T4.B5`: Remediación UI/UX de campos de signos vitales, estados de carga y tokens MTS (SP: 2).
 - [ ] `CEN-78` / `T4.B6`: Suite de pruebas Feature/Livewire para flujo unificado, bloqueo activo y gestión en `/triage` (SP: 3).

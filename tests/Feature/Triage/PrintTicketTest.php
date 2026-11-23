@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Triage;
 
 use App\Enums\TriagePriority;
+use App\Enums\TriageStatus;
 use App\Livewire\Triage\EvaluatePatient;
 use App\Livewire\Triage\PrintTicket;
 use App\Models\Neighborhood;
@@ -212,5 +213,91 @@ class PrintTicketTest extends TestCase
             ->get('/triage')
             ->assertOk()
             ->assertSeeLivewire(PrintTicket::class);
+    }
+
+    public function test_el_ticket_muestra_la_posicion_estimada_en_espera_y_nota_dinamica_y_la_actualiza_tras_override(): void
+    {
+        $enfermera = User::factory()->triageNurse()->create();
+
+        // 1 paciente Rojo (#1) y 1 paciente Verde previo (#2) en espera
+        Triage::factory()->create([
+            'user_id' => $enfermera->id,
+            'algorithmic_priority' => TriagePriority::RED,
+            'final_priority' => TriagePriority::RED,
+            'status' => TriageStatus::PENDING_CONSULTATION,
+            'created_at' => now()->subMinutes(20),
+        ]);
+
+        Triage::factory()->create([
+            'user_id' => $enfermera->id,
+            'algorithmic_priority' => TriagePriority::GREEN,
+            'final_priority' => TriagePriority::GREEN,
+            'status' => TriageStatus::PENDING_CONSULTATION,
+            'created_at' => now()->subMinutes(10),
+        ]);
+
+        // Nuevo triage Verde (#3)
+        $triage = $this->triage(TriagePriority::GREEN);
+
+        $componente = Livewire::actingAs($enfermera)
+            ->test(PrintTicket::class)
+            ->dispatch('triage-saved', triageId: $triage->id)
+            ->assertSet('show', true)
+            ->assertSee('Posición estimada en espera: #3')
+            ->assertSee('puede variar según urgencias clínicas entrantes')
+            ->assertSeeHtml('data-queue-position="3"');
+
+        // Al reclasificar a Naranja por Clinical Override, sube al puesto #2 (detrás del Rojo)
+        $triage->overridePriority(
+            TriagePriority::ORANGE,
+            'Deterioro clínico observado en sala de espera.',
+            $enfermera
+        );
+
+        $componente->dispatch('triage-overridden', triageId: $triage->id)
+            ->assertSee('Posición estimada en espera: #2')
+            ->assertSeeHtml('data-queue-position="2"')
+            ->assertSee(TriagePriority::ORANGE->label());
+    }
+
+    public function test_el_ticket_no_muestra_posicion_en_espera_si_el_triage_ya_fue_completado(): void
+    {
+        $triage = $this->triage(TriagePriority::YELLOW);
+        $triage->update(['status' => TriageStatus::COMPLETED]);
+
+        $this->assertNull($triage->estimatedQueuePosition());
+
+        Livewire::actingAs(User::factory()->triageNurse()->create())
+            ->test(PrintTicket::class)
+            ->dispatch('triage-saved', triageId: $triage->id)
+            ->assertSet('show', true)
+            ->assertDontSee('Posición estimada en espera:');
+    }
+
+    public function test_la_posicion_estimada_coincide_con_el_orden_de_la_cola_medica_incluido_desempate_por_id(): void
+    {
+        $momento = now()->subMinutes(5);
+        $prioridades = [
+            TriagePriority::GREEN,
+            TriagePriority::RED,
+            TriagePriority::GREEN,
+            TriagePriority::YELLOW,
+            TriagePriority::RED,
+        ];
+
+        foreach ($prioridades as $prioridad) {
+            Triage::factory()->create([
+                'algorithmic_priority' => $prioridad,
+                'final_priority' => $prioridad,
+                'status' => TriageStatus::PENDING_CONSULTATION,
+                'created_at' => $momento,
+            ]);
+        }
+
+        $ordenEsperado = Triage::query()->medicalQueue()->pluck('id')->all();
+
+        foreach ($ordenEsperado as $indice => $id) {
+            $this->assertSame($indice + 1, Triage::findOrFail($id)->estimatedQueuePosition());
+        }
     }
 }

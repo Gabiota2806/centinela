@@ -119,6 +119,8 @@ class CreatePatient extends Component
 
     public int $createdTargetWaitMinutes = 240;
 
+    public ?int $createdQueuePosition = null;
+
     /**
      * @return array<string, mixed>
      */
@@ -402,6 +404,7 @@ class CreatePatient extends Component
         $this->createdPriorityLabel = $priority->label();
         $this->createdPriorityBadgeClasses = $priority->badgeClasses();
         $this->createdTargetWaitMinutes = $evaluation['target_wait_minutes'];
+        $this->createdQueuePosition = $triage->estimatedQueuePosition();
 
         session()->flash('status', "Paciente y triage registrados: {$patient->full_name} (DNI {$patient->dni}) · Ticket #{$this->createdTicketNumber}.");
 
@@ -421,16 +424,18 @@ class CreatePatient extends Component
     }
 
     /**
-     * Refleja en la confirmación la prioridad reclasificada si se ejecuta un Clinical Override.
+     * Refleja en la confirmación la prioridad reclasificada y la nueva posición estimada
+     * en cola si se ejecuta un Clinical Override o actualización de triage.
      */
     #[On('triage-overridden')]
-    public function onTriageOverridden(int $triageId): void
+    #[On('triage-updated')]
+    public function onTriageOverridden(?int $triageId = null): void
     {
-        if ($triageId !== $this->createdTriageId) {
+        if ($this->createdTriageId === null) {
             return;
         }
 
-        $triage = Triage::find($triageId);
+        $triage = Triage::find($this->createdTriageId);
         if ($triage === null) {
             return;
         }
@@ -438,6 +443,7 @@ class CreatePatient extends Component
         $this->createdPriorityLabel = $triage->final_priority->label();
         $this->createdPriorityBadgeClasses = $triage->final_priority->badgeClasses();
         $this->createdTargetWaitMinutes = $triage->target_wait_minutes;
+        $this->createdQueuePosition = $triage->estimatedQueuePosition();
     }
 
     /**
@@ -525,6 +531,7 @@ class CreatePatient extends Component
             'createdPriorityLabel',
             'createdPriorityBadgeClasses',
             'createdTargetWaitMinutes',
+            'createdQueuePosition',
         ]);
     }
 

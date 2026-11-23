@@ -91,16 +91,24 @@ class Triage extends Model
      */
     public function scopeOrderedByPriority(Builder $query): Builder
     {
-        return $query->orderByRaw(
-            "CASE final_priority
+        return $query->orderByRaw(self::priorityRankSql('final_priority').' ASC')
+            ->orderBy('created_at', 'asc')
+            ->orderBy('id', 'asc');
+    }
+
+    /**
+     * Expresión SQL que traduce la prioridad MTS a su rango clínico (1 = Rojo ... 5 = Azul).
+     */
+    private static function priorityRankSql(string $column): string
+    {
+        return "CASE {$column}
                 WHEN 'red' THEN 1
                 WHEN 'orange' THEN 2
                 WHEN 'yellow' THEN 3
                 WHEN 'green' THEN 4
                 WHEN 'blue' THEN 5
                 ELSE 6
-            END ASC"
-        )->orderBy('created_at', 'asc')->orderBy('id', 'asc');
+            END";
     }
 
     /**
@@ -114,6 +122,39 @@ class Triage extends Model
         return $query
             ->where('status', TriageStatus::PENDING_CONSULTATION)
             ->orderedByPriority();
+    }
+
+    /**
+     * Calcula la posición estimada (1-based, #N) del triage dentro de la cola
+     * activa en espera de consulta (pending_consultation) según jerarquía MTS
+     * y orden de llegada FIFO (created_at ASC, id ASC).
+     *
+     * Retorna null si el registro aún no fue persistido o ya no está en espera.
+     */
+    public function estimatedQueuePosition(): ?int
+    {
+        if ($this->id === null) {
+            return null;
+        }
+
+        $pending = TriageStatus::PENDING_CONSULTATION->value;
+        $otherRank = self::priorityRankSql('o.final_priority');
+        $selfRank = self::priorityRankSql('t.final_priority');
+
+        // Cuenta en una sola consulta los triages en espera que preceden a este
+        // (rango MTS, created_at, id), usando los valores persistidos en la BD.
+        $row = DB::selectOne(
+            "SELECT COUNT(o.id) + 1 AS position
+               FROM triages t
+               LEFT JOIN triages o
+                 ON o.status = ?
+                AND ({$otherRank}, o.created_at, o.id) < ({$selfRank}, t.created_at, t.id)
+              WHERE t.id = ? AND t.status = ?
+              GROUP BY t.id",
+            [$pending, $this->id, $pending]
+        );
+
+        return $row === null ? null : (int) $row->position;
     }
 
     /**
