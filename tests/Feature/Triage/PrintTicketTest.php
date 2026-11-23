@@ -273,4 +273,31 @@ class PrintTicketTest extends TestCase
             ->assertSet('show', true)
             ->assertDontSee('Posición estimada en espera:');
     }
+
+    public function test_la_posicion_estimada_coincide_con_el_orden_de_la_cola_medica_incluido_desempate_por_id(): void
+    {
+        $momento = now()->subMinutes(5);
+        $prioridades = [
+            TriagePriority::GREEN,
+            TriagePriority::RED,
+            TriagePriority::GREEN,
+            TriagePriority::YELLOW,
+            TriagePriority::RED,
+        ];
+
+        foreach ($prioridades as $prioridad) {
+            Triage::factory()->create([
+                'algorithmic_priority' => $prioridad,
+                'final_priority' => $prioridad,
+                'status' => TriageStatus::PENDING_CONSULTATION,
+                'created_at' => $momento,
+            ]);
+        }
+
+        $ordenEsperado = Triage::query()->medicalQueue()->pluck('id')->all();
+
+        foreach ($ordenEsperado as $indice => $id) {
+            $this->assertSame($indice + 1, Triage::findOrFail($id)->estimatedQueuePosition());
+        }
+    }
 }
