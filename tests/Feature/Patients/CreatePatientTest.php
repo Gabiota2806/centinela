@@ -433,4 +433,80 @@ class CreatePatientTest extends TestCase
             'status' => TriageStatus::PENDING_CONSULTATION->value,
         ]);
     }
+
+    public function test_calcula_y_muestra_posicion_estimada_en_cola_segun_jerarquia_mts_y_fifo_y_recalcula_tras_override(): void
+    {
+        $user = User::factory()->admission()->create();
+        $doctor = User::factory()->doctor()->create();
+        $barrio = Neighborhood::factory()->create(['name' => 'San Miguel']);
+
+        // 1 paciente Rojo en espera (#1)
+        $triageRojo = Triage::factory()->create([
+            'user_id' => $user->id,
+            'algorithmic_priority' => TriagePriority::RED,
+            'final_priority' => TriagePriority::RED,
+            'status' => TriageStatus::PENDING_CONSULTATION,
+            'created_at' => now()->subMinutes(15),
+        ]);
+
+        // 1 paciente Verde previo en espera (#2)
+        $triageVerdePrevio = Triage::factory()->create([
+            'user_id' => $user->id,
+            'algorithmic_priority' => TriagePriority::GREEN,
+            'final_priority' => TriagePriority::GREEN,
+            'status' => TriageStatus::PENDING_CONSULTATION,
+            'created_at' => now()->subMinutes(10),
+        ]);
+
+        // 1 paciente Azul en espera (irá detrás del nuevo Verde)
+        $triageAzul = Triage::factory()->create([
+            'user_id' => $user->id,
+            'algorithmic_priority' => TriagePriority::BLUE,
+            'final_priority' => TriagePriority::BLUE,
+            'status' => TriageStatus::PENDING_CONSULTATION,
+            'created_at' => now()->subMinutes(20),
+        ]);
+
+        // 1 paciente Rojo ya en consulta (no cuenta en pending_consultation)
+        Triage::factory()->create([
+            'user_id' => $user->id,
+            'algorithmic_priority' => TriagePriority::RED,
+            'final_priority' => TriagePriority::RED,
+            'status' => TriageStatus::IN_CONSULTATION,
+            'created_at' => now()->subMinutes(25),
+        ]);
+
+        // Nuevo ingreso con febrícula leve (38.0°C -> prioridad Verde)
+        $datos = array_merge($this->datosValidos($barrio), [
+            'temperature' => '38.0',
+            'symptoms' => 'Febrícula de 12 horas sin signos de alarma.',
+        ]);
+
+        $form = $this->completar(Livewire::actingAs($user)->test(CreatePatient::class), $datos)
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $nuevoTriage = Triage::whereHas('patient', fn ($q) => $q->where('dni', '23456789'))->firstOrFail();
+
+        $this->assertSame(TriagePriority::GREEN, $nuevoTriage->final_priority);
+        $this->assertSame(1, $triageRojo->estimatedQueuePosition());
+        $this->assertSame(2, $triageVerdePrevio->estimatedQueuePosition());
+        $this->assertSame(3, $nuevoTriage->estimatedQueuePosition());
+        $this->assertSame(4, $triageAzul->estimatedQueuePosition());
+
+        $form->assertSet('createdQueuePosition', 3)
+            ->assertSee('Posición estimada en espera: #3');
+
+        // Si se ejecuta Clinical Override del nuevo triage a Naranja, pasa al #2 (detrás del Rojo y delante del Verde previo)
+        $nuevoTriage->overridePriority(
+            TriagePriority::ORANGE,
+            'Taquicardia progresiva y dolor abdominal agudo en sala de espera.',
+            $doctor
+        );
+
+        $form->dispatch('triage-overridden', triageId: $nuevoTriage->id)
+            ->assertSet('createdQueuePosition', 2)
+            ->assertSee('Posición estimada en espera: #2')
+            ->assertSee(TriagePriority::ORANGE->label());
+    }
 }

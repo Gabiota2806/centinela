@@ -117,6 +117,37 @@ class Triage extends Model
     }
 
     /**
+     * Calcula la posición estimada (1-based, #N) del triage dentro de la cola
+     * activa en espera de consulta (pending_consultation) según jerarquía MTS
+     * y orden de llegada FIFO (created_at ASC, id ASC).
+     *
+     * Retorna null si el registro aún no fue persistido o ya no está en espera.
+     */
+    public function estimatedQueuePosition(): ?int
+    {
+        if ($this->id === null) {
+            return null;
+        }
+
+        $orderedIds = static::query()
+            ->medicalQueue()
+            ->pluck('id')
+            ->all();
+
+        $index = array_search($this->id, $orderedIds, true);
+
+        return $index === false ? null : ((int) $index + 1);
+    }
+
+    /**
+     * Alias semántico de estimatedQueuePosition().
+     */
+    public function queuePosition(): ?int
+    {
+        return $this->estimatedQueuePosition();
+    }
+
+    /**
      * Aplica un Clinical Override manual sobre la prioridad del paciente,
      * actualizando final_priority, activando is_override = true, recalculando
      * target_wait_minutes y persistiendo el registro inmutable en triage_audit_logs.

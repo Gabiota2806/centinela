@@ -4,6 +4,7 @@
             $triage = $this->triage;
             $priority = $triage->final_priority;
             $wait = $triage->target_wait_minutes;
+            $queuePosition = $this->queuePosition;
         @endphp
 
         <div class="fixed inset-0 z-50 flex items-start sm:items-center justify-center overflow-y-auto bg-brand-noche/60 p-4"
@@ -37,6 +38,18 @@
                             </p>
                         </div>
                     </div>
+
+                    @if ($queuePosition !== null)
+                        <div class="mt-3 rounded-xl border border-line bg-surface-soft px-3.5 py-2.5 text-center"
+                             data-queue-position="{{ $queuePosition }}">
+                            <p class="text-sm font-extrabold text-ink font-mono">
+                                Posición estimada en espera: #{{ $queuePosition }}
+                            </p>
+                            <p class="mt-0.5 text-[11px] text-ink-muted leading-tight">
+                                Posición dinámica al ingreso: puede variar según urgencias clínicas entrantes.
+                            </p>
+                        </div>
+                    @endif
 
                     <dl class="mt-4 divide-y divide-line text-sm">
                         <div class="flex justify-between gap-4 py-2">
