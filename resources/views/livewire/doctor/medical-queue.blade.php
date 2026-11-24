@@ -23,6 +23,7 @@
 @endphp
 
 <div class="space-y-6"
+     wire:poll.5s
      x-data="{
          now: Date.now(),
          init() { setInterval(() => this.now = Date.now(), 15000) },

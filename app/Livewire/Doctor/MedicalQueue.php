@@ -14,6 +14,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 /**
@@ -71,6 +72,18 @@ class MedicalQueue extends Component
     public function inConsultation(): Collection
     {
         return $this->byStatus(TriageStatus::IN_CONSULTATION);
+    }
+
+    /**
+     * CEN-43: refresca la cola ante triages nuevos, editados o reclasificados.
+     * Entre terminales de la LAN la sincronización la resuelve wire:poll.5s.
+     */
+    #[On('patient-triaged')]
+    #[On('triage-updated')]
+    #[On('triage-overridden')]
+    public function refreshQueue(): void
+    {
+        unset($this->activeTriages, $this->waiting, $this->called, $this->inConsultation);
     }
 
     public function callPatient(int $triageId): void
@@ -153,7 +166,7 @@ class MedicalQueue extends Component
 
             return null;
         } finally {
-            unset($this->activeTriages, $this->waiting, $this->called, $this->inConsultation);
+            $this->refreshQueue();
         }
 
         $this->flash(str_replace(':name', $triage->patient->full_name, $message));
