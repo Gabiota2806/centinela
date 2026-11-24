@@ -120,6 +120,8 @@ class MedicalQueue extends Component
      */
     public function reclassify(int $triageId): void
     {
+        $this->authorize('access-doctor');
+
         $this->dispatch('open-clinical-override', triageId: $triageId);
     }
 
@@ -151,6 +153,9 @@ class MedicalQueue extends Component
      */
     private function act(int $triageId, Closure $transition, string $message): ?Triage
     {
+        // Cada acción se autoriza de nuevo: el permiso de mount() no cubre las llamadas posteriores.
+        $this->authorize('access-doctor');
+
         $triage = Triage::query()->with('patient')->find($triageId);
 
         if ($triage === null) {

@@ -82,6 +82,17 @@ class MedicalQueueTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_cada_accion_vuelve_a_verificar_el_permiso_del_usuario(): void
+    {
+        $triage = $this->enEspera('Marta Rodríguez', TriagePriority::YELLOW, 10);
+        $cola = Livewire::actingAs($this->medico())->test(MedicalQueue::class);
+
+        $this->actingAs(User::factory()->admission()->create());
+
+        $cola->call('callPatient', $triage->id)->assertForbidden();
+        $this->assertSame(TriageStatus::PENDING_CONSULTATION, $triage->refresh()->status);
+    }
+
     public function test_la_cola_ordena_por_prioridad_mts_y_luego_por_llegada(): void
     {
         // Gherkin RF-CONS-01: Verde, Rojo y Amarillo ➔ #1 Rojo, #2 Amarillo, #3 Verde.
