@@ -131,6 +131,9 @@ class ClinicalOverrideModalTest extends TestCase
             ->test(ClinicalOverrideModal::class)
             ->dispatch('open-clinical-override', triageId: $triage->id)
             ->assertSet('show', true)
+            ->assertSee('Reclasificar prioridad')
+            ->assertDontSee('Clinical Override')
+            ->assertSeeHtml('max-w-2xl')
             ->assertSee('Marta Rodríguez')
             ->assertSee('Justificación diferida');
 

@@ -273,7 +273,7 @@
                     {{-- Temperatura --}}
                     <div>
                         <x-input-label for="temperature" value="Temperatura (°C) *" />
-                        <div class="relative">
+                        <div class="relative mt-1.5">
                             <input id="temperature"
                                    type="text"
                                    inputmode="decimal"
@@ -284,7 +284,7 @@
                                    placeholder="Ej: 36.8"
                                    aria-invalid="{{ $errors->has('temperature') ? 'true' : 'false' }}"
                                    aria-describedby="temperature-error"
-                                   class="{{ $field('temperature', 'pr-9') }}" />
+                                   class="{{ $field('temperature', 'mt-0 pr-9') }}" />
                             <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-ink-muted">°C</span>
                         </div>
                         @error('temperature') <p id="temperature-error" class="mt-1.5 text-sm text-danger">{{ $message }}</p> @enderror
@@ -293,7 +293,7 @@
                     {{-- Presión Sistólica --}}
                     <div>
                         <x-input-label for="systolic_bp" value="PAS Sistólica (mmHg) *" />
-                        <div class="relative">
+                        <div class="relative mt-1.5">
                             <input id="systolic_bp"
                                    type="text"
                                    inputmode="numeric"
@@ -304,7 +304,7 @@
                                    placeholder="Ej: 120"
                                    aria-invalid="{{ $errors->has('systolic_bp') ? 'true' : 'false' }}"
                                    aria-describedby="systolic_bp-error"
-                                   class="{{ $field('systolic_bp', 'pr-14') }}" />
+                                   class="{{ $field('systolic_bp', 'mt-0 pr-14') }}" />
                             <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-ink-muted">mmHg</span>
                         </div>
                         @error('systolic_bp') <p id="systolic_bp-error" class="mt-1.5 text-sm text-danger">{{ $message }}</p> @enderror
@@ -313,7 +313,7 @@
                     {{-- Presión Diastólica --}}
                     <div>
                         <x-input-label for="diastolic_bp" value="PAD Diastólica (mmHg) *" />
-                        <div class="relative">
+                        <div class="relative mt-1.5">
                             <input id="diastolic_bp"
                                    type="text"
                                    inputmode="numeric"
@@ -324,7 +324,7 @@
                                    placeholder="Ej: 80"
                                    aria-invalid="{{ $errors->has('diastolic_bp') ? 'true' : 'false' }}"
                                    aria-describedby="diastolic_bp-error"
-                                   class="{{ $field('diastolic_bp', 'pr-14') }}" />
+                                   class="{{ $field('diastolic_bp', 'mt-0 pr-14') }}" />
                             <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-ink-muted">mmHg</span>
                         </div>
                         @error('diastolic_bp') <p id="diastolic_bp-error" class="mt-1.5 text-sm text-danger">{{ $message }}</p> @enderror
@@ -333,7 +333,7 @@
                     {{-- Frecuencia Cardíaca --}}
                     <div>
                         <x-input-label for="heart_rate" value="Frecuencia Cardíaca (lpm) *" />
-                        <div class="relative">
+                        <div class="relative mt-1.5">
                             <input id="heart_rate"
                                    type="text"
                                    inputmode="numeric"
@@ -344,7 +344,7 @@
                                    placeholder="Ej: 75"
                                    aria-invalid="{{ $errors->has('heart_rate') ? 'true' : 'false' }}"
                                    aria-describedby="heart_rate-error"
-                                   class="{{ $field('heart_rate', 'pr-12') }}" />
+                                   class="{{ $field('heart_rate', 'mt-0 pr-12') }}" />
                             <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-ink-muted">lpm</span>
                         </div>
                         @error('heart_rate') <p id="heart_rate-error" class="mt-1.5 text-sm text-danger">{{ $message }}</p> @enderror
@@ -353,7 +353,7 @@
                     {{-- Frecuencia Respiratoria --}}
                     <div>
                         <x-input-label for="respiratory_rate" value="Frecuencia Respiratoria (rpm) *" />
-                        <div class="relative">
+                        <div class="relative mt-1.5">
                             <input id="respiratory_rate"
                                    type="text"
                                    inputmode="numeric"
@@ -364,7 +364,7 @@
                                    placeholder="Ej: 16"
                                    aria-invalid="{{ $errors->has('respiratory_rate') ? 'true' : 'false' }}"
                                    aria-describedby="respiratory_rate-error"
-                                   class="{{ $field('respiratory_rate', 'pr-12') }}" />
+                                   class="{{ $field('respiratory_rate', 'mt-0 pr-12') }}" />
                             <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-ink-muted">rpm</span>
                         </div>
                         @error('respiratory_rate') <p id="respiratory_rate-error" class="mt-1.5 text-sm text-danger">{{ $message }}</p> @enderror
@@ -373,7 +373,7 @@
                     {{-- Saturación de Oxígeno (SpO2) --}}
                     <div>
                         <x-input-label for="spo2" value="Saturación O2 (SpO2) *" />
-                        <div class="relative">
+                        <div class="relative mt-1.5">
                             <input id="spo2"
                                    type="text"
                                    inputmode="numeric"
@@ -384,7 +384,7 @@
                                    placeholder="Ej: 98"
                                    aria-invalid="{{ $errors->has('spo2') ? 'true' : 'false' }}"
                                    aria-describedby="spo2-error"
-                                   class="{{ $field('spo2', 'pr-9 font-bold') }}" />
+                                   class="{{ $field('spo2', trim('mt-0 pr-9 font-bold '.(is_numeric($spo2) && (int) $spo2 < 85 ? 'text-danger' : (is_numeric($spo2) && (int) $spo2 <= 92 ? 'text-warn' : '')))) }}" />
                             <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-ink-muted">%</span>
                         </div>
                         @error('spo2') <p id="spo2-error" class="mt-1.5 text-sm text-danger">{{ $message }}</p> @enderror
@@ -457,8 +457,8 @@
             </div>
         </div>
 
-        {{-- Columna Derecha: Panel Sticky MTS en vivo --}}
-        <div class="lg:col-span-1 space-y-4 lg:sticky lg:top-6">
+        {{-- Columna Derecha: Panel Sticky MTS en vivo (despejado bajo topbar h-16) --}}
+        <div class="lg:col-span-1 space-y-4 lg:sticky lg:top-20">
             <div class="bg-white border border-line rounded-2xl shadow-card overflow-hidden">
                 {{-- Encabezado con Color Manchester Dinámico --}}
                 <div class="p-5 text-center transition-colors duration-300 {{ $badgeClasses }}">

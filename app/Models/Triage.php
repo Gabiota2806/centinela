@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\TriagePriority;
 use App\Enums\TriageStatus;
+use App\Services\ManchesterTriageService;
 use Database\Factories\TriageFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -195,6 +196,93 @@ class Triage extends Model
                 'original_priority' => $originalPriority,
                 'overridden_priority' => $newPriority,
                 'override_reason' => $effectiveReason,
+            ]);
+        });
+    }
+
+    /**
+     * Retorna el mapa [triage_id => posición #N (1-based)] de toda la cola
+     * activa en espera de consulta (pending_consultation) en una sola consulta SQL,
+     * evitando consultas N+1 en listados y preservando la posición real al filtrar.
+     *
+     * @return array<int, int>
+     */
+    public static function pendingQueuePositions(): array
+    {
+        $ids = self::query()
+            ->medicalQueue()
+            ->pluck('id');
+
+        $positions = [];
+        foreach ($ids as $index => $id) {
+            $positions[(int) $id] = $index + 1;
+        }
+
+        return $positions;
+    }
+
+    /**
+     * Edita signos vitales, motivo de consulta y discriminadores de un triage
+     * pendiente (pending_consultation), recalculando la prioridad MTS.
+     * Si la prioridad final cambia respecto a la vigente, registra una entrada
+     * inmutable en triage_audit_logs para trazabilidad médico-legal (RF-TRIAGE-13).
+     *
+     * @param  array<string, mixed>  $vitalSigns
+     * @param  array<string, bool>  $discriminators
+     *
+     * @throws InvalidArgumentException Si el triage ya no está en espera (pending_consultation).
+     */
+    public function updateEvaluation(
+        array $vitalSigns,
+        string $symptoms,
+        array $discriminators,
+        User $user
+    ): ?TriageAuditLog {
+        /** @var ManchesterTriageService $service */
+        $service = app(ManchesterTriageService::class);
+
+        $normalizedVitals = $service->normalizeVitalSigns($vitalSigns);
+        $evaluation = $service->evaluate($normalizedVitals, $discriminators);
+
+        /** @var TriagePriority $newPriority */
+        $newPriority = $evaluation['priority'];
+        $activeDiscriminatorCodes = array_keys(array_filter($discriminators));
+
+        return DB::transaction(function () use ($normalizedVitals, $symptoms, $activeDiscriminatorCodes, $evaluation, $newPriority, $user): ?TriageAuditLog {
+            /** @var self|null $locked */
+            $locked = self::query()->lockForUpdate()->find($this->id);
+
+            if ($locked === null || $locked->status !== TriageStatus::PENDING_CONSULTATION) {
+                throw new InvalidArgumentException(
+                    'Solo es posible editar triages que se encuentran en espera de consulta (pending_consultation).'
+                );
+            }
+
+            $previousFinalPriority = $locked->final_priority ?? $locked->algorithmic_priority;
+            $priorityChanged = $previousFinalPriority !== $newPriority;
+
+            $locked->symptoms = trim($symptoms);
+            $locked->vital_signs = array_merge($normalizedVitals, [
+                'discriminators' => $activeDiscriminatorCodes,
+                'calculated_discriminator' => $evaluation['discriminator'],
+            ]);
+            $locked->algorithmic_priority = $newPriority;
+            $locked->final_priority = $newPriority;
+            $locked->is_override = false;
+            $locked->target_wait_minutes = $evaluation['target_wait_minutes'];
+            $locked->save();
+
+            $this->refresh();
+
+            if (! $priorityChanged) {
+                return null;
+            }
+
+            return $locked->auditLogs()->create([
+                'user_id' => $user->id,
+                'original_priority' => $previousFinalPriority,
+                'overridden_priority' => $newPriority,
+                'override_reason' => "[RE-EVALUACIÓN DE TRIAGE] Recálculo MTS por edición de signos vitales/motivo: {$evaluation['discriminator']}.",
             ]);
         });
     }

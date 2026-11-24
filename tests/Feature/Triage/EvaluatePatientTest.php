@@ -7,12 +7,16 @@ namespace Tests\Feature\Triage;
 use App\Enums\TriagePriority;
 use App\Enums\TriageStatus;
 use App\Livewire\Triage\EvaluatePatient;
+use App\Livewire\Triage\PrintTicket;
 use App\Models\Patient;
 use App\Models\Triage;
+use App\Models\TriageAuditLog;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use InvalidArgumentException;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 /**
@@ -188,12 +192,11 @@ class EvaluatePatientTest extends TestCase
 
         // Con sincronización "live" el valor parcial "38." llegaba vacío y borraba el campo (QA CEN-37).
         Livewire::actingAs($nurse)
-            ->test(EvaluatePatient::class)
+            ->test(EvaluatePatient::class, ['patient' => $patient])
             ->assertSeeHtml('wire:model.live.blur="temperature"')
             // type="number" descarta "38.9" si el navegador está en español (espera coma).
             ->assertSeeHtml('inputmode="decimal"')
             ->assertSeeHtml("replace(',', '.')")
-            ->call('selectPatient', $patient->id)
             ->set('symptoms', 'Fiebre')
             ->set('temperature', 38.9)
             ->call('save')
@@ -204,19 +207,599 @@ class EvaluatePatientTest extends TestCase
 
     public function test_los_signos_vitales_no_usan_campos_numericos_con_flechas_ni_rueda(): void
     {
+        $patient = Patient::factory()->create();
+
         // type="number" muestra flechas y cambia el valor con la rueda del mouse (QA CEN-37).
         Livewire::actingAs(User::factory()->triageNurse()->create())
-            ->test(EvaluatePatient::class)
+            ->test(EvaluatePatient::class, ['patient' => $patient])
             ->assertDontSeeHtml('type="number"')
             ->assertSeeHtml('inputmode="numeric"');
     }
 
     public function test_la_vista_solo_usa_colores_de_marca_definidos_en_la_paleta(): void
     {
-        // brand-azul no existe en tailwind.config.js: el botón "Registrar Triage Clínico" quedaba blanco sobre blanco.
+        $patient = Patient::factory()->create();
+
+        // brand-azul no existe en tailwind.config.js: el botón principal quedaba blanco sobre blanco.
         Livewire::actingAs(User::factory()->triageNurse()->create())
-            ->test(EvaluatePatient::class)
+            ->test(EvaluatePatient::class, ['patient' => $patient])
             ->assertDontSeeHtml('brand-azul')
             ->assertSeeHtml('bg-brand-petroleo');
+    }
+
+    public function test_el_formulario_de_signos_vitales_permanece_oculto_en_triage_hasta_pulsar_editar(): void
+    {
+        $nurse = User::factory()->triageNurse()->create();
+        $triage = Triage::factory()->create([
+            'status' => TriageStatus::PENDING_CONSULTATION,
+        ]);
+
+        Livewire::actingAs($nurse)
+            ->test(EvaluatePatient::class)
+            ->assertDontSeeHtml('id="triage-evaluation-form"')
+            ->assertDontSee('Signos Vitales Cuantitativos')
+            ->call('startEditing', $triage->id)
+            ->assertSeeHtml('id="triage-evaluation-form"')
+            ->assertSee('Signos Vitales Cuantitativos')
+            ->assertSeeHtml('lg:sticky lg:top-20')
+            ->assertDontSeeHtml('lg:sticky lg:top-6')
+            ->call('cancelEditing')
+            ->assertDontSeeHtml('id="triage-evaluation-form"')
+            ->assertDontSee('Signos Vitales Cuantitativos');
+    }
+
+    public function test_pestana_en_espera_ordena_por_mts_muestra_posicion_global_y_badge_llamado(): void
+    {
+        $nurse = User::factory()->triageNurse()->create();
+
+        $pacienteRojo = Patient::factory()->create(['first_name' => 'Elena', 'last_name' => 'Gómez', 'dni' => '21111111']);
+        $pacienteVerde = Patient::factory()->create(['first_name' => 'Bruno', 'last_name' => 'Sosa', 'dni' => '22222222']);
+        $pacienteAzul = Patient::factory()->create(['first_name' => 'Carla', 'last_name' => 'Paz', 'dni' => '23333333']);
+        $pacienteLlamado = Patient::factory()->create(['first_name' => 'Diego', 'last_name' => 'Vera', 'dni' => '24444444']);
+        $pacienteCompletado = Patient::factory()->create(['first_name' => 'Laura', 'last_name' => 'Maidana', 'dni' => '25555555']);
+
+        $triageAzul = Triage::factory()->create([
+            'patient_id' => $pacienteAzul->id,
+            'user_id' => $nurse->id,
+            'algorithmic_priority' => TriagePriority::BLUE,
+            'final_priority' => TriagePriority::BLUE,
+            'status' => TriageStatus::PENDING_CONSULTATION,
+            'created_at' => now()->subMinutes(30),
+        ]);
+
+        $triageVerde = Triage::factory()->create([
+            'patient_id' => $pacienteVerde->id,
+            'user_id' => $nurse->id,
+            'algorithmic_priority' => TriagePriority::GREEN,
+            'final_priority' => TriagePriority::GREEN,
+            'status' => TriageStatus::PENDING_CONSULTATION,
+            'created_at' => now()->subMinutes(20),
+        ]);
+
+        $triageRojo = Triage::factory()->create([
+            'patient_id' => $pacienteRojo->id,
+            'user_id' => $nurse->id,
+            'algorithmic_priority' => TriagePriority::RED,
+            'final_priority' => TriagePriority::RED,
+            'status' => TriageStatus::PENDING_CONSULTATION,
+            'created_at' => now()->subMinutes(10),
+        ]);
+
+        $triageLlamado = Triage::factory()->create([
+            'patient_id' => $pacienteLlamado->id,
+            'user_id' => $nurse->id,
+            'algorithmic_priority' => TriagePriority::ORANGE,
+            'final_priority' => TriagePriority::ORANGE,
+            'status' => TriageStatus::CALLED,
+            'created_at' => now()->subMinutes(25),
+        ]);
+
+        Triage::factory()->create([
+            'patient_id' => $pacienteCompletado->id,
+            'user_id' => $nurse->id,
+            'algorithmic_priority' => TriagePriority::YELLOW,
+            'final_priority' => TriagePriority::YELLOW,
+            'status' => TriageStatus::COMPLETED,
+        ]);
+
+        $component = Livewire::actingAs($nurse)
+            ->test(EvaluatePatient::class)
+            ->assertSet('activeTab', 'waiting')
+            ->assertSeeInOrder(['Diego Vera', 'Elena Gómez', 'Bruno Sosa', 'Carla Paz'])
+            ->assertSee('Llamado')
+            ->assertSee('#1')
+            ->assertSee('#2')
+            ->assertSee('#3')
+            ->assertSee(PrintTicket::ticketNumber($triageRojo->id))
+            ->assertDontSee('Laura Maidana');
+
+        /** @var Collection<int, Triage> $waitingTriages */
+        $waitingTriages = $component->viewData('waitingTriages');
+        $this->assertSame(
+            [$triageLlamado->id, $triageRojo->id, $triageVerde->id, $triageAzul->id],
+            $waitingTriages->pluck('id')->all()
+        );
+        $this->assertTrue($waitingTriages->first()->relationLoaded('patient'));
+        $this->assertTrue($waitingTriages->first()->patient->relationLoaded('neighborhood'));
+        $this->assertTrue($waitingTriages->first()->relationLoaded('user'));
+
+        $positions = $component->viewData('queuePositions');
+        $this->assertSame(1, $positions[$triageRojo->id]);
+        $this->assertSame(2, $positions[$triageVerde->id]);
+        $this->assertSame(3, $positions[$triageAzul->id]);
+        $this->assertArrayNotHasKey($triageLlamado->id, $positions);
+    }
+
+    public function test_buscador_por_dni_y_nombre_filtra_en_espera_preservando_posicion_real_y_filtra_historial(): void
+    {
+        $nurse = User::factory()->triageNurse()->create();
+
+        $p1 = Patient::factory()->create(['first_name' => 'Ana', 'last_name' => 'Torres', 'dni' => '31000001']);
+        $p2 = Patient::factory()->create(['first_name' => 'Luis', 'last_name' => 'Acosta', 'dni' => '32000002']);
+        $p3 = Patient::factory()->create(['first_name' => 'Sofía', 'last_name' => 'Benítez', 'dni' => '33000003']);
+        $pHist = Patient::factory()->create(['first_name' => 'Ramón', 'last_name' => 'Galeano', 'dni' => '34000004']);
+
+        Triage::factory()->create([
+            'patient_id' => $p1->id,
+            'algorithmic_priority' => TriagePriority::RED,
+            'final_priority' => TriagePriority::RED,
+            'status' => TriageStatus::PENDING_CONSULTATION,
+            'created_at' => now()->subMinutes(15),
+        ]);
+        Triage::factory()->create([
+            'patient_id' => $p2->id,
+            'algorithmic_priority' => TriagePriority::YELLOW,
+            'final_priority' => TriagePriority::YELLOW,
+            'status' => TriageStatus::PENDING_CONSULTATION,
+            'created_at' => now()->subMinutes(10),
+        ]);
+        $t3 = Triage::factory()->create([
+            'patient_id' => $p3->id,
+            'algorithmic_priority' => TriagePriority::GREEN,
+            'final_priority' => TriagePriority::GREEN,
+            'status' => TriageStatus::PENDING_CONSULTATION,
+            'created_at' => now()->subMinutes(5),
+        ]);
+        Triage::factory()->create([
+            'patient_id' => $pHist->id,
+            'algorithmic_priority' => TriagePriority::BLUE,
+            'final_priority' => TriagePriority::BLUE,
+            'status' => TriageStatus::COMPLETED,
+        ]);
+
+        // Filtra por DNI del paciente en posición #3: conserva su #3 global
+        Livewire::actingAs($nurse)
+            ->test(EvaluatePatient::class)
+            ->set('searchTriage', '33000003')
+            ->assertSee('Sofía Benítez')
+            ->assertSee(PrintTicket::ticketNumber($t3->id))
+            ->assertSee('#3')
+            ->assertDontSee('Ana Torres')
+            ->assertDontSee('Luis Acosta')
+            ->call('setTab', 'history')
+            ->set('searchTriage', 'Galeano')
+            ->assertSee('Ramón Galeano')
+            ->assertDontSee('Sofía Benítez');
+    }
+
+    public function test_pestana_historial_muestra_en_consulta_completados_y_cancelados_con_eager_loading(): void
+    {
+        $doctor = User::factory()->doctor()->create();
+
+        $pEnConsulta = Patient::factory()->create(['first_name' => 'Mario', 'last_name' => 'Ibarra', 'dni' => '41000001']);
+        $pCompletado = Patient::factory()->create(['first_name' => 'Lucía', 'last_name' => 'Peralta', 'dni' => '42000002']);
+        $pCancelado = Patient::factory()->create(['first_name' => 'Oscar', 'last_name' => 'Duarte', 'dni' => '43000003']);
+        $pPendiente = Patient::factory()->create(['first_name' => 'Nadia', 'last_name' => 'Romero', 'dni' => '44000004']);
+
+        Triage::factory()->create(['patient_id' => $pEnConsulta->id, 'status' => TriageStatus::IN_CONSULTATION]);
+        Triage::factory()->create(['patient_id' => $pCompletado->id, 'status' => TriageStatus::COMPLETED]);
+        Triage::factory()->create(['patient_id' => $pCancelado->id, 'status' => TriageStatus::CANCELLED]);
+        Triage::factory()->create(['patient_id' => $pPendiente->id, 'status' => TriageStatus::PENDING_CONSULTATION]);
+
+        $component = Livewire::actingAs($doctor)
+            ->test(EvaluatePatient::class)
+            ->call('setTab', 'history')
+            ->assertSet('activeTab', 'history')
+            ->assertSee('Mario Ibarra')
+            ->assertSee('Lucía Peralta')
+            ->assertSee('Oscar Duarte')
+            ->assertSee('En consulta')
+            ->assertSee('Completado')
+            ->assertSee('Cancelado')
+            ->assertDontSee('Nadia Romero');
+
+        $historyTriages = $component->viewData('historyTriages');
+        $this->assertCount(3, $historyTriages);
+        $this->assertTrue($historyTriages->first()->relationLoaded('patient'));
+        $this->assertTrue($historyTriages->first()->patient->relationLoaded('neighborhood'));
+        $this->assertTrue($historyTriages->first()->relationLoaded('user'));
+    }
+
+    public function test_editar_triage_pendiente_con_cambio_de_prioridad_recalcula_mts_y_registra_auditoria_inmutable(): void
+    {
+        $nurse = User::factory()->triageNurse()->create();
+        $patient = Patient::factory()->create(['first_name' => 'Marta', 'last_name' => 'Rodríguez', 'dni' => '23456789']);
+
+        $triage = Triage::factory()->create([
+            'patient_id' => $patient->id,
+            'user_id' => $nurse->id,
+            'symptoms' => 'Febrícula leve de 6 horas.',
+            'vital_signs' => [
+                'temperature' => 37.9,
+                'systolic_bp' => 120,
+                'diastolic_bp' => 80,
+                'heart_rate' => 78,
+                'respiratory_rate' => 16,
+                'spo2' => 98,
+                'discriminators' => ['mild_pain'],
+                'calculated_discriminator' => 'Fiebre < 38.5°C sin alteración hemodinámica',
+            ],
+            'algorithmic_priority' => TriagePriority::GREEN,
+            'final_priority' => TriagePriority::GREEN,
+            'is_override' => false,
+            'target_wait_minutes' => 120,
+            'status' => TriageStatus::PENDING_CONSULTATION,
+        ]);
+
+        Livewire::actingAs($nurse)
+            ->test(EvaluatePatient::class)
+            ->call('startEditing', $triage->id)
+            ->assertSet('editingTriageId', $triage->id)
+            ->assertSet('patientId', $patient->id)
+            ->assertSet('temperature', 37.9)
+            ->assertSet('spo2', 98)
+            ->assertSet('discriminators.mild_pain', true)
+            ->assertSet('priorityValue', 'green')
+            ->set('spo2', 82)
+            ->set('symptoms', 'Desaturación súbita y dificultad respiratoria en sala de espera.')
+            ->assertSet('priorityValue', 'red')
+            ->assertSet('targetWaitMinutes', 0)
+            ->call('save')
+            ->assertHasNoErrors()
+            ->assertSet('editingTriageId', null)
+            ->assertSet('savedSuccessfully', true)
+            ->assertDispatched('triage-updated', triageId: $triage->id)
+            ->assertSee('auditoría registrada');
+
+        $triage->refresh();
+        $this->assertSame(TriagePriority::RED, $triage->algorithmic_priority);
+        $this->assertSame(TriagePriority::RED, $triage->final_priority);
+        $this->assertSame(0, $triage->target_wait_minutes);
+        $this->assertSame(82, $triage->vital_signs['spo2']);
+        $this->assertSame('Desaturación súbita y dificultad respiratoria en sala de espera.', $triage->symptoms);
+
+        $auditLog = TriageAuditLog::where('triage_id', $triage->id)->sole();
+        $this->assertSame($nurse->id, $auditLog->user_id);
+        $this->assertSame(TriagePriority::GREEN, $auditLog->original_priority);
+        $this->assertSame(TriagePriority::RED, $auditLog->overridden_priority);
+        $this->assertStringContainsString('RE-EVALUACIÓN DE TRIAGE', $auditLog->override_reason);
+    }
+
+    public function test_editar_triage_pendiente_sin_cambio_de_prioridad_actualiza_datos_sin_duplicar_auditoria(): void
+    {
+        $nurse = User::factory()->triageNurse()->create();
+        $patient = Patient::factory()->create();
+
+        $triage = Triage::factory()->create([
+            'patient_id' => $patient->id,
+            'user_id' => $nurse->id,
+            'symptoms' => 'Control general inicial.',
+            'vital_signs' => [
+                'temperature' => 36.5,
+                'systolic_bp' => 118,
+                'diastolic_bp' => 76,
+                'heart_rate' => 72,
+                'respiratory_rate' => 15,
+                'spo2' => 99,
+                'discriminators' => [],
+            ],
+            'algorithmic_priority' => TriagePriority::BLUE,
+            'final_priority' => TriagePriority::BLUE,
+            'target_wait_minutes' => 240,
+            'status' => TriageStatus::PENDING_CONSULTATION,
+        ]);
+
+        Livewire::actingAs($nurse)
+            ->test(EvaluatePatient::class)
+            ->call('startEditing', $triage->id)
+            ->set('temperature', 36.8)
+            ->set('symptoms', 'Control periódico y renovación de receta crónica.')
+            ->call('save')
+            ->assertHasNoErrors()
+            ->assertDispatched('triage-updated', triageId: $triage->id)
+            ->assertSee('sin cambios en prioridad');
+
+        $triage->refresh();
+        $this->assertSame(TriagePriority::BLUE, $triage->final_priority);
+        $this->assertSame(36.8, (float) $triage->vital_signs['temperature']);
+        $this->assertSame('Control periódico y renovación de receta crónica.', $triage->symptoms);
+        $this->assertSame(0, TriageAuditLog::where('triage_id', $triage->id)->count());
+    }
+
+    /**
+     * @return array<string, array{TriageStatus}>
+     */
+    public static function nonEditableStatusesProvider(): array
+    {
+        return [
+            'llamado a consultorio' => [TriageStatus::CALLED],
+            'en consulta' => [TriageStatus::IN_CONSULTATION],
+            'completado' => [TriageStatus::COMPLETED],
+            'cancelado' => [TriageStatus::CANCELLED],
+        ];
+    }
+
+    #[DataProvider('nonEditableStatusesProvider')]
+    public function test_no_permite_editar_triage_que_no_esta_en_espera_de_consulta(TriageStatus $status): void
+    {
+        $nurse = User::factory()->triageNurse()->create();
+
+        $triage = Triage::factory()->create([
+            'symptoms' => 'Síntoma original inmutable',
+            'algorithmic_priority' => TriagePriority::GREEN,
+            'final_priority' => TriagePriority::GREEN,
+            'status' => $status,
+        ]);
+
+        Livewire::actingAs($nurse)
+            ->test(EvaluatePatient::class)
+            ->call('startEditing', $triage->id)
+            ->assertSet('editingTriageId', null)
+            ->assertHasErrors(['editing']);
+
+        $this->expectException(InvalidArgumentException::class);
+
+        try {
+            $triage->updateEvaluation(['spo2' => 80], 'Intento de edición bloqueado', [], $nurse);
+        } finally {
+            $triage->refresh();
+            $this->assertSame('Síntoma original inmutable', $triage->symptoms);
+            $this->assertSame(TriagePriority::GREEN, $triage->final_priority);
+            $this->assertSame(0, TriageAuditLog::where('triage_id', $triage->id)->count());
+        }
+    }
+
+    public function test_acciones_de_fila_en_espera_emiten_eventos_de_ticket_y_clinical_override(): void
+    {
+        $nurse = User::factory()->triageNurse()->create();
+        $triage = Triage::factory()->create([
+            'status' => TriageStatus::PENDING_CONSULTATION,
+        ]);
+
+        Livewire::actingAs($nurse)
+            ->test(EvaluatePatient::class)
+            ->assertSee('Reclasificar')
+            ->assertDontSee('Clinical Override')
+            ->call('showTicketFor', $triage->id)
+            ->assertDispatched('triage-saved', triageId: $triage->id)
+            ->call('openOverrideFor', $triage->id)
+            ->assertDispatched('open-clinical-override', triageId: $triage->id);
+    }
+
+    public function test_signos_vitales_reservan_padding_derecho_con_pointer_events_none_tokens_danger_y_wire_target_save(): void
+    {
+        $nurse = User::factory()->triageNurse()->create();
+        $patient = Patient::factory()->create();
+
+        $component = Livewire::actingAs($nurse)
+            ->test(EvaluatePatient::class, ['patient' => $patient])
+            ->assertSeeHtml('pr-9')
+            ->assertSeeHtml('pr-12')
+            ->assertSeeHtml('pr-14')
+            ->assertSeeHtml('pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-ink-muted')
+            ->assertSeeHtml('wire:target="save"')
+            ->assertSeeHtml('aria-describedby="vital-temp-error"')
+            ->assertSeeHtml('aria-describedby="vital-pas-error"')
+            ->assertSeeHtml('aria-describedby="vital-pad-error"')
+            ->assertSeeHtml('aria-describedby="vital-hr-error"')
+            ->assertSeeHtml('aria-describedby="vital-rr-error"')
+            ->assertSeeHtml('aria-describedby="vital-spo2-error"')
+            ->assertSeeHtml('aria-describedby="triage-symptoms-error"');
+
+        $htmlSinError = $component->html();
+        $this->assertDoesNotMatchRegularExpression('/[\x{1F300}-\x{1FAFF}\x{2600}-\x{27BF}]/u', $htmlSinError);
+
+        $component
+            ->set('temperature', 55.0)
+            ->set('spo2', 150)
+            ->set('symptoms', '')
+            ->call('save')
+            ->assertHasErrors(['temperature', 'spo2', 'symptoms'])
+            ->assertSeeHtml('border-danger')
+            ->assertSeeHtml('text-danger')
+            ->assertSeeHtml('aria-invalid="true"')
+            ->assertDontSeeHtml('text-red-600')
+            ->assertDontSeeHtml('border-red-200');
+    }
+
+    public function test_cancelar_edicion_limpia_el_formulario_sin_modificar_el_triage_ni_crear_auditoria(): void
+    {
+        $nurse = User::factory()->triageNurse()->create();
+        $triage = Triage::factory()->create([
+            'symptoms' => 'Motivo original intacto',
+            'algorithmic_priority' => TriagePriority::GREEN,
+            'final_priority' => TriagePriority::GREEN,
+            'status' => TriageStatus::PENDING_CONSULTATION,
+        ]);
+
+        Livewire::actingAs($nurse)
+            ->test(EvaluatePatient::class)
+            ->call('startEditing', $triage->id)
+            ->assertSet('editingTriageId', $triage->id)
+            ->set('spo2', 80)
+            ->set('symptoms', 'Cambio descartado')
+            ->call('cancelEditing')
+            ->assertSet('editingTriageId', null)
+            ->assertSet('patientId', null)
+            ->assertSet('symptoms', '')
+            ->assertSet('spo2', null);
+
+        $triage->refresh();
+        $this->assertSame('Motivo original intacto', $triage->symptoms);
+        $this->assertSame(TriagePriority::GREEN, $triage->final_priority);
+        $this->assertSame(0, TriageAuditLog::where('triage_id', $triage->id)->count());
+    }
+
+    public function test_bloquea_guardado_de_edicion_si_el_triage_cambio_de_estado_antes_de_confirmar(): void
+    {
+        $nurse = User::factory()->triageNurse()->create();
+        $triage = Triage::factory()->create([
+            'symptoms' => 'Cefalea moderada inicial',
+            'algorithmic_priority' => TriagePriority::YELLOW,
+            'final_priority' => TriagePriority::YELLOW,
+            'status' => TriageStatus::PENDING_CONSULTATION,
+        ]);
+
+        $component = Livewire::actingAs($nurse)
+            ->test(EvaluatePatient::class)
+            ->call('startEditing', $triage->id)
+            ->set('spo2', 81)
+            ->set('symptoms', 'Intento de edición tras llamado médico');
+
+        // El médico llama al paciente antes de que enfermería confirme el guardado
+        $triage->update(['status' => TriageStatus::CALLED]);
+
+        $component->call('save')
+            ->assertHasErrors(['editing'])
+            ->assertNotDispatched('triage-updated');
+
+        $triage->refresh();
+        $this->assertSame('Cefalea moderada inicial', $triage->symptoms);
+        $this->assertSame(TriagePriority::YELLOW, $triage->final_priority);
+        $this->assertSame(0, TriageAuditLog::where('triage_id', $triage->id)->count());
+    }
+
+    public function test_validacion_en_edicion_rechaza_rangos_invalidos_sin_alterar_triage_ni_auditoria(): void
+    {
+        $nurse = User::factory()->triageNurse()->create();
+        $triage = Triage::factory()->create([
+            'symptoms' => 'Control clínico válido',
+            'algorithmic_priority' => TriagePriority::BLUE,
+            'final_priority' => TriagePriority::BLUE,
+            'status' => TriageStatus::PENDING_CONSULTATION,
+        ]);
+
+        Livewire::actingAs($nurse)
+            ->test(EvaluatePatient::class)
+            ->call('startEditing', $triage->id)
+            ->set('temperature', 52.0)
+            ->set('symptoms', 'ab')
+            ->call('save')
+            ->assertHasErrors(['temperature', 'symptoms'])
+            ->assertSee('No se pudieron guardar los cambios del triage')
+            ->assertNotDispatched('triage-updated');
+
+        $triage->refresh();
+        $this->assertSame('Control clínico válido', $triage->symptoms);
+        $this->assertSame(TriagePriority::BLUE, $triage->final_priority);
+        $this->assertSame(0, TriageAuditLog::where('triage_id', $triage->id)->count());
+    }
+
+    public function test_reclasificar_un_triage_mientras_se_edita_sincroniza_prioridad_actual_en_el_banner(): void
+    {
+        $nurse = User::factory()->triageNurse()->create();
+        $doctor = User::factory()->doctor()->create();
+        $triage = Triage::factory()->create([
+            'algorithmic_priority' => TriagePriority::GREEN,
+            'final_priority' => TriagePriority::GREEN,
+            'status' => TriageStatus::PENDING_CONSULTATION,
+        ]);
+
+        $component = Livewire::actingAs($nurse)
+            ->test(EvaluatePatient::class)
+            ->call('startEditing', $triage->id)
+            ->assertSet('editingCurrentPriorityValue', 'green');
+
+        $triage->overridePriority(
+            TriagePriority::ORANGE,
+            'Dolor torácico agudo evaluado en sala de espera.',
+            $doctor
+        );
+
+        $component->dispatch('triage-overridden', triageId: $triage->id)
+            ->assertSet('editingCurrentPriorityValue', 'orange')
+            ->assertSet('editingCurrentPriorityLabel', TriagePriority::ORANGE->label());
+    }
+
+    public function test_busqueda_por_nombre_completo_insensible_a_mayusculas_y_paginacion_de_historial(): void
+    {
+        $nurse = User::factory()->triageNurse()->create();
+
+        for ($i = 1; $i <= 11; $i++) {
+            Triage::factory()->create([
+                'status' => TriageStatus::COMPLETED,
+                'updated_at' => now()->subMinutes($i + 5),
+            ]);
+        }
+
+        $pacienteObjetivo = Patient::factory()->create([
+            'first_name' => 'María',
+            'last_name' => 'González',
+            'dni' => '29000999',
+        ]);
+
+        Triage::factory()->create([
+            'patient_id' => $pacienteObjetivo->id,
+            'status' => TriageStatus::COMPLETED,
+            'updated_at' => now()->subMinutes(60),
+        ]);
+
+        $component = Livewire::actingAs($nurse)
+            ->test(EvaluatePatient::class)
+            ->call('setTab', 'history');
+
+        // 12 registros históricos -> primera página muestra 10
+        $this->assertCount(10, $component->viewData('historyTriages'));
+
+        // Búsqueda por nombre completo en minúsculas encuentra el registro #12
+        $component->set('searchTriage', 'maría gonzález')
+            ->assertSee('María González')
+            ->assertSee('29000999');
+
+        $this->assertCount(1, $component->viewData('historyTriages'));
+    }
+
+    public function test_medico_y_direccion_pueden_editar_triage_pendiente_y_reordenar_cola(): void
+    {
+        $doctor = User::factory()->doctor()->create();
+        $director = User::factory()->director()->create();
+
+        $triageAmarillo = Triage::factory()->create([
+            'algorithmic_priority' => TriagePriority::YELLOW,
+            'final_priority' => TriagePriority::YELLOW,
+            'status' => TriageStatus::PENDING_CONSULTATION,
+            'created_at' => now()->subMinutes(15),
+        ]);
+
+        $triageVerde = Triage::factory()->create([
+            'algorithmic_priority' => TriagePriority::GREEN,
+            'final_priority' => TriagePriority::GREEN,
+            'status' => TriageStatus::PENDING_CONSULTATION,
+            'created_at' => now()->subMinutes(10),
+        ]);
+
+        $this->assertSame(1, $triageAmarillo->estimatedQueuePosition());
+        $this->assertSame(2, $triageVerde->estimatedQueuePosition());
+
+        // Médico eleva el triage Verde a Rojo mediante edición -> pasa a #1
+        Livewire::actingAs($doctor)
+            ->test(EvaluatePatient::class)
+            ->call('startEditing', $triageVerde->id)
+            ->set('spo2', 82)
+            ->set('symptoms', 'Hipoxemia crítica detectada por guardia.')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $positions = Triage::pendingQueuePositions();
+        $this->assertSame(1, $positions[$triageVerde->id]);
+        $this->assertSame(2, $positions[$triageAmarillo->id]);
+
+        // Dirección también puede editar un triage pendiente
+        Livewire::actingAs($director)
+            ->test(EvaluatePatient::class)
+            ->call('startEditing', $triageAmarillo->id)
+            ->set('symptoms', 'Actualización administrativa de motivo clínico.')
+            ->call('save')
+            ->assertHasNoErrors();
     }
 }

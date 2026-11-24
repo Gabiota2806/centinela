@@ -15,6 +15,23 @@ export default {
         './config/centinela.php',
         // Enums con clases de Tailwind (p. ej. TriagePriority::badgeClasses()).
         './app/Enums/**/*.php',
+        './app/Livewire/**/*.php',
+    ],
+
+    // Garantiza la compilación CSS de los 5 niveles MTS (tokens oficiales y clases de TriagePriority).
+    safelist: [
+        'bg-mts-red',
+        'bg-mts-orange',
+        'bg-mts-yellow',
+        'bg-mts-green',
+        'bg-mts-blue',
+        'bg-red-600',
+        'bg-orange-600',
+        'bg-yellow-500',
+        'bg-green-600',
+        'bg-blue-600',
+        'text-white',
+        'text-black',
     ],
 
     theme: {

@@ -509,4 +509,173 @@ class CreatePatientTest extends TestCase
             ->assertSee('Posición estimada en espera: #2')
             ->assertSee(TriagePriority::ORANGE->label());
     }
+
+    public function test_signos_vitales_reservan_padding_derecho_con_pointer_events_none_tokens_danger_y_wire_target_save(): void
+    {
+        $user = User::factory()->admission()->create();
+
+        $component = Livewire::actingAs($user)
+            ->test(CreatePatient::class)
+            ->assertSeeHtml('mt-0 pr-9')
+            ->assertSeeHtml('mt-0 pr-12')
+            ->assertSeeHtml('mt-0 pr-14')
+            ->assertSeeHtml('lg:sticky lg:top-20')
+            ->assertDontSeeHtml('lg:sticky lg:top-6')
+            ->assertSeeHtml('pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-ink-muted')
+            ->assertSeeHtml('wire:target="save"')
+            ->assertSeeHtml('aria-describedby="temperature-error"')
+            ->assertSeeHtml('aria-describedby="systolic_bp-error"')
+            ->assertSeeHtml('aria-describedby="diastolic_bp-error"')
+            ->assertSeeHtml('aria-describedby="heart_rate-error"')
+            ->assertSeeHtml('aria-describedby="respiratory_rate-error"')
+            ->assertSeeHtml('aria-describedby="spo2-error"')
+            ->assertSeeHtml('aria-describedby="symptoms-error"');
+
+        $this->assertDoesNotMatchRegularExpression('/[\x{1F300}-\x{1FAFF}\x{2600}-\x{27BF}]/u', $component->html());
+
+        $component
+            ->set('temperature', '50')
+            ->set('spo2', 120)
+            ->call('save')
+            ->assertHasErrors(['temperature', 'spo2'])
+            ->assertSeeHtml('border-danger')
+            ->assertSeeHtml('text-danger')
+            ->assertSeeHtml('aria-invalid="true"');
+    }
+
+    public function test_motivo_de_consulta_se_renderiza_antes_de_los_discriminadores_mts_opcionales(): void
+    {
+        $user = User::factory()->admission()->create();
+
+        Livewire::actingAs($user)
+            ->test(CreatePatient::class)
+            ->assertSeeInOrder([
+                'Signos Vitales Cuantitativos',
+                'Motivo de Consulta y Anamnesis',
+                'Discriminadores Clínicos Manchester (MTS)',
+            ]);
+    }
+
+    public function test_precarga_paciente_recurrente_y_bloqueo_activo_desde_query_string_dni(): void
+    {
+        $user = User::factory()->admission()->create();
+        $barrio = Neighborhood::factory()->create(['name' => 'San Francisco']);
+        $paciente = Patient::factory()->create([
+            'dni' => '27654321',
+            'first_name' => 'Elena',
+            'last_name' => 'Báez',
+            'neighborhood_id' => $barrio->id,
+        ]);
+
+        $triageActivo = Triage::factory()->create([
+            'patient_id' => $paciente->id,
+            'status' => TriageStatus::PENDING_CONSULTATION,
+        ]);
+        $ticket = PrintTicket::ticketNumber($triageActivo->id);
+
+        Livewire::actingAs($user)
+            ->withQueryParams(['dni' => '27654321'])
+            ->test(CreatePatient::class)
+            ->assertSet('dni', '27654321')
+            ->assertSet('isRecurringPatient', true)
+            ->assertSet('first_name', 'Elena')
+            ->assertSet('last_name', 'Báez')
+            ->assertSet('selectedNeighborhoodName', 'San Francisco')
+            ->assertSet('activeTriageId', $triageActivo->id)
+            ->assertSet('activeTriageTicket', $ticket)
+            ->assertSee('#'.$ticket);
+    }
+
+    /**
+     * @return array<string, array{TriageStatus}>
+     */
+    public static function estadosInactivosQueLiberanBloqueo(): array
+    {
+        return [
+            'completado' => [TriageStatus::COMPLETED],
+            'cancelado' => [TriageStatus::CANCELLED],
+        ];
+    }
+
+    #[DataProvider('estadosInactivosQueLiberanBloqueo')]
+    public function test_libera_bloqueo_cuando_el_triage_previo_esta_completado_o_cancelado(TriageStatus $estadoInactivo): void
+    {
+        $user = User::factory()->admission()->create();
+        $barrio = Neighborhood::factory()->create(['name' => 'Obrero']);
+
+        $paciente = Patient::factory()->create([
+            'dni' => '28111222',
+            'neighborhood_id' => $barrio->id,
+        ]);
+
+        Triage::factory()->create([
+            'patient_id' => $paciente->id,
+            'status' => $estadoInactivo,
+        ]);
+
+        $form = Livewire::actingAs($user)
+            ->test(CreatePatient::class)
+            ->set('dni', '28111222')
+            ->assertSet('isRecurringPatient', true)
+            ->assertSet('activeTriageId', null)
+            ->assertSet('activeTriageTicket', null);
+
+        $form->set('temperature', '36.7')
+            ->set('systolic_bp', 120)
+            ->set('diastolic_bp', 80)
+            ->set('heart_rate', 74)
+            ->set('respiratory_rate', 16)
+            ->set('spo2', 99)
+            ->set('symptoms', 'Nueva consulta de control posterior al cierre.')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseCount('patients', 1);
+        $this->assertDatabaseCount('triages', 2);
+    }
+
+    public function test_recalcula_posicion_estimada_en_confirmacion_al_recibir_triage_updated(): void
+    {
+        $user = User::factory()->admission()->create();
+        $nurse = User::factory()->triageNurse()->create();
+        $barrio = Neighborhood::factory()->create(['name' => 'San Miguel']);
+
+        // Paciente Amarillo previo en espera (#1)
+        Triage::factory()->create([
+            'user_id' => $nurse->id,
+            'algorithmic_priority' => TriagePriority::YELLOW,
+            'final_priority' => TriagePriority::YELLOW,
+            'status' => TriageStatus::PENDING_CONSULTATION,
+            'created_at' => now()->subMinutes(10),
+        ]);
+
+        // Nuevo ingreso Azul (#2)
+        $form = $this->completar(Livewire::actingAs($user)->test(CreatePatient::class), $this->datosValidos($barrio))
+            ->call('save')
+            ->assertHasNoErrors()
+            ->assertSet('createdQueuePosition', 2)
+            ->assertSee('Posición estimada en espera: #2');
+
+        $triage = Triage::whereHas('patient', fn ($q) => $q->where('dni', '23456789'))->firstOrFail();
+
+        // Enfermería edita el triage en /triage elevando la prioridad a Rojo (sube a #1)
+        $triage->updateEvaluation(
+            [
+                'temperature' => 36.8,
+                'systolic_bp' => 120,
+                'diastolic_bp' => 80,
+                'heart_rate' => 75,
+                'respiratory_rate' => 16,
+                'spo2' => 81,
+            ],
+            'Deterioro respiratorio agudo en sala de espera.',
+            [],
+            $nurse
+        );
+
+        $form->dispatch('triage-updated', triageId: $triage->id)
+            ->assertSet('createdQueuePosition', 1)
+            ->assertSee('Posición estimada en espera: #1')
+            ->assertSee(TriagePriority::RED->label());
+    }
 }
