@@ -509,4 +509,35 @@ class CreatePatientTest extends TestCase
             ->assertSee('Posición estimada en espera: #2')
             ->assertSee(TriagePriority::ORANGE->label());
     }
+
+    public function test_signos_vitales_reservan_padding_derecho_con_pointer_events_none_tokens_danger_y_wire_target_save(): void
+    {
+        $user = User::factory()->admission()->create();
+
+        $component = Livewire::actingAs($user)
+            ->test(CreatePatient::class)
+            ->assertSeeHtml('mt-0 pr-9')
+            ->assertSeeHtml('mt-0 pr-12')
+            ->assertSeeHtml('mt-0 pr-14')
+            ->assertSeeHtml('pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-ink-muted')
+            ->assertSeeHtml('wire:target="save"')
+            ->assertSeeHtml('aria-describedby="temperature-error"')
+            ->assertSeeHtml('aria-describedby="systolic_bp-error"')
+            ->assertSeeHtml('aria-describedby="diastolic_bp-error"')
+            ->assertSeeHtml('aria-describedby="heart_rate-error"')
+            ->assertSeeHtml('aria-describedby="respiratory_rate-error"')
+            ->assertSeeHtml('aria-describedby="spo2-error"')
+            ->assertSeeHtml('aria-describedby="symptoms-error"');
+
+        $this->assertDoesNotMatchRegularExpression('/[\x{1F300}-\x{1FAFF}\x{2600}-\x{27BF}]/u', $component->html());
+
+        $component
+            ->set('temperature', '50')
+            ->set('spo2', 120)
+            ->call('save')
+            ->assertHasErrors(['temperature', 'spo2'])
+            ->assertSeeHtml('border-danger')
+            ->assertSeeHtml('text-danger')
+            ->assertSeeHtml('aria-invalid="true"');
+    }
 }

@@ -549,4 +549,40 @@ class EvaluatePatientTest extends TestCase
             ->call('openOverrideFor', $triage->id)
             ->assertDispatched('open-clinical-override', triageId: $triage->id);
     }
+
+    public function test_signos_vitales_reservan_padding_derecho_con_pointer_events_none_tokens_danger_y_wire_target_save(): void
+    {
+        $nurse = User::factory()->triageNurse()->create();
+        $patient = Patient::factory()->create();
+
+        $component = Livewire::actingAs($nurse)
+            ->test(EvaluatePatient::class, ['patient' => $patient])
+            ->assertSeeHtml('pr-9')
+            ->assertSeeHtml('pr-12')
+            ->assertSeeHtml('pr-14')
+            ->assertSeeHtml('pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-ink-muted')
+            ->assertSeeHtml('wire:target="save"')
+            ->assertSeeHtml('aria-describedby="vital-temp-error"')
+            ->assertSeeHtml('aria-describedby="vital-pas-error"')
+            ->assertSeeHtml('aria-describedby="vital-pad-error"')
+            ->assertSeeHtml('aria-describedby="vital-hr-error"')
+            ->assertSeeHtml('aria-describedby="vital-rr-error"')
+            ->assertSeeHtml('aria-describedby="vital-spo2-error"')
+            ->assertSeeHtml('aria-describedby="triage-symptoms-error"');
+
+        $htmlSinError = $component->html();
+        $this->assertDoesNotMatchRegularExpression('/[\x{1F300}-\x{1FAFF}\x{2600}-\x{27BF}]/u', $htmlSinError);
+
+        $component
+            ->set('temperature', 55.0)
+            ->set('spo2', 150)
+            ->set('symptoms', '')
+            ->call('save')
+            ->assertHasErrors(['temperature', 'spo2', 'symptoms'])
+            ->assertSeeHtml('border-danger')
+            ->assertSeeHtml('text-danger')
+            ->assertSeeHtml('aria-invalid="true"')
+            ->assertDontSeeHtml('text-red-600')
+            ->assertDontSeeHtml('border-red-200');
+    }
 }

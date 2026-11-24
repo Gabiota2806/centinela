@@ -1,20 +1,29 @@
+@php
+    $vitalField = fn (string $name, string $extra = '') => \Illuminate\Support\Arr::toCssClasses([
+        'w-full rounded-xl border pl-3 py-2 text-sm text-ink placeholder:text-ink-subtle focus:ring-2',
+        $extra => $extra !== '',
+        'border-danger focus:border-danger focus:ring-danger' => $errors->has($name),
+        'border-line focus:border-brand-turquesa focus:ring-brand-turquesa' => ! $errors->has($name),
+    ]);
+@endphp
+
 <div class="space-y-6 scroll-mt-24"
      x-data
      x-on:triage-saved.window="$el.scrollIntoView({ block: 'start' })"
      x-on:triage-edit-started.window="document.getElementById('triage-evaluation-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' })">
     {{-- Confirmación del último triage registrado o actualizado --}}
     @if ($savedSuccessfully)
-        <div role="status" class="p-4 rounded-xl border border-green-200 bg-green-50 text-green-800 flex items-start gap-3">
-            <x-icon name="check-circle" class="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+        <div role="status" class="p-4 rounded-xl border border-ok/30 bg-ok/10 text-ink flex items-start gap-3">
+            <x-icon name="check-circle" class="w-5 h-5 text-ok shrink-0 mt-0.5" />
             <div class="flex-1">
-                <p class="text-sm font-semibold">{{ $savedMessage }}</p>
-                <p class="text-xs mt-1">La pantalla quedó lista para gestionar o evaluar al siguiente paciente.</p>
+                <p class="text-sm font-semibold text-ok">{{ $savedMessage }}</p>
+                <p class="text-xs text-ink-muted mt-1">La pantalla quedó lista para gestionar o evaluar al siguiente paciente.</p>
             </div>
             <div class="shrink-0 flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-4">
                 <button
                     type="button"
                     wire:click="showTicket"
-                    class="inline-flex items-center gap-1.5 text-xs font-semibold text-green-700 hover:text-green-900 underline"
+                    class="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-petroleo hover:text-brand-noche underline"
                 >
                     <x-icon name="printer" class="w-4 h-4" />
                     Ver ticket
@@ -22,7 +31,7 @@
                 <button
                     type="button"
                     wire:click="openOverride"
-                    class="inline-flex items-center gap-1.5 text-xs font-semibold text-green-700 hover:text-green-900 underline"
+                    class="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-petroleo hover:text-brand-noche underline"
                 >
                     <x-icon name="arrows-up-down" class="w-4 h-4" />
                     Reclasificar prioridad
@@ -459,7 +468,7 @@
                     @endif
 
                     @error('patientId')
-                        <p class="text-xs font-semibold text-red-600 mt-1">{{ $message }}</p>
+                        <p id="patient-id-error" class="text-xs font-semibold text-danger mt-1">{{ $message }}</p>
                     @enderror
                 </div>
             @endif
@@ -497,11 +506,13 @@
                                     x-on:input.capture="$el.value = $el.value.replace(',', '.').replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1')"
                                     wire:model.live.blur="temperature"
                                     placeholder="Ej: 36.8"
-                                    class="w-full rounded-xl border border-line px-3 py-2 text-sm focus:ring-2 focus:ring-brand-turquesa"
+                                    aria-invalid="{{ $errors->has('temperature') ? 'true' : 'false' }}"
+                                    aria-describedby="vital-temp-error"
+                                    class="{{ $vitalField('temperature', 'pr-9') }}"
                                 />
-                                <span class="absolute right-3 top-2.5 text-xs text-ink-muted">°C</span>
+                                <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-ink-muted">°C</span>
                             </div>
-                            @error('temperature') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                            @error('temperature') <p id="vital-temp-error" class="text-xs text-danger mt-1">{{ $message }}</p> @enderror
                         </div>
 
                         {{-- Presión Sistólica --}}
@@ -519,11 +530,13 @@
                                     x-on:input.capture="$el.value = $el.value.replace(/[^0-9]/g, '')"
                                     wire:model.live.debounce.250ms="systolic_bp"
                                     placeholder="Ej: 120"
-                                    class="w-full rounded-xl border border-line px-3 py-2 text-sm focus:ring-2 focus:ring-brand-turquesa"
+                                    aria-invalid="{{ $errors->has('systolic_bp') ? 'true' : 'false' }}"
+                                    aria-describedby="vital-pas-error"
+                                    class="{{ $vitalField('systolic_bp', 'pr-14') }}"
                                 />
-                                <span class="absolute right-3 top-2.5 text-xs text-ink-muted">mmHg</span>
+                                <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-ink-muted">mmHg</span>
                             </div>
-                            @error('systolic_bp') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                            @error('systolic_bp') <p id="vital-pas-error" class="text-xs text-danger mt-1">{{ $message }}</p> @enderror
                         </div>
 
                         {{-- Presión Diastólica --}}
@@ -541,11 +554,13 @@
                                     x-on:input.capture="$el.value = $el.value.replace(/[^0-9]/g, '')"
                                     wire:model.live.debounce.250ms="diastolic_bp"
                                     placeholder="Ej: 80"
-                                    class="w-full rounded-xl border border-line px-3 py-2 text-sm focus:ring-2 focus:ring-brand-turquesa"
+                                    aria-invalid="{{ $errors->has('diastolic_bp') ? 'true' : 'false' }}"
+                                    aria-describedby="vital-pad-error"
+                                    class="{{ $vitalField('diastolic_bp', 'pr-14') }}"
                                 />
-                                <span class="absolute right-3 top-2.5 text-xs text-ink-muted">mmHg</span>
+                                <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-ink-muted">mmHg</span>
                             </div>
-                            @error('diastolic_bp') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                            @error('diastolic_bp') <p id="vital-pad-error" class="text-xs text-danger mt-1">{{ $message }}</p> @enderror
                         </div>
 
                         {{-- Frecuencia Cardíaca --}}
@@ -563,11 +578,13 @@
                                     x-on:input.capture="$el.value = $el.value.replace(/[^0-9]/g, '')"
                                     wire:model.live.debounce.250ms="heart_rate"
                                     placeholder="Ej: 75"
-                                    class="w-full rounded-xl border border-line px-3 py-2 text-sm focus:ring-2 focus:ring-brand-turquesa"
+                                    aria-invalid="{{ $errors->has('heart_rate') ? 'true' : 'false' }}"
+                                    aria-describedby="vital-hr-error"
+                                    class="{{ $vitalField('heart_rate', 'pr-12') }}"
                                 />
-                                <span class="absolute right-3 top-2.5 text-xs text-ink-muted">lpm</span>
+                                <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-ink-muted">lpm</span>
                             </div>
-                            @error('heart_rate') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                            @error('heart_rate') <p id="vital-hr-error" class="text-xs text-danger mt-1">{{ $message }}</p> @enderror
                         </div>
 
                         {{-- Frecuencia Respiratoria --}}
@@ -585,11 +602,13 @@
                                     x-on:input.capture="$el.value = $el.value.replace(/[^0-9]/g, '')"
                                     wire:model.live.debounce.250ms="respiratory_rate"
                                     placeholder="Ej: 16"
-                                    class="w-full rounded-xl border border-line px-3 py-2 text-sm focus:ring-2 focus:ring-brand-turquesa"
+                                    aria-invalid="{{ $errors->has('respiratory_rate') ? 'true' : 'false' }}"
+                                    aria-describedby="vital-rr-error"
+                                    class="{{ $vitalField('respiratory_rate', 'pr-12') }}"
                                 />
-                                <span class="absolute right-3 top-2.5 text-xs text-ink-muted">rpm</span>
+                                <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-ink-muted">rpm</span>
                             </div>
-                            @error('respiratory_rate') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                            @error('respiratory_rate') <p id="vital-rr-error" class="text-xs text-danger mt-1">{{ $message }}</p> @enderror
                         </div>
 
                         {{-- Saturación de Oxígeno (SpO2) --}}
@@ -607,11 +626,13 @@
                                     x-on:input.capture="$el.value = $el.value.replace(/[^0-9]/g, '')"
                                     wire:model.live.debounce.250ms="spo2"
                                     placeholder="Ej: 98"
-                                    class="w-full rounded-xl border border-line px-3 py-2 text-sm focus:ring-2 focus:ring-brand-turquesa font-bold @if($spo2 !== null && $spo2 < 85) text-red-600 @elseif($spo2 !== null && $spo2 <= 92) text-orange-600 @endif"
+                                    aria-invalid="{{ $errors->has('spo2') ? 'true' : 'false' }}"
+                                    aria-describedby="vital-spo2-error"
+                                    class="{{ $vitalField('spo2', trim('pr-9 font-bold '.($spo2 !== null && $spo2 < 85 ? 'text-danger' : ($spo2 !== null && $spo2 <= 92 ? 'text-warn' : '')))) }}"
                                 />
-                                <span class="absolute right-3 top-2.5 text-xs text-ink-muted">%</span>
+                                <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-ink-muted">%</span>
                             </div>
-                            @error('spo2') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                            @error('spo2') <p id="vital-spo2-error" class="text-xs text-danger mt-1">{{ $message }}</p> @enderror
                         </div>
                     </div>
                 </div>
@@ -637,10 +658,12 @@
                             rows="3"
                             wire:model.live.debounce.300ms="symptoms"
                             placeholder="Describa el motivo de consulta, tiempo de evolución y síntomas asociados..."
-                            class="w-full rounded-xl border border-line p-3 text-sm focus:ring-2 focus:ring-brand-turquesa"
+                            aria-invalid="{{ $errors->has('symptoms') ? 'true' : 'false' }}"
+                            aria-describedby="triage-symptoms-error"
+                            class="w-full rounded-xl border p-3 text-sm text-ink placeholder:text-ink-subtle focus:ring-2 {{ $errors->has('symptoms') ? 'border-danger focus:border-danger focus:ring-danger' : 'border-line focus:border-brand-turquesa focus:ring-brand-turquesa' }}"
                         ></textarea>
                         @error('symptoms')
-                            <p class="text-xs text-red-600 mt-1 font-semibold">{{ $message }}</p>
+                            <p id="triage-symptoms-error" class="text-xs text-danger mt-1 font-semibold">{{ $message }}</p>
                         @enderror
                     </div>
                 </div>
@@ -728,7 +751,7 @@
 
                         {{-- Errores de validación visibles junto al botón --}}
                         @if ($errors->any())
-                            <div id="triage-save-errors" role="alert" class="p-3 rounded-xl border border-red-200 bg-red-50 text-red-700">
+                            <div id="triage-save-errors" role="alert" class="p-3 rounded-xl border border-danger/30 bg-danger/10 text-danger">
                                 <p class="text-xs font-bold">
                                     {{ $editingTriageId !== null ? 'No se pudieron guardar los cambios del triage:' : 'No se pudo registrar el triage:' }}
                                 </p>
@@ -746,17 +769,18 @@
                                 type="button"
                                 wire:click="save"
                                 wire:loading.attr="disabled"
+                                wire:target="save"
                                 class="w-full py-3 px-4 rounded-xl bg-brand-petroleo hover:bg-brand-noche text-white font-bold text-sm shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-50"
                             >
-                                <svg wire:loading.remove class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <svg wire:loading.remove wire:target="save" class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                 </svg>
-                                <svg wire:loading class="w-5 h-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                                <svg wire:loading wire:target="save" class="w-5 h-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                                 </svg>
-                                <span wire:loading.remove>{{ $editingTriageId !== null ? 'Guardar cambios del triage' : 'Registrar Triage Clínico' }}</span>
-                                <span wire:loading>Procesando Triage...</span>
+                                <span wire:loading.remove wire:target="save">{{ $editingTriageId !== null ? 'Guardar cambios del triage' : 'Registrar Triage Clínico' }}</span>
+                                <span wire:loading wire:target="save">Procesando Triage...</span>
                             </button>
 
                             @if ($editingTriageId !== null)
