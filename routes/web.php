@@ -27,10 +27,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('can:access-triage')
         ->name('triage.index');
 
-    Route::get('/consultas', fn () => view('modules.placeholder', [
-        'title' => 'Consultas',
-        'sprint' => 'Sprint 4',
-    ]))->middleware('can:access-doctor')->name('consultations.index');
+    // CEN-42: cola médica en tiempo real (docs/specs/consultas/spec.md).
+    Route::view('/consultas', 'consultations.index')
+        ->middleware('can:access-doctor')->name('consultations.index');
 });
 
 Route::middleware('auth')->group(function () {
