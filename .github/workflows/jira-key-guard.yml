@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   validate-jira-keys:
-    name: Validar clave Jira única en rama, commits y PR
+    name: Validar claves Jira autorizadas en rama, commits y PR
     runs-on: ubuntu-latest
     steps:
       - name: Checkout del repositorio
@@ -17,7 +17,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Verificar ausencia de claves CEN-xxx ajenas
+      - name: Verificar ausencia de claves CEN-xxx ajenas al alcance de la rama
         shell: bash
         env:
           HEAD_REF: ${{ github.head_ref }}
@@ -30,7 +30,7 @@ jobs:
           set -euo pipefail
 
           if [ "$BASE_REF" = "main" ] && [ "$HEAD_REF" = "develop" ]; then
-            echo "PR de release (develop -> main): validación de clave Jira única omitida."
+            echo "PR de release (develop -> main): validación de claves Jira omitida."
             exit 0
           fi
 
@@ -49,11 +49,61 @@ jobs:
             }' | sort -u
           }
 
+          resolve_allowed_keys() {
+            local bkey="$1"
+            [ -z "$bkey" ] && return 0
+
+            if [ -f ".github/jira-scopes.conf" ]; then
+              local scoped
+              scoped=$(LC_ALL=C awk -v key="$bkey" '
+                /^[[:space:]]*#/ || /^[[:space:]]*$/ { next }
+                {
+                  line = toupper($0)
+                  sub(/[[:space:]]*#.*/, "", line)
+                  split(line, parts, ":")
+                  lhs = parts[1]
+                  gsub(/[[:space:]]+/, "", lhs)
+                  if (lhs == key) {
+                    n = split(parts[2], toks, /[[:space:],]+/)
+                    for (i = 1; i <= n; i++) {
+                      if (toks[i] ~ /^CEN-[0-9]+$/) print toks[i]
+                    }
+                    found = 1
+                    exit
+                  }
+                }
+                END { if (found) print key }
+              ' ".github/jira-scopes.conf" | sort -u)
+              if [ -n "$scoped" ]; then
+                printf '%s\n' "$scoped"
+                return 0
+              fi
+            fi
+
+            if [ -f "docs/backlog.md" ]; then
+              local from_backlog
+              from_backlog=$(LC_ALL=C awk -v key="$bkey" '
+                /^### / { in_hu = (index(toupper($0), key) > 0) ? 1 : 0; next }
+                /^## / || /^---/ { in_hu = 0; next }
+                in_hu && /^#### / {
+                  line = toupper($0)
+                  if (match(line, /CEN-[0-9]+/)) print substr(line, RSTART, RLENGTH)
+                }
+              ' "docs/backlog.md" | sort -u)
+              if [ -n "$from_backlog" ]; then
+                printf '%s\n%s\n' "$bkey" "$from_backlog" | sort -u
+                return 0
+              fi
+            fi
+
+            printf '%s\n' "$bkey"
+          }
+
           find_foreign_keys() {
             local allowed="$1"
             extract_keys | while IFS= read -r key; do
               [ -z "$key" ] && continue
-              if [ -z "$allowed" ] || [ "$key" != "$allowed" ]; then
+              if [ -z "$allowed" ] || ! printf '%s\n' "$allowed" | grep -qx "$key"; then
                 printf '%s\n' "$key"
               fi
             done
@@ -65,28 +115,32 @@ jobs:
 
           if [ "$BRANCH_KEY_COUNT" -gt 1 ]; then
             JOINED=$(printf '%s\n' "$BRANCH_KEYS" | paste -sd ', ' -)
-            echo "::error::El nombre de la rama '${HEAD_REF}' contiene múltiples claves Jira (${JOINED}). Solo se permite una clave por rama."
+            echo "::error::El nombre de la rama '${HEAD_REF}' contiene múltiples claves Jira (${JOINED}). Solo se permite una clave en el nombre de la rama."
             ERRORS=1
-            ALLOWED_KEY=$(printf '%s\n' "$BRANCH_KEYS" | head -n 1)
+            ALLOWED_KEYS=$(resolve_allowed_keys "$(printf '%s\n' "$BRANCH_KEYS" | head -n 1)")
           elif [ "$BRANCH_KEY_COUNT" -eq 1 ]; then
-            ALLOWED_KEY="$BRANCH_KEYS"
-            echo "Clave Jira autorizada para esta PR: ${ALLOWED_KEY}"
+            ALLOWED_KEYS=$(resolve_allowed_keys "$BRANCH_KEYS")
+            ALLOWED_DISPLAY=$(printf '%s\n' "$ALLOWED_KEYS" | paste -sd ', ' -)
+            echo "Clave de rama: ${BRANCH_KEYS} | Claves autorizadas en commits/PR: ${ALLOWED_DISPLAY}"
           else
-            ALLOWED_KEY=""
+            ALLOWED_KEYS=""
+            ALLOWED_DISPLAY=""
             echo "Rama de mantenimiento/documentación sin clave Jira: no se permite ninguna clave CEN-<número>."
           fi
 
-          TITLE_FOREIGN=$(printf '%s\n' "$PR_TITLE" | find_foreign_keys "$ALLOWED_KEY" || true)
+          ALLOWED_DISPLAY="${ALLOWED_DISPLAY:-$(printf '%s\n' "$ALLOWED_KEYS" | paste -sd ', ' -)}"
+
+          TITLE_FOREIGN=$(printf '%s\n' "$PR_TITLE" | find_foreign_keys "$ALLOWED_KEYS" || true)
           if [ -n "$TITLE_FOREIGN" ]; then
             JOINED=$(printf '%s\n' "$TITLE_FOREIGN" | paste -sd ', ' -)
-            echo "::error::El título de la PR contiene clave(s) Jira ajena(s): ${JOINED} (permitida: ${ALLOWED_KEY:-ninguna})."
+            echo "::error::El título de la PR contiene clave(s) Jira ajena(s): ${JOINED} (permitidas: ${ALLOWED_DISPLAY:-ninguna})."
             ERRORS=1
           fi
 
-          BODY_FOREIGN=$(printf '%s\n' "$PR_BODY" | find_foreign_keys "$ALLOWED_KEY" || true)
+          BODY_FOREIGN=$(printf '%s\n' "$PR_BODY" | find_foreign_keys "$ALLOWED_KEYS" || true)
           if [ -n "$BODY_FOREIGN" ]; then
             JOINED=$(printf '%s\n' "$BODY_FOREIGN" | paste -sd ', ' -)
-            echo "::error::La descripción de la PR contiene clave(s) Jira ajena(s): ${JOINED} (permitida: ${ALLOWED_KEY:-ninguna})."
+            echo "::error::La descripción de la PR contiene clave(s) Jira ajena(s): ${JOINED} (permitidas: ${ALLOWED_DISPLAY:-ninguna})."
             ERRORS=1
           fi
 
@@ -95,10 +149,10 @@ jobs:
           for sha in $COMMITS; do
             short_sha=$(git rev-parse --short "$sha")
             msg=$(git log -1 --format=%B "$sha")
-            commit_foreign=$(printf '%s\n' "$msg" | find_foreign_keys "$ALLOWED_KEY" || true)
+            commit_foreign=$(printf '%s\n' "$msg" | find_foreign_keys "$ALLOWED_KEYS" || true)
             if [ -n "$commit_foreign" ]; then
               JOINED=$(printf '%s\n' "$commit_foreign" | paste -sd ', ' -)
-              echo "::error::El commit ${short_sha} contiene clave(s) Jira ajena(s): ${JOINED} (permitida: ${ALLOWED_KEY:-ninguna})."
+              echo "::error::El commit ${short_sha} contiene clave(s) Jira ajena(s): ${JOINED} (permitidas: ${ALLOWED_DISPLAY:-ninguna})."
               ERRORS=1
             fi
           done
@@ -106,8 +160,8 @@ jobs:
           if [ "$ERRORS" -ne 0 ]; then
             echo ""
             echo "Bloqueado para evitar transiciones accidentales en las automatizaciones de Jira."
-            echo "Eliminá las claves CEN-<número> ajenas y referenciá tareas relacionadas por nombre técnico/funcional o código local (RF-xxx, T4.x)."
+            echo "Eliminá las claves CEN-<número> ajenas y referenciá tareas fuera del alcance por nombre técnico o código local (RF-xxx, T4.x)."
             exit 1
           fi
 
-          echo "OK: rama, commits, título y descripción de la PR cumplen la regla de clave Jira única."
+          echo "OK: rama, commits, título y descripción de la PR cumplen el alcance de claves Jira."

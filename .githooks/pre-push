@@ -2,6 +2,7 @@
 set -eu
 
 ZERO_SHA="0000000000000000000000000000000000000000"
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 
 extract_keys() {
   LC_ALL=C awk '
@@ -16,6 +17,61 @@ extract_keys() {
       line = substr(line, RSTART + RLENGTH)
     }
   }' | sort -u
+}
+
+resolve_allowed_keys() {
+  _bkey="$1"
+  [ -z "$_bkey" ] && return 0
+
+  if [ -f "${REPO_ROOT}/.github/jira-scopes.conf" ]; then
+    _scoped=$(LC_ALL=C awk -v key="$_bkey" '
+      /^[[:space:]]*#/ || /^[[:space:]]*$/ { next }
+      {
+        line = toupper($0)
+        sub(/[[:space:]]*#.*/, "", line)
+        split(line, parts, ":")
+        lhs = parts[1]
+        gsub(/[[:space:]]+/, "", lhs)
+        if (lhs == key) {
+          n = split(parts[2], toks, /[[:space:],]+/)
+          for (i = 1; i <= n; i++) {
+            if (toks[i] ~ /^CEN-[0-9]+$/) print toks[i]
+          }
+          found = 1
+          exit
+        }
+      }
+      END { if (found) print key }
+    ' "${REPO_ROOT}/.github/jira-scopes.conf" | sort -u)
+    if [ -n "$_scoped" ]; then
+      printf '%s\n' "$_scoped"
+      return 0
+    fi
+  fi
+
+  if [ -f "${REPO_ROOT}/docs/backlog.md" ]; then
+    _backlog=$(LC_ALL=C awk -v key="$_bkey" '
+      /^### / { in_hu = (index(toupper($0), key) > 0) ? 1 : 0; next }
+      /^## / || /^---/ { in_hu = 0; next }
+      in_hu && /^#### / {
+        line = toupper($0)
+        if (match(line, /CEN-[0-9]+/)) print substr(line, RSTART, RLENGTH)
+      }
+    ' "${REPO_ROOT}/docs/backlog.md" | sort -u)
+    if [ -n "$_backlog" ]; then
+      printf '%s\n%s\n' "$_bkey" "$_backlog" | sort -u
+      return 0
+    fi
+  fi
+
+  printf '%s\n' "$_bkey"
+}
+
+is_allowed_key() {
+  _cand="$1"
+  _allowed="$2"
+  [ -z "$_allowed" ] && return 1
+  printf '%s\n' "$_allowed" | grep -qx "$_cand"
 }
 
 ERRORS=0
@@ -44,12 +100,14 @@ while read -r local_ref local_sha remote_ref remote_sha; do
     JOINED=$(printf '%s\n' "$BRANCH_KEYS" | paste -sd ', ' -)
     printf '%s\n' "[jira-key-guard] Push bloqueado: la rama '${BRANCH}' contiene múltiples claves Jira (${JOINED})." >&2
     ERRORS=1
-    ALLOWED_KEY=$(printf '%s\n' "$BRANCH_KEYS" | head -n 1)
+    FIRST_BRANCH_KEY=$(printf '%s\n' "$BRANCH_KEYS" | head -n 1)
+    ALLOWED_KEYS=$(resolve_allowed_keys "$FIRST_BRANCH_KEY")
   elif [ "$BRANCH_KEY_COUNT" -eq 1 ]; then
-    ALLOWED_KEY="$BRANCH_KEYS"
+    ALLOWED_KEYS=$(resolve_allowed_keys "$BRANCH_KEYS")
   else
-    ALLOWED_KEY=""
+    ALLOWED_KEYS=""
   fi
+  ALLOWED_DISPLAY=$(printf '%s\n' "$ALLOWED_KEYS" | paste -sd ', ' -)
 
   EXCLUDES=""
   for base in origin/develop develop origin/main main; do
@@ -72,14 +130,14 @@ while read -r local_ref local_sha remote_ref remote_sha; do
     msg=$(git log -1 --format=%B "$sha")
     FOREIGN_KEYS=$(printf '%s\n' "$msg" | extract_keys | while IFS= read -r key; do
       [ -z "$key" ] && continue
-      if [ -z "$ALLOWED_KEY" ] || [ "$key" != "$ALLOWED_KEY" ]; then
+      if ! is_allowed_key "$key" "$ALLOWED_KEYS"; then
         printf '%s\n' "$key"
       fi
     done)
 
     if [ -n "$FOREIGN_KEYS" ]; then
       JOINED=$(printf '%s\n' "$FOREIGN_KEYS" | paste -sd ', ' -)
-      printf '%s\n' "[jira-key-guard] Push bloqueado: el commit ${short_sha} en '${BRANCH}' contiene clave(s) Jira ajena(s): ${JOINED} (permitida: ${ALLOWED_KEY:-ninguna})." >&2
+      printf '%s\n' "[jira-key-guard] Push bloqueado: el commit ${short_sha} en '${BRANCH}' contiene clave(s) Jira ajena(s): ${JOINED} (permitidas: ${ALLOWED_DISPLAY:-ninguna})." >&2
       ERRORS=1
     fi
   done

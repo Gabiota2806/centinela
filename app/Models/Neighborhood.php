@@ -11,11 +11,22 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['name', 'geometry', 'risk_level'])]
+#[Fillable(['name', 'geometry', 'risk_level', 'risk_score', 'risk_updated_at'])]
 class Neighborhood extends Model
 {
     /** @use HasFactory<NeighborhoodFactory> */
     use HasFactory;
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'risk_score' => 'float',
+            'risk_updated_at' => 'datetime',
+        ];
+    }
 
     /**
      * Filtra el barrio cuyo polígono (SRID 4326) contiene el punto geográfico (latitud, longitud).

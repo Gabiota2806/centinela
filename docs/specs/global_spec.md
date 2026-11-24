@@ -43,26 +43,29 @@ Implementado mediante Enums nativos de PHP 8.3 (`App\Enums\UserRole`) desacoplad
 - Design System (tokens, tipografía local Plus Jakarta Sans, logo y layouts): ver `docs/specs/ui/spec.md`.
 
 ### E. Control de Versiones, Pull Requests e Integración con Jira
-- **Regla estricta de clave Jira única (`CEN-xxx`)**: El repositorio está vinculado a Jira Cloud con automatizaciones que transicionan el estado de cualquier tarjeta cuya clave `CEN-<número>` aparezca en metadatos Git/GitHub.
+- **Regla estricta de alcance de claves Jira (`CEN-xxx`)**: El repositorio está vinculado a Jira Cloud con automatizaciones que transicionan tarjetas al crear ramas (`En curso`), abrir Pull Requests (`En revisión`) y fusionar Pull Requests (`Listo`).
   * **Superficies alcanzadas:** Nombre de rama, título y **cuerpo** de commits, y título y **descripción** de Pull Requests.
-  * **En tareas con subtarea Jira:** Solo puede figurar la clave `CEN-xxx` de la subtarea activa. Queda **PROHIBIDO** mencionar cualquier otra clave `CEN-xxx` (épicas, Historias de Usuario padre, dependencias previas, tareas futuras o rangos de cierre de Sprint).
-  * **En tareas sin ticket Jira** (mantenimiento, documentación, hotfixes de infraestructura): **cero** claves `CEN-<número>`.
-  * **Cómo citar contexto relacionado:** Utilizar nombres técnicos o funcionales (p. ej. "lógica de reclasificación", "paleta corporativa", "Sprint 3") o códigos locales del proyecto (`RF-TRIAGE-10`, `T4.x`) sin el prefijo `CEN-`.
+  * **Nombre de rama:** Solo puede contener **una** clave `CEN-xxx` (la clave de la Historia de Usuario o sub-vertical asignada en `.github/jira-scopes.conf`, o **ninguna** en ramas de mantenimiento/documentación).
+  * **Commits y Pull Requests:** Solo pueden figurar las claves autorizadas para esa rama en `.github/jira-scopes.conf` (o, en su defecto, la clave de la HU y sus subtareas hijas en `docs/backlog.md`). Esto permite una rama por HU/sub-vertical con commits etiquetados por subtarea (`feat(CEN-48): ...`, `feat(CEN-49): ...`) manteniendo bloqueadas épicas, otras HUs y tarjetas de otros integrantes.
+  * **En tareas sin ticket Jira** (mantenimiento, documentación, contratos base): **cero** claves `CEN-<número>`.
+  * **Cómo citar contexto fuera del alcance:** Utilizar nombres técnicos o funcionales (p. ej. "lógica de reclasificación", "paleta corporativa", "Sprint 3") o códigos locales del proyecto (`RF-TRIAGE-10`, `T4.x`) sin el prefijo `CEN-`.
   * **Archivos del repositorio:** Dentro de `docs/specs/`, `docs/backlog.md` y `docs/changelog.md` las referencias cruzadas siguen permitidas porque Jira no escanea el contenido de archivos.
-- **Controles automáticos y auditoría:** El workflow `.github/workflows/jira-key-guard.yml` valida de forma bloqueante cada PR (omitiendo únicamente el merge de release `develop -> main`). Además, el repositorio provee hooks locales portables en `.githooks/` (`git config core.hooksPath .githooks`) para frenar infracciones antes del push. En `/auditoria` y `@reviewer`, cualquier clave `CEN-xxx` ajena implica `VEREDICTO: CAMBIOS NECESARIOS`.
+- **Controles automáticos y auditoría:** El workflow `.github/workflows/jira-key-guard.yml` valida de forma bloqueante cada PR contra `.github/jira-scopes.conf` (omitiendo únicamente el merge de release `develop -> main`). Además, el repositorio provee hooks locales portables en `.githooks/` (`git config core.hooksPath .githooks`) para frenar infracciones antes del push. En `/auditoria` y `@reviewer`, cualquier clave `CEN-xxx` fuera del alcance autorizado implica `VEREDICTO: CAMBIOS NECESARIOS`.
 
 ---
 
 ## 3. Registro de Módulos del Sistema
 
-- **Tablero de Backlog Activo:** [backlog.md](file:///mnt/Datos/Documentos/TUP/Cuarto Cuatrimestre/TIF/centinela/docs/backlog.md) (Sprint Activo siempre al inicio).
-- **Archivo Histórico de Sprints:** [backlog_archive.md](file:///mnt/Datos/Documentos/TUP/Cuarto Cuatrimestre/TIF/centinela/docs/backlog_archive.md) (Sprints 1, 2 y 3 finalizados).
+- **Contratos Transversales (Sprints 4 a 7):** `docs/specs/00_contracts.md` *(fuente canónica de estados, evento `ConsultationCompleted`, tablas base y APIs Edge↔Hub)*.
+- **Tablero de Backlog Activo:** `docs/backlog.md` (Sprint Activo siempre al inicio).
+- **Archivo Histórico de Sprints:** `docs/backlog_archive.md` (Sprints 1, 2 y 3 finalizados).
 
 | Módulo | Directorio de la Spec | Estado | Subtareas / HUs Asociadas |
 | :--- | :--- | :--- | :--- |
+| **Contratos Transversales** | `docs/specs/00_contracts.md` | *Congelado* | Sprints 4 a 7 (Edge ↔ Hub) |
 | **Autenticación y Roles** | `docs/specs/auth/spec.md` | *En Progreso* | `CEN-10`, `CEN-14`, `CEN-15`, `CEN-16` (Sprint 2), `CEN-73` (Sprint 4 Bugfix) |
 | **Design System y Layouts** | `docs/specs/ui/spec.md` | *Implementado* | `CEN-12` (Sprint 2) |
 | **Pacientes y Admisión** | `docs/specs/pacientes/spec.md` | *En Progreso* | `CEN-24`, `CEN-34`, `CEN-36` (Sprint 3), `CEN-72`–`CEN-78` (Sprint 4 Bugfix) |
 | **Triage MTS y Auditoría** | `docs/specs/triage/spec.md` | *En Progreso* | `CEN-24`, `CEN-25`, `CEN-35` a `CEN-41` (Sprint 3), `CEN-72`–`CEN-78` (Sprint 4 Bugfix) |
 | **Consultas Médicas** | `docs/specs/consultas/spec.md` | *En Progreso* | `CEN-26`, `CEN-27` (Sprint 4 Activo) |
-| **Geoespacial y Telemetría** | `docs/specs/geo/spec.md` | *Planificado* | `CEN-28` a `CEN-31` (Sprints 5 a 7) |
+| **Geoespacial y Telemetría** | `docs/specs/geo/spec.md` | *En Progreso* | `CEN-28` a `CEN-31` (Sprints 5 a 7) |

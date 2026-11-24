@@ -11,6 +11,7 @@ namespace App\Enums;
 enum TriageStatus: string
 {
     case PENDING_CONSULTATION = 'pending_consultation'; // En espera de llamada médica
+    case CALLED = 'called';                             // Llamado a consultorio (pendiente de ingreso)
     case IN_CONSULTATION = 'in_consultation';           // Siendo atendido por médico de guardia
     case COMPLETED = 'completed';                       // Consulta finalizada
     case CANCELLED = 'cancelled';                       // Cancelado o retirado sin atención
@@ -19,6 +20,7 @@ enum TriageStatus: string
     {
         return match ($this) {
             self::PENDING_CONSULTATION => 'En espera de consulta',
+            self::CALLED => 'Llamado a consultorio',
             self::IN_CONSULTATION => 'En consulta',
             self::COMPLETED => 'Completado',
             self::CANCELLED => 'Cancelado',
