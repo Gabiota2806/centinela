@@ -585,4 +585,195 @@ class EvaluatePatientTest extends TestCase
             ->assertDontSeeHtml('text-red-600')
             ->assertDontSeeHtml('border-red-200');
     }
+
+    public function test_cancelar_edicion_limpia_el_formulario_sin_modificar_el_triage_ni_crear_auditoria(): void
+    {
+        $nurse = User::factory()->triageNurse()->create();
+        $triage = Triage::factory()->create([
+            'symptoms' => 'Motivo original intacto',
+            'algorithmic_priority' => TriagePriority::GREEN,
+            'final_priority' => TriagePriority::GREEN,
+            'status' => TriageStatus::PENDING_CONSULTATION,
+        ]);
+
+        Livewire::actingAs($nurse)
+            ->test(EvaluatePatient::class)
+            ->call('startEditing', $triage->id)
+            ->assertSet('editingTriageId', $triage->id)
+            ->set('spo2', 80)
+            ->set('symptoms', 'Cambio descartado')
+            ->call('cancelEditing')
+            ->assertSet('editingTriageId', null)
+            ->assertSet('patientId', null)
+            ->assertSet('symptoms', '')
+            ->assertSet('spo2', null);
+
+        $triage->refresh();
+        $this->assertSame('Motivo original intacto', $triage->symptoms);
+        $this->assertSame(TriagePriority::GREEN, $triage->final_priority);
+        $this->assertSame(0, TriageAuditLog::where('triage_id', $triage->id)->count());
+    }
+
+    public function test_bloquea_guardado_de_edicion_si_el_triage_cambio_de_estado_antes_de_confirmar(): void
+    {
+        $nurse = User::factory()->triageNurse()->create();
+        $triage = Triage::factory()->create([
+            'symptoms' => 'Cefalea moderada inicial',
+            'algorithmic_priority' => TriagePriority::YELLOW,
+            'final_priority' => TriagePriority::YELLOW,
+            'status' => TriageStatus::PENDING_CONSULTATION,
+        ]);
+
+        $component = Livewire::actingAs($nurse)
+            ->test(EvaluatePatient::class)
+            ->call('startEditing', $triage->id)
+            ->set('spo2', 81)
+            ->set('symptoms', 'Intento de edición tras llamado médico');
+
+        // El médico llama al paciente antes de que enfermería confirme el guardado
+        $triage->update(['status' => TriageStatus::CALLED]);
+
+        $component->call('save')
+            ->assertHasErrors(['editing'])
+            ->assertNotDispatched('triage-updated');
+
+        $triage->refresh();
+        $this->assertSame('Cefalea moderada inicial', $triage->symptoms);
+        $this->assertSame(TriagePriority::YELLOW, $triage->final_priority);
+        $this->assertSame(0, TriageAuditLog::where('triage_id', $triage->id)->count());
+    }
+
+    public function test_validacion_en_edicion_rechaza_rangos_invalidos_sin_alterar_triage_ni_auditoria(): void
+    {
+        $nurse = User::factory()->triageNurse()->create();
+        $triage = Triage::factory()->create([
+            'symptoms' => 'Control clínico válido',
+            'algorithmic_priority' => TriagePriority::BLUE,
+            'final_priority' => TriagePriority::BLUE,
+            'status' => TriageStatus::PENDING_CONSULTATION,
+        ]);
+
+        Livewire::actingAs($nurse)
+            ->test(EvaluatePatient::class)
+            ->call('startEditing', $triage->id)
+            ->set('temperature', 52.0)
+            ->set('symptoms', 'ab')
+            ->call('save')
+            ->assertHasErrors(['temperature', 'symptoms'])
+            ->assertSee('No se pudieron guardar los cambios del triage')
+            ->assertNotDispatched('triage-updated');
+
+        $triage->refresh();
+        $this->assertSame('Control clínico válido', $triage->symptoms);
+        $this->assertSame(TriagePriority::BLUE, $triage->final_priority);
+        $this->assertSame(0, TriageAuditLog::where('triage_id', $triage->id)->count());
+    }
+
+    public function test_reclasificar_un_triage_mientras_se_edita_sincroniza_prioridad_actual_en_el_banner(): void
+    {
+        $nurse = User::factory()->triageNurse()->create();
+        $doctor = User::factory()->doctor()->create();
+        $triage = Triage::factory()->create([
+            'algorithmic_priority' => TriagePriority::GREEN,
+            'final_priority' => TriagePriority::GREEN,
+            'status' => TriageStatus::PENDING_CONSULTATION,
+        ]);
+
+        $component = Livewire::actingAs($nurse)
+            ->test(EvaluatePatient::class)
+            ->call('startEditing', $triage->id)
+            ->assertSet('editingCurrentPriorityValue', 'green');
+
+        $triage->overridePriority(
+            TriagePriority::ORANGE,
+            'Dolor torácico agudo evaluado en sala de espera.',
+            $doctor
+        );
+
+        $component->dispatch('triage-overridden', triageId: $triage->id)
+            ->assertSet('editingCurrentPriorityValue', 'orange')
+            ->assertSet('editingCurrentPriorityLabel', TriagePriority::ORANGE->label());
+    }
+
+    public function test_busqueda_por_nombre_completo_insensible_a_mayusculas_y_paginacion_de_historial(): void
+    {
+        $nurse = User::factory()->triageNurse()->create();
+
+        for ($i = 1; $i <= 11; $i++) {
+            Triage::factory()->create([
+                'status' => TriageStatus::COMPLETED,
+                'updated_at' => now()->subMinutes($i + 5),
+            ]);
+        }
+
+        $pacienteObjetivo = Patient::factory()->create([
+            'first_name' => 'María',
+            'last_name' => 'González',
+            'dni' => '29000999',
+        ]);
+
+        Triage::factory()->create([
+            'patient_id' => $pacienteObjetivo->id,
+            'status' => TriageStatus::COMPLETED,
+            'updated_at' => now()->subMinutes(60),
+        ]);
+
+        $component = Livewire::actingAs($nurse)
+            ->test(EvaluatePatient::class)
+            ->call('setTab', 'history');
+
+        // 12 registros históricos -> primera página muestra 10
+        $this->assertCount(10, $component->viewData('historyTriages'));
+
+        // Búsqueda por nombre completo en minúsculas encuentra el registro #12
+        $component->set('searchTriage', 'maría gonzález')
+            ->assertSee('María González')
+            ->assertSee('29000999');
+
+        $this->assertCount(1, $component->viewData('historyTriages'));
+    }
+
+    public function test_medico_y_direccion_pueden_editar_triage_pendiente_y_reordenar_cola(): void
+    {
+        $doctor = User::factory()->doctor()->create();
+        $director = User::factory()->director()->create();
+
+        $triageAmarillo = Triage::factory()->create([
+            'algorithmic_priority' => TriagePriority::YELLOW,
+            'final_priority' => TriagePriority::YELLOW,
+            'status' => TriageStatus::PENDING_CONSULTATION,
+            'created_at' => now()->subMinutes(15),
+        ]);
+
+        $triageVerde = Triage::factory()->create([
+            'algorithmic_priority' => TriagePriority::GREEN,
+            'final_priority' => TriagePriority::GREEN,
+            'status' => TriageStatus::PENDING_CONSULTATION,
+            'created_at' => now()->subMinutes(10),
+        ]);
+
+        $this->assertSame(1, $triageAmarillo->estimatedQueuePosition());
+        $this->assertSame(2, $triageVerde->estimatedQueuePosition());
+
+        // Médico eleva el triage Verde a Rojo mediante edición -> pasa a #1
+        Livewire::actingAs($doctor)
+            ->test(EvaluatePatient::class)
+            ->call('startEditing', $triageVerde->id)
+            ->set('spo2', 82)
+            ->set('symptoms', 'Hipoxemia crítica detectada por guardia.')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $positions = Triage::pendingQueuePositions();
+        $this->assertSame(1, $positions[$triageVerde->id]);
+        $this->assertSame(2, $positions[$triageAmarillo->id]);
+
+        // Dirección también puede editar un triage pendiente
+        Livewire::actingAs($director)
+            ->test(EvaluatePatient::class)
+            ->call('startEditing', $triageAmarillo->id)
+            ->set('symptoms', 'Actualización administrativa de motivo clínico.')
+            ->call('save')
+            ->assertHasNoErrors();
+    }
 }
