@@ -11,27 +11,28 @@
 ---
 
 ## Flujo Multiagente y Especificaciones Modulares (SDD)
-Este repositorio opera bajo una metodología multiagente:
-1. **Specs Modulares**: Las especificaciones funcionales se encuentran en `docs/specs/<modulo>/spec.md`.
-2. **Spec Global**: La arquitectura y convenciones transversales residen en `docs/specs/global_spec.md`.
+Este repositorio opera bajo flujo paralelo por Historia de Usuario / sub-vertical:
+1. **Contratos y Specs Modulares**: Consulta siempre `docs/specs/00_contracts.md`, `docs/specs/global_spec.md` y `docs/specs/<modulo>/spec.md`.
+2. **Guía de Ramas del Equipo**: Consulta `docs/team/guia_trabajo_paralelo_y_asignacion_hus.md` y `.github/jira-scopes.conf` para conocer la rama exacta y las subtareas permitidas en cada vertical.
 3. **Backlog Optimizado (`docs/backlog.md` y `docs/backlog_archive.md`)**:
-   - `docs/backlog.md` ubica siempre primero el **Sprint Activo**. Para ahorrar tokens, busca la clave con `grep -n "CEN-xxx" docs/backlog.md` y lee únicamente el bloque de esa subtarea.
+   - `docs/backlog.md` ubica siempre primero el **Sprint Activo**. Para ahorrar tokens, busca la clave con `grep -n "CEN-xxx" docs/backlog.md` y lee únicamente ese bloque.
    - `docs/backlog_archive.md` almacena los Sprints finalizados (`[x] Listo`). No lo leas salvo consulta histórica explícita.
-   - Al cerrar o auditar la última subtarea `[x]` del Sprint Activo, mueve ese Sprint a `docs/backlog_archive.md` y promueve el siguiente Sprint como `(ACTIVO)` al tope de `docs/backlog.md`.
+   - **Anti-conflictos:** **NO edites `docs/backlog.md` ni `docs/changelog.md` dentro de ramas de features/HUs**; se consolidan directamente en `develop` al cierre del día/bloque.
 4. **Roles Operativos**:
-   - **Planificación**: Define o actualiza la spec modular antes de escribir código.
-   - **Implementación**: Sigue TDD estricto con `docker compose exec app php artisan test` (tests primero, código después).
-   - **Revisión**: Comprueba que la suite pase al 100% y valida el diff frente a los criterios Gherkin.
+   - **Planificación**: Un único plan técnico por HU/sub-vertical antes de escribir código.
+   - **Implementación**: TDD estricto con `docker compose exec app php artisan test` y **1 commit por subtarea terminada** usando su propia clave `CEN-xxx`.
+   - **Auto-Auditoría**: Antes de abrir la PR, ejecuta `/auditoria` sobre tu propia rama y pega el veredicto en la descripción de la PR.
 
 ---
 
 ## Reglas Inviolables
-- **Cero Auto-Merge**: Nunca fusiones ramas automáticamente a `develop`. Deja la Pull Request creada para revisión humana.
-- **Clave Jira Única (`CEN-xxx`) en Ramas, Commits y PRs**: El repositorio tiene automatizaciones de Jira Cloud que cambian el estado de cualquier tarjeta cuya clave `CEN-<número>` aparezca en el **nombre de rama**, en el **título o cuerpo de los commits** o en el **título o descripción de la Pull Request**.
-  - En una tarea con ticket, **solo** puede aparecer la clave `CEN-xxx` de la subtarea activa (y **ninguna** en ramas de mantenimiento/docs sin ticket).
-  - **PROHIBIDO** escribir cualquier otra clave `CEN-xxx` (ni épicas, ni HUs padre, ni dependencias previas, ni tareas futuras, ni archivos de otra tarea, ni rangos al cerrar un Sprint).
-  - Para explicar contexto o dependencias en el cuerpo del commit o la descripción de la PR, usa nombres técnicos/funcionales (ej. "sobre `Triage::overridePriority()`", "paleta corporativa", "cola médica", "Sprint 3") o códigos locales (`RF-TRIAGE-10`, `T4.x`) **sin el prefijo `CEN-`**.
-  - El incumplimiento falla el check bloqueante de GitHub Actions (`jira-key-guard`) y frena `/auditoria`. (En los archivos de `docs/` las referencias cruzadas siguen permitidas).
+- **Cero Auto-Merge**: Nunca fusiones ramas automáticamente a `develop`. Deja la Pull Request abierta para aprobación y merge humano en GitHub.
+- **Alcance Estricto de Claves Jira (`CEN-xxx`) en Ramas, Commits y PRs**: Jira Cloud transiciona tarjetas al crear ramas (`En curso`), abrir PRs (`En revisión`) y fusionar PRs (`Listo`).
+  - El **nombre de la rama** lleva **una sola clave** `CEN-xxx` (la HU o sub-vertical asignada en `.github/jira-scopes.conf`, o **ninguna** en ramas de mantenimiento/docs).
+  - En los **commits** (título y cuerpo) y en la **PR** (título y descripción) solo pueden figurar las claves autorizadas para esa rama en `.github/jira-scopes.conf` (o las subtareas hijas de esa HU en `docs/backlog.md`).
+  - **PROHIBIDO** escribir cualquier clave `CEN-xxx` fuera de ese alcance (épicas, otras HUs, tareas de otros compañeros ni rangos de Sprint).
+  - Para explicar contexto externo, usa nombres técnicos/funcionales (ej. "sobre `Triage::overridePriority()`", "cola médica", "Sprint 4") o códigos locales (`RF-CONS-01`, `T4.x`) **sin el prefijo `CEN-`**.
+  - El incumplimiento falla el check bloqueante `jira-key-guard` y frena `/auditoria`. (Dentro de archivos de `docs/` las referencias cruzadas siguen permitidas).
 - **TDD Obligatorio**: Todo cambio de lógica debe contar con su correspondiente prueba en PHPUnit (`php artisan test`).
 - **Iconografía**: En vistas y componentes UI usa únicamente SVGs vectoriales (Heroicons / Lucide) con clases CSS. No uses emojis de texto.
 - **Protocolo MTS**: Respetar los 5 colores Manchester y la auditoría clínica inmutable (*Clinical Override*).

@@ -51,10 +51,12 @@ class ModelRelationshipsAndCastsTest extends TestCase
     public function test_triage_status_enum_values_and_labels(): void
     {
         $this->assertSame('pending_consultation', TriageStatus::PENDING_CONSULTATION->value);
+        $this->assertSame('called', TriageStatus::CALLED->value);
         $this->assertSame('in_consultation', TriageStatus::IN_CONSULTATION->value);
         $this->assertSame('completed', TriageStatus::COMPLETED->value);
         $this->assertSame('cancelled', TriageStatus::CANCELLED->value);
         $this->assertNotEmpty(TriageStatus::PENDING_CONSULTATION->label());
+        $this->assertNotEmpty(TriageStatus::CALLED->label());
     }
 
     public function test_consultation_status_enum_values_and_labels(): void
@@ -70,6 +72,10 @@ class ModelRelationshipsAndCastsTest extends TestCase
         $neighborhood = new Neighborhood;
         $this->assertInstanceOf(HasMany::class, $neighborhood->patients());
         $this->assertInstanceOf(Patient::class, $neighborhood->patients()->getRelated());
+
+        $casts = $neighborhood->getCasts();
+        $this->assertSame('float', $casts['risk_score']);
+        $this->assertSame('datetime', $casts['risk_updated_at']);
     }
 
     public function test_patient_model_relationships_and_accessors(): void

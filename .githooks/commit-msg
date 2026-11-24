@@ -11,6 +11,8 @@ if [ -z "$BRANCH" ] || [ "$BRANCH" = "main" ] || [ "$BRANCH" = "develop" ]; then
   exit 0
 fi
 
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+
 CLEAN_MSG=$(LC_ALL=C awk '
   /^# ------------------------ >8 ------------------------$/ { exit }
   /^#/ { next }
@@ -39,24 +41,80 @@ extract_keys() {
   }' | sort -u
 }
 
+resolve_allowed_keys() {
+  _bkey="$1"
+  [ -z "$_bkey" ] && return 0
+
+  if [ -f "${REPO_ROOT}/.github/jira-scopes.conf" ]; then
+    _scoped=$(LC_ALL=C awk -v key="$_bkey" '
+      /^[[:space:]]*#/ || /^[[:space:]]*$/ { next }
+      {
+        line = toupper($0)
+        sub(/[[:space:]]*#.*/, "", line)
+        split(line, parts, ":")
+        lhs = parts[1]
+        gsub(/[[:space:]]+/, "", lhs)
+        if (lhs == key) {
+          n = split(parts[2], toks, /[[:space:],]+/)
+          for (i = 1; i <= n; i++) {
+            if (toks[i] ~ /^CEN-[0-9]+$/) print toks[i]
+          }
+          found = 1
+          exit
+        }
+      }
+      END { if (found) print key }
+    ' "${REPO_ROOT}/.github/jira-scopes.conf" | sort -u)
+    if [ -n "$_scoped" ]; then
+      printf '%s\n' "$_scoped"
+      return 0
+    fi
+  fi
+
+  if [ -f "${REPO_ROOT}/docs/backlog.md" ]; then
+    _backlog=$(LC_ALL=C awk -v key="$_bkey" '
+      /^### / { in_hu = (index(toupper($0), key) > 0) ? 1 : 0; next }
+      /^## / || /^---/ { in_hu = 0; next }
+      in_hu && /^#### / {
+        line = toupper($0)
+        if (match(line, /CEN-[0-9]+/)) print substr(line, RSTART, RLENGTH)
+      }
+    ' "${REPO_ROOT}/docs/backlog.md" | sort -u)
+    if [ -n "$_backlog" ]; then
+      printf '%s\n%s\n' "$_bkey" "$_backlog" | sort -u
+      return 0
+    fi
+  fi
+
+  printf '%s\n' "$_bkey"
+}
+
+is_allowed_key() {
+  _cand="$1"
+  _allowed="$2"
+  [ -z "$_allowed" ] && return 1
+  printf '%s\n' "$_allowed" | grep -qx "$_cand"
+}
+
 BRANCH_KEYS=$(printf '%s\n' "$BRANCH" | extract_keys || true)
 BRANCH_KEY_COUNT=$(printf '%s\n' "$BRANCH_KEYS" | LC_ALL=C awk 'NF { c++ } END { print c + 0 }')
 
 if [ "$BRANCH_KEY_COUNT" -gt 1 ]; then
   JOINED=$(printf '%s\n' "$BRANCH_KEYS" | paste -sd ', ' -)
   printf '%s\n' "[jira-key-guard] ERROR: La rama '${BRANCH}' contiene múltiples claves Jira (${JOINED})." >&2
-  printf '%s\n' "Renombrá la rama dejando únicamente la clave CEN-xxx de la subtarea activa." >&2
+  printf '%s\n' "Renombrá la rama dejando únicamente la clave CEN-xxx de la HU o tarea principal." >&2
   exit 1
 fi
 
-ALLOWED_KEY=""
+ALLOWED_KEYS=""
 if [ "$BRANCH_KEY_COUNT" -eq 1 ]; then
-  ALLOWED_KEY="$BRANCH_KEYS"
+  ALLOWED_KEYS=$(resolve_allowed_keys "$BRANCH_KEYS")
 fi
+ALLOWED_DISPLAY=$(printf '%s\n' "$ALLOWED_KEYS" | paste -sd ', ' -)
 
 FOREIGN_KEYS=$(printf '%s\n' "$CLEAN_MSG" | extract_keys | while IFS= read -r key; do
   [ -z "$key" ] && continue
-  if [ -z "$ALLOWED_KEY" ] || [ "$key" != "$ALLOWED_KEY" ]; then
+  if ! is_allowed_key "$key" "$ALLOWED_KEYS"; then
     printf '%s\n' "$key"
   fi
 done)
@@ -64,10 +122,10 @@ done)
 if [ -n "$FOREIGN_KEYS" ]; then
   JOINED=$(printf '%s\n' "$FOREIGN_KEYS" | paste -sd ', ' -)
   printf '%s\n' "[jira-key-guard] Commit bloqueado: contiene clave(s) Jira ajena(s): ${JOINED}" >&2
-  printf '%s\n' "  Rama actual:     ${BRANCH}" >&2
-  printf '%s\n' "  Clave permitida: ${ALLOWED_KEY:-ninguna (rama de mantenimiento/docs)}" >&2
-  printf '%s\n' "  Motivo:          Las automatizaciones de Jira mueven el estado de cualquier CEN-<número> que aparezca en commits." >&2
-  printf '%s\n' "  Solución:        Quitá esas claves del título y cuerpo del commit; citá contexto por nombre técnico o código RF/T." >&2
+  printf '%s\n' "  Rama actual:        ${BRANCH}" >&2
+  printf '%s\n' "  Claves permitidas:  ${ALLOWED_DISPLAY:-ninguna (rama de mantenimiento/docs)}" >&2
+  printf '%s\n' "  Motivo:             Las automatizaciones de Jira mueven el estado de cualquier CEN-<número> que aparezca en commits." >&2
+  printf '%s\n' "  Solución:           Quitá esas claves del título y cuerpo del commit; citá contexto por nombre técnico o código RF/T." >&2
   exit 1
 fi
 

@@ -44,7 +44,7 @@
 - **Detalle Técnico:** Buscador por DNI/nombre; pestaña "En espera" (`pending_consultation` con `#N` y `called` con badge "Llamado") con acciones Editar signos/motivo/discriminadores (recalcula MTS y registra en `triage_audit_logs` si cambia la prioridad), Clinical Override y Ver ticket; pestaña "Historial" (`in_consultation`, `completed`, `cancelled`).
 
 #### 📌 CEN-77: [T4.B5] Remediación UI/UX de campos de signos vitales, estados de carga y tokens MTS
-- **Estado:** `[ ]` Por hacer | **Responsable:** Valeria Budiño | **Estimación:** 2 SP
+- **Estado:** `[ ]` Por hacer | **Responsable:** Gabriel Pineda | **Estimación:** 2 SP
 - **Archivos Objetivo:** `resources/views/livewire/patients/create-patient.blade.php`, `resources/views/livewire/triage/evaluate-patient.blade.php`, `tailwind.config.js`.
 - **Detalle Técnico:** Padding derecho reservado (`pr-9`, `pr-12`, `pr-14`) + `pointer-events-none` en unidades (`°C`, `mmHg`, `lpm`, `rpm`, `%`), `wire:target="save"` en botones de guardado, bordes `border-danger` / `aria-invalid` / `aria-describedby` según `docs/specs/ui/spec.md` y verificación de compilación CSS de los 5 colores MTS.
 
@@ -56,7 +56,7 @@
 ### 📖 HU03: Gestión de Cola Médica en Tiempo Real (`CEN-26`, 20 SP)
 
 #### 📌 CEN-42: [T4.1] Diseño y maquetación del panel médico con ordenamiento dinámico por MTS
-- **Estado:** `[ ]` Por hacer | **Responsable:** Valeria Budiño | **Estimación:** 4 SP
+- **Estado:** `[ ]` Por hacer | **Responsable:** Gabriel Pineda | **Estimación:** 4 SP
 - **Archivos Objetivo:** `app/Livewire/Doctor/MedicalQueue.php`, `resources/views/livewire/doctor/medical-queue.blade.php`.
 - **Detalle Técnico:** Tarjetas de espera ordenadas por color MTS (Rojo al frente, luego Naranja, Amarillo, Verde, Azul) mostrando posición `#N` y ticket `TR-XXXXX`. Cronómetro regresivo con tiempo restante antes del límite máximo de espera. Botón "Llamar a Consultorio", botón de Clinical Override (`open-clinical-override`) y acciones selectivas sobre pacientes en estado `called`: "Ingresar a consulta", "Volver a espera" o "Cancelar / Ausente".
 
@@ -67,12 +67,12 @@
   `ORDER BY CASE final_priority WHEN 'red' THEN 1 WHEN 'orange' THEN 2 WHEN 'yellow' THEN 3 WHEN 'green' THEN 4 WHEN 'blue' THEN 5 END, created_at ASC`.
 
 #### 📌 CEN-44: [T4.3] Lógica de cambio de estados del paciente (Llamado, En Consulta, Atendido)
-- **Estado:** `[ ]` Por hacer | **Responsable:** Enrique M. González | **Estimación:** 4 SP
+- **Estado:** `[ ]` Por hacer | **Responsable:** Gabriel Pineda | **Estimación:** 4 SP
 - **Archivos Objetivo:** `app/Models/Triage.php`, `app/Models/Consultation.php`, `app/Enums/TriageStatus.php`.
 - **Detalle Técnico:** Agregar `CALLED = 'called'` en `TriageStatus`. Transiciones válidas: `pending_consultation` ➔ `called` ➔ `in_consultation` ➔ `completed` (con `Consultation` en `completed` / `referred_sipec`), más transiciones selectivas desde `called`: ➔ `pending_consultation` (devolver a cola conservando `created_at` FIFO) o ➔ `cancelled` (ausente/retirado, habilitando re-admisión futura). Registro de timestamps `started_at` y `completed_at`.
 
 #### 📌 CEN-45: [T4.5] Optimización de consultas a la cola de espera mediante índices compuestos
-- **Estado:** `[ ]` Por hacer | **Responsable:** Enrique M. González | **Estimación:** 3 SP
+- **Estado:** `[ ]` Por hacer | **Responsable:** Gabriel Pineda | **Estimación:** 3 SP
 - **Archivos Objetivo:** `database/migrations/xxxx_add_indexes_to_triages_table.php`.
 - **Detalle Técnico:** Índice compuesto en PostgreSQL: `CREATE INDEX idx_triages_active_queue ON triages (status, final_priority, created_at);`. Tiempo de respuesta < 20 ms probado con `EXPLAIN ANALYZE`.
 
@@ -108,19 +108,19 @@
 - **Detalle Técnico:** Ejecución diaria automatizada a las 06:00 AM. Almacenamiento en caché de contingencia ante caídas de enlace de red para mantener datos de los últimos 7 días.
 
 #### 📌 CEN-50: [T5.5] Maquetación de vistas de configuración y parámetros epidemiológicos
-- **Estado:** `[ ]` Por hacer | **Responsable:** Valeria Budiño | **Estimación:** 5 SP
+- **Estado:** `[ ]` Por hacer | **Responsable:** Enrique M. González | **Estimación:** 5 SP
 - **Archivos Objetivo:** `app/Livewire/Admin/EpidemiologySettings.php`, `resources/views/livewire/admin/epidemiology-settings.blade.php`.
 - **Detalle Técnico:** Panel para ajustar parámetros de alerta (umbrales de lluvia en mm, ventana de tiempo crítico y factores de riesgo ambiental).
 
 ### 📖 HU06: Telemetría Epidemiológica Asíncrona y Anonimización (Ley 25.326) (`CEN-29`, 20 SP)
 
 #### 📌 CEN-51: [T5.3] Módulo de disociación y anonimización de datos clínicos (Ley N° 25.326)
-- **Estado:** `[ ]` Por hacer | **Responsable:** Gabriel Pineda | **Estimación:** 4 SP
+- **Estado:** `[ ]` Por hacer | **Responsable:** Enrique M. González | **Estimación:** 4 SP
 - **Archivos Objetivo:** `app/Services/Telemetry/AnonymizerService.php`, `app/Jobs/DispatchTelemetryJob.php`.
 - **Detalle Técnico:** Outbox Pattern: tabla `outbox_telemetry_events`. Filtro irreversible: conserva `neighborhood_id`, grupo etario (`infante`, `adulto`, `mayor`), `triage_priority`, `presumptive_diagnosis` y `symptoms`. Elimina absolutamente DNI, nombre, apellido, teléfono y domicilio.
 
 #### 📌 CEN-52: [T5.4] Estructuración de microservicio FastAPI en Python para analítica
-- **Estado:** `[ ]` Por hacer | **Responsable:** Gabriel Pineda | **Estimación:** 4 SP
+- **Estado:** `[ ]` Por hacer | **Responsable:** Enrique M. González | **Estimación:** 4 SP
 - **Archivos Objetivo:** `backend_analytics/main.py`, `backend_analytics/routers/telemetry.py`, `backend_analytics/schemas/telemetry.py`.
 - **Detalle Técnico:** Microservicio en Python 3.12 con FastAPI. Endpoint `POST /api/v1/telemetry` con validación Pydantic y autenticación de nodo mediante header `X-CAPS-Key`.
 

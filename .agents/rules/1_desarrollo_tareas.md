@@ -1,68 +1,38 @@
----
-name: regla-desarrollo-tareas
-description: Regla de cumplimiento obligatorio para el ciclo de vida de desarrollo de tareas técnicas con Jira Cloud en Centinela.
-trigger: always_on
----
-
-# 🛡️ Regla de Cumplimiento: Metodología de Desarrollo de Tareas (Gabriel & Antigravity)
+# 🛡️ Regla de Cumplimiento: Metodología de Desarrollo Paralelo por HU / Sub-vertical (Centinela)
 
 Esta regla rige de forma permanente en todas las sesiones y conversaciones en Centinela:
 
-1. **ACTIVACIÓN HÍBRIDA, DETECCIÓN DE MODO Y CREACIÓN DE RAMA**:
+1. **ACTIVACIÓN HÍBRIDA, DETECCIÓN DE ALCANCE Y CREACIÓN DE RAMA**:
    - **Activación Híbrida (Slash Command `/desarrollo-tarea`)**:
-     * **Invocación Inline**: Si Gabriel escribe `/desarrollo-tarea <CLAVE> <modo>` (ej. `/desarrollo-tarea CEN-12 local`), Antigravity extrae directamente los parámetros y avanza de inmediato a consultar Jira sin preguntas redundantes.
-     * **Invocación Vacía / Asistida**: Si Gabriel invoca `/desarrollo-tarea` sin argumentos, Antigravity **DEBE activar de inmediato la herramienta interactiva `ask_question`** presentando el modal (Clave de Jira y selector de Modo Local vs. Remoto).
-   - NUNCA escribas código, modifiques archivos ni crees ramas sin antes presentar un Plan Técnico detallado en el chat.
-   - **Consulta de la Tarea (Local First en docs/backlog.md)**:
-     * Antigravity DEBE consultar primero `docs/backlog.md` (donde el **Sprint Activo** figura siempre al inicio). Para optimizar el consumo de tokens, debe localizar la tarea con `grep -n "CEN-xxx" docs/backlog.md` y leer únicamente el rango de líneas correspondiente, sin cargar el archivo completo ni leer `docs/backlog_archive.md` (reservado solo a Sprints finalizados).
-     * Si el entorno cuenta con credenciales en `.env.jira` o servidor MCP de Jira activo, puede consultar opcionalmente Jira Cloud; en caso contrario, `docs/backlog.md` es la fuente de verdad definitiva y suficiente.
-     * Estructura el nombre de rama estandarizado (ej. `CEN-xxx-nombre-tarea`).
-   - **Consulta de Especificación Modular SDD**:
-     * Antigravity DEBE consultar la especificación del módulo correspondiente en `docs/specs/<modulo>/spec.md` y las directivas generales en `docs/specs/global_spec.md` para extraer los requerimientos funcionales (RF) y criterios de aceptación (Gherkin).
-   - **Inspección de Estado Vivo**:
-     * Inspeccionar migraciones en `database/migrations/`, modelos en `app/Models/` y el contenedor Docker de PostgreSQL/PostGIS.
-   - DEBES pausar y esperar el "OK" explícito de Gabriel sobre el plan antes de tocar código.
-   - Tras el "OK" de Gabriel, sincroniza `develop`, crea la rama en Git y súbela a GitHub para vincular con Jira.
+     * **Invocación Inline**: Si el desarrollador escribe `/desarrollo-tarea <CLAVE_HU_O_SUBTAREA> <modo>` (ej. `/desarrollo-tarea CEN-28 local`), extrae directamente los parámetros y avanza de inmediato sin preguntas redundantes.
+     * **Invocación Vacía / Asistida**: Si se invoca `/desarrollo-tarea` sin argumentos, activar `ask_question` para pedir la clave (`CEN-xxx`) y el modo (`Local` vs. `Remoto`).
+   - **Detección Automática de Alcance (1 Rama = 1 HU o Sub-vertical)**:
+     * Consultar `.github/jira-scopes.conf` y `docs/team/guia_trabajo_paralelo_y_asignacion_hus.md` para identificar el nombre exacto de la rama y **todas las subtareas `CEN-xxx` asignadas a esa rama**.
+     * Consultar `docs/backlog.md` de forma quirúrgica (`grep -n "CEN-xxx" docs/backlog.md`) leyendo únicamente las subtareas de esa rama (sin leer `docs/backlog_archive.md`).
+     * Consultar `docs/specs/00_contracts.md`, `docs/specs/global_spec.md` y la spec modular correspondiente (`docs/specs/<modulo>/spec.md`).
+     * Inspeccionar migraciones en `database/migrations/` y modelos en `app/Models/`.
+   - **Plan Técnico Único**: Presentar un único plan ordenado por subtarea (`CEN-xx` → `CEN-yy` → ...) y el nombre exacto de rama antes de tocar código.
+   - 🚫 **PAUSA**: Esperar el "OK" explícito del desarrollador sobre el plan antes de crear la rama o escribir código.
+   - Tras el "OK", sincronizar `develop`, crear la rama (con una única clave `CEN-xxx` en su nombre) y subirla a GitHub (`git push -u origin <rama>`) para que Jira la pase a *En curso*.
 
-2. **REGLA ESTRICTA DE CLAVE JIRA ÚNICA EN RAMAS, COMMITS Y PULL REQUESTS**:
-   - Antigravity **NO debe modificar el estado de las tarjetas en Jira Cloud mediante transitions API** a menos que el usuario lo solicite. Las transiciones las manejan las automatizaciones de Jira.
-   - **Clave única obligatoria:** En el **nombre de rama**, el **título y cuerpo (body) de cada commit** y el **título y descripción (body) de la Pull Request**, SOLO puede aparecer la clave `CEN-xxx` de la subtarea activa (o **ninguna** en ramas de mantenimiento/docs sin ticket).
-   - **PROHIBIDO mencionar cualquier otra clave `CEN-xxx`**: ni épicas, ni Historias de Usuario padre, ni dependencias previas, ni tareas siguientes, ni rangos de cierre de Sprint (ej. escribir "cierre del Sprint 3" en lugar de citar un rango de claves `CEN-`).
-   - Para dar contexto sobre otras funcionalidades o dependencias, usa nombres técnicos/funcionales o códigos locales (`RF-xxx`, `T4.x`) sin el prefijo `CEN-`. (Dentro de archivos de `docs/` las referencias cruzadas siguen permitidas).
-   - El check de CI `jira-key-guard` y los hooks locales `.githooks/` validan esta regla de forma bloqueante.
+2. **REGLA ESTRICTA DE ALCANCE DE CLAVES JIRA EN RAMAS, COMMITS Y PRs**:
+   - No modificar tarjetas en Jira Cloud mediante transitions API salvo pedido expreso. Jira transiciona automáticamente: rama (`En curso`), PR abierta (`En revisión`) y PR mergeada (`Listo`).
+   - **Nombre de rama:** solo **una** clave `CEN-xxx` (la clave de HU o sub-vertical definida en `.github/jira-scopes.conf`, o ninguna en mantenimiento/docs).
+   - **Commits (1 commit por subtarea terminada):** cada subtarea completada en la rama lleva su propia clave autorizada (`feat(CEN-48): ...`, `feat(CEN-49): ...`).
+   - **PR (título y cuerpo):** solo pueden figurar claves dentro del alcance de `.github/jira-scopes.conf` para esa rama (o subtareas hijas de esa HU en `docs/backlog.md`).
+   - **PROHIBIDO** mencionar claves `CEN-xxx` fuera de ese alcance (épicas, otras HUs, tareas de otros integrantes ni rangos de Sprint). Usar nombres técnicos/funcionales o códigos `RF-xxx`/`T4.x`.
+   - El check bloqueante `jira-key-guard` y los hooks locales `.githooks/` validan esta regla.
 
-3. **TDD, SMOKE TESTING Y PRE-VERIFICACIÓN TÉCNICA EN NAVEGADOR**:
-   - **TDD Estricto**: Escribe o actualiza las pruebas unitarias y de integración cubriendo los criterios Gherkin en PHPUnit antes o en paralelo al código de producción.
-   - Ejecuta la suite de pruebas mediante: `docker compose exec app php artisan test`. Garantiza el 100% en verde.
-   - **Estándar de Iconografía**: Queda **PROHIBIDO** usar emojis de texto o caracteres tipográficos sustitutos. Utilizar exclusivamente **SVGs vectoriales** con clases utilitarias (`w-4 h-4` o `w-5 h-5`).
-   - **Pre-Verificación Técnica en Navegador**:
-     * Si la tarea afecta interfaz gráfica o Livewire, navegar a la pantalla afectada con `/browser` o Playwright en `http://localhost:8000` (o `http://localhost`).
-     * Constatar que renderice sin excepciones HTTP 500 ni caídas de componentes Livewire.
-     * Validar que la consola JavaScript y los logs de Laravel (`laravel.log`) permanezcan completamente limpios.
-   - 🚫 **GUARDIA ESTRICTA DE DOBLE VERIFICACIÓN**: La pre-verificación técnica del asistente **NUNCA** sustituye la prueba manual de Gabriel. La pausa para validación humana es obligatoria e inviolable.
-   - **Entrega de la Guía de QA Manual**:
-     * **En Modo Local**: Apuntar directamente a `http://localhost`.
-     * Nota: Entorno sin túnel remoto configurado. Todas las pruebas se realizan directamente en `http://localhost`.
-   - 🚫 **PAUSA OBLIGATORIA**: Esperar el "OK" explícito de Gabriel confirmando sus pruebas en el navegador.
-   - 🔄 **CICLO ITERATIVO ANTE OBSERVACIONES**: Si Gabriel plantea observaciones, Antigravity DEBE presentar un Plan Técnico de Ajuste, esperar el "OK", implementar, re-verificar y presentar la guía de re-validación.
+3. **TDD ITERATIVO POR SUBTAREA, QA MANUAL UNIFICADA Y AUTO-AUDITORÍA**:
+   - Implementar cada subtarea del bloque en orden con TDD (`docker compose exec app php artisan test` 100% en verde y `./vendor/bin/pint --test` limpio).
+   - Al cerrar cada subtarea con tests verdes, realizar su commit atómico (`feat(CEN-xx): ...`).
+   - **Anti-conflictos:** **NO editar `docs/backlog.md` ni `docs/changelog.md`** dentro de ramas de features/HUs (se consolidan directo en `develop` al cierre del día/bloque).
+   - **Iconografía:** Prohibido usar emojis de texto en vistas Blade o componentes; usar exclusivamente SVGs vectoriales (`w-4 h-4` o `w-5 h-5`).
+   - **Pre-Verificación y Guía de QA Manual Unificada**: Al completar todas las subtareas de la rama, verificar consola JS / `laravel.log` en `http://localhost:8000` (si aplica UI) y entregar una **única Guía de QA Manual** cubriendo toda la HU.
+   - 🚫 **PAUSA OBLIGATORIA**: Esperar el "OK" explícito del desarrollador confirmando sus pruebas manuales (+ pruebas extra que agregue).
 
-4. **REGISTRO EN DOCUMENTACIÓN Y COMMIT (SOLO TRAS EL OK DE QA)**:
-   - Marca la tarea técnica como completada `[x]` en `docs/specs/<modulo>/spec.md` y en `docs/backlog.md`.
-   - **Rotación de Sprint**: Si la tarea completada es la última subtarea pendiente del **Sprint Activo** en `docs/backlog.md`, migra el Sprint finalizado a `docs/backlog_archive.md` y promueve el siguiente Sprint como `(ACTIVO)` al inicio de `docs/backlog.md`.
-   - Registra la entrada en `docs/changelog.md` bajo `## [Unreleased]`.
-   - Realiza el commit en español con Conventional Commits (`feat: ...`, `fix: ...`, `test: ...`) referenciando únicamente la clave de la subtarea técnica (ej. `CEN-12`), verificando que ni el título ni el cuerpo contengan otras claves `CEN-xxx`.
-   - Sube la rama a GitHub (`git push origin <rama>`).
-
-5. **CREACIÓN DE PULL REQUEST (PROHIBIDO AUTO-MERGE)**:
-   - 🚫 **PROHIBICIÓN ESTRICTA DE AUTO-MERGE**: Antigravity **NUNCA** ejecutará `gh pr merge`, ni mergeará la rama local o remotamente a `develop`. La PR DEBE quedar abierta para revisión de código por el equipo (Valeria, Enrique, Gabriel).
-   - **Protocolo de Creación de PR**:
-     1. Si el servidor MCP de GitHub está autenticado y activo, invocar `create_pull_request` apuntando a `develop`.
-     2. Si el CLI `gh` está disponible y autenticado en el sistema, ejecutar:
-        ```bash
-        gh pr create --base develop --head <rama> --title "feat(CEN-xxx): [Título]" --body "[Cuerpo Markdown con tareas cubiertas y checklist de QA, sin ninguna otra clave CEN-xxx]"
-        ```
-     3. Si ni el MCP ni el CLI de GitHub están autenticados:
-        * Generar y mostrar en el chat la URL directa de comparación de GitHub:
-          `https://github.com/Gabiota2806/centinela/compare/develop...<rama>?expand=1`
-        * Imprimir un bloque Markdown preformateado con el Título y Descripción listos para copiar y pegar en la interfaz web de GitHub.
-   - Informar a Gabriel que la rama fue empujada exitosamente y la Pull Request quedó abierta a la espera de la auditoría y revisión del equipo.
+4. **AUTO-AUDITORÍA PREVIA Y PULL REQUEST (PROHIBIDO AUTO-MERGE)**:
+   - Tras el "OK" de QA manual, ejecutar **`/auditoria` sobre la propia rama** verificando `php artisan test`, `pint --test`, concordancia RF por RF contra `00_contracts.md` y la spec modular, RBAC, Ley N° 25.326, ausencia de emojis e integridad de claves Jira.
+   - Si surgen observaciones, corregirlas y re-validar hasta emitir `VEREDICTO: APROBADO`.
+   - Empujar la rama (`git push origin <rama>`) y crear la PR hacia `develop` pegando el resumen de `/auditoria` y el checklist de QA.
+   - 🚫 **PROHIBIDO EL AUTO-MERGE**: Nunca ejecutar `gh pr merge` ni fusionar a `develop` sin aprobación humana. El desarrollador puede iniciar de inmediato su siguiente rama independiente desde `develop` sin esperar el merge.

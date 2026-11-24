@@ -1,72 +1,62 @@
 ---
 name: desarrollo-tarea
-description: Guía y flujo operativo paso a paso para el desarrollo e implementación de subtareas técnicas en Laravel. Usar al iniciar o trabajar en cualquier tarea (TASK-X / CEN-X).
+description: Guía y flujo operativo paso a paso para desarrollar una Historia de Usuario, sub-vertical o subtarea en Centinela (1 rama por bloque, commits por subtarea, TDD, QA manual, auto-auditoría y PR sin auto-merge).
 ---
 
-# 🚀 Skill: Desarrollo e Implementación de Tareas
+# 🚀 Skill: Desarrollo Paralelo por HU / Sub-vertical
 
-Este skill guía a Antigravity en la ejecución paso a paso del ciclo de vida de desarrollo de cualquier tarea técnica junto al desarrollador.
+Este skill guía a Antigravity durante el ciclo completo de desarrollo de una Historia de Usuario, sub-vertical o subtarea individual en Centinela.
 
 ---
 
 ## 🔄 Flujo Operativo Paso a Paso
 
-### 1. Activación Híbrida, Planificación y Creación de Rama
-* **Protocolo de Activación Híbrida (`/desarrollo-tarea`)**:
-  - **Invocación Inline**: Si se envía la clave y modo directamente (ej. `/desarrollo-tarea CEN-101 local`), extrae los parámetros y avanza de inmediato a consultar el contexto de la tarea.
-  - **Invocación Asistida**: Si se envía solo `/desarrollo-tarea`, activa `ask_question` para consultar:
-    * Clave de la tarea o ticket asignado.
-    * Modo de trabajo (`(Recommended) Modo Local (en la PC)` | `Modo Remoto (desde el celular con túnel Cloudflare)`).
-* **Consulta de la Tarea y Alcance (docs/backlog.md)**:
-  - El **Sprint Activo** está siempre al principio de `docs/backlog.md`. Para ahorrar tokens, localiza la subtarea con `grep -n "CEN-xxx" docs/backlog.md` y lee solo ese rango de líneas. No leas `docs/backlog_archive.md` salvo consulta histórica explícita.
-  - Si existen credenciales de Jira Cloud (`.env.jira`), sincroniza opcionalmente con Jira; de lo contrario, opera de forma 100% autónoma con el backlog local.
-* **Consulta de Especificación Modular SDD**:
-  - Antigravity DEBE consultar la especificación modular correspondiente en `docs/specs/<modulo>/spec.md` y `docs/specs/global_spec.md` para extraer los Requerimientos Funcionales (RF) y Criterios de Aceptación (Gherkin).
-* **Inspección de Estado Vivo**:
-  - Inspeccionar el esquema de base de datos viva (vía Laravel Boost MCP si está instalado, o leyendo migraciones en `database/migrations/` y modelos en `app/Models/`).
-* **Plan Técnico Estructurado**:
-  1. Modo de Trabajo (Local o Remoto).
-  2. Nombre de rama estandarizado con una única clave Jira (ej. `CEN-xxx-nombre-tarea`, o sin clave `CEN-` en mantenimiento/docs).
-  3. Clases, modelos, enums, migraciones o vistas a crear o modificar.
-  4. Estrategia de pruebas TDD.
-* 🚫 **PAUSA**: Espera el "OK" explícito del desarrollador antes de codificar o crear ramas.
-* **Creación y Push de Rama**:
-  Tras recibir el "OK", crea la rama desde `develop` y la sube a GitHub.
+### 1. Activación, Detección de Alcance y Plan Único
+* **Activación Híbrida (`/desarrollo-tarea`)**:
+  - Inline: `/desarrollo-tarea CEN-28 local` → extrae clave y modo directamente.
+  - Asistida: si falta clave o modo, usar `ask_question`.
+* **Detección de Rama y Subtareas**:
+  - Buscar la clave en `.github/jira-scopes.conf` y `docs/team/guia_trabajo_paralelo_y_asignacion_hus.md` para obtener:
+    1. Nombre exacto de la rama asignada (con una única clave `CEN-xxx`).
+    2. Lista completa de subtareas `CEN-xxx` incluidas en esa rama (o solo esa clave si es una tarea individual).
+  - Leer únicamente esas subtareas en `docs/backlog.md` (`grep -n "CEN-xxx" docs/backlog.md`; no leer `docs/backlog_archive.md`).
+  - Leer `docs/specs/00_contracts.md`, `docs/specs/global_spec.md` y la spec modular (`docs/specs/<modulo>/spec.md`).
+* **Plan Técnico Unificado**:
+  1. Nombre exacto de la rama y subtareas incluidas.
+  2. Archivos a crear/modificar (verificando cero solapamiento con otros carriles).
+  3. Orden de implementación y estrategia TDD por subtarea.
+* 🚫 **PAUSA**: Esperar el "OK" explícito del desarrollador.
+* Tras el "OK", sincronizar `develop`, crear la rama y subirla (`git push -u origin <rama>`).
 
 ---
 
-### 2. Desarrollo, TDD y QA Manual
-* Implementa la lógica siguiendo la spec modular y las convenciones del repositorio (`AGENTS.md`).
-* **TDD Estricto**: Escribe o actualiza las pruebas unitarias y de integración primero.
-* **Ejecución de Pruebas**: Ejecuta la suite mediante `docker compose exec app php artisan test`. El 100% debe pasar en verde.
-* **Iconografía**: Utiliza exclusivamente SVGs vectoriales (Heroicons / Lucide) con clases utilitarias. PROHIBIDO el uso de emojis en la interfaz.
-* **Pre-Verificación Técnica en Navegador**:
-  - Si hay cambios visuales, navegar con `/browser` o Playwright a `http://localhost/...`.
-  - Validar que no haya excepciones HTTP 500 ni caídas de componentes reactivos.
-  - Verificar que la consola JavaScript y los logs de Laravel (`laravel.log`) permanezcan completamente limpios.
-* **Guía de QA Manual**:
-  - Presentar la guía paso a paso para validación humana (Local en `localhost` o Remoto con túnel Cloudflare si está configurado).
-  - 🚫 **PAUSA OBLIGATORIA**: Esperar el "OK" explícito del desarrollador confirmando sus pruebas en el navegador.
+### 2. Implementación Iterativa con 1 Commit por Subtarea
+Para cada subtarea del bloque, en orden:
+* **TDD Estricto**: escribir pruebas en `tests/` cubriendo los criterios Gherkin y casos borde (403, 422, offline/privacidad).
+* Implementar la lógica respetando `docs/specs/00_contracts.md` y `AGENTS.md` (solo SVGs vectoriales, cero emojis).
+* Verificar suite y formato:
+  - `docker compose exec app php artisan test` (100% verde)
+  - `docker compose exec app ./vendor/bin/pint --test` (limpio)
+  - Si toca `backend_analytics/`, ejecutar también su suite `pytest`.
+* **Commit atómico por subtarea** usando únicamente la clave de esa subtarea autorizada en `.github/jira-scopes.conf` (`feat(CEN-48): ...`).
+* **Regla anti-conflictos:** **NO editar `docs/backlog.md` ni `docs/changelog.md`** en la rama de feature (se consolidan directo en `develop` al cierre del día).
 
 ---
 
-### 3. Registro en Documentación y Commit
-Tras el "OK" humano de QA:
-* Marca la subtarea como completada `[x]` en `docs/specs/<modulo>/spec.md` y en `docs/backlog.md`.
-* **Rotación de Sprint**: Si con esta subtarea se completa el 100% del **Sprint Activo**, mueve el Sprint finalizado a `docs/backlog_archive.md` y promueve el siguiente Sprint como `(ACTIVO)` al inicio de `docs/backlog.md`. Al describir la rotación en el commit o en la PR, menciona solo el número de Sprint (ej. "Sprint 4") sin escribir otras claves `CEN-xxx`.
-* Registra la entrada en `docs/changelog.md` bajo `## [Unreleased]`.
-* Realiza el commit en español con Conventional Commits referenciando únicamente la clave de la subtarea técnica; verifica que **ni el título ni el cuerpo** del commit incluyan claves `CEN-xxx` de otras tareas, épicas, HUs o dependencias (usa nombres técnicos/funcionales o códigos `RF-`/`T`).
-* Sube la rama a GitHub (`git push origin <rama>`).
+### 3. Pre-Verificación y Guía de QA Manual Unificada
+Al terminar todas las subtareas de la rama:
+* Si hay cambios UI/Livewire, validar ausencia de errores HTTP 500, consola JS y `storage/logs/laravel.log` en `http://localhost:8000`.
+* Entregar una **Guía de QA Manual unificada** paso a paso para toda la HU/sub-vertical.
+* 🚫 **PAUSA OBLIGATORIA**: Esperar el "OK" explícito del desarrollador confirmando sus pruebas manuales.
 
 ---
 
-### 4. Creación de Pull Request (Sin Auto-Merge)
-* 🚫 **PROHIBIDO EL AUTO-MERGE**: La Pull Request NO debe fusionarse automáticamente; debe quedar abierta para revisión.
-* 🚫 **CLAVE JIRA ÚNICA EN TÍTULO Y DESCRIPCIÓN DE PR**: Revisa el título y todo el cuerpo Markdown de la PR antes de crearla para asegurar que no aparezca ninguna clave `CEN-xxx` distinta a la subtarea activa (ni épicas, ni HUs, ni dependencias, ni rangos de Sprint). En tareas sin ticket Jira, no incluyas ninguna clave `CEN-xxx`.
-* **Creación Asistida**:
-  1. Si GitHub MCP está disponible: Invocar `create_pull_request` apuntando a `develop`.
-  2. Si CLI `gh` está autenticado: Ejecutar `gh pr create`.
-  3. Si no hay herramientas programáticas activas:
-     - Imprimir la URL directa de comparación: `https://github.com/Gabiota2806/centinela/compare/develop...<rama>?expand=1`.
-     - Entregar el bloque Markdown con el Título y Descripción listos para copiar y pegar en la web de GitHub.
-* Confirma al desarrollador que la rama y la PR quedaron publicadas a la espera de auditoría.
+### 4. Auto-Auditoría y Pull Request (Sin Auto-Merge)
+Tras el "OK" de QA manual:
+* Ejecutar el flujo de **`/auditoria` sobre la rama actual** (validando `00_contracts.md`, spec RF por RF, RBAC, Ley N° 25.326, N+1, SVGs, tests reales y claves Jira permitidas).
+* Corregir cualquier hallazgo hasta obtener `VEREDICTO: APROBADO`.
+* Subir los commits (`git push origin <rama>`).
+* Crear la Pull Request hacia `develop` (sin claves `CEN-xxx` fuera de `.github/jira-scopes.conf`) pegando el resumen de `/auditoria` y el checklist de QA:
+  1. GitHub MCP (`create_pull_request`) o `gh pr create --base develop --head <rama> ...`
+  2. Si no hay autenticación programática, entregar URL `compare` + bloque Markdown listo para copiar.
+* 🚫 **PROHIBIDO EL AUTO-MERGE**: Dejar la PR abierta para aprobación/merge humano en GitHub y recordar al desarrollador que ya puede pasar a su siguiente rama independiente desde `develop`.

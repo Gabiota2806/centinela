@@ -33,14 +33,15 @@ Este proyecto implementa el flujo de trabajo multiagente basado en especificacio
 - **Revisor (QA)**: Audita specs y valida la implementación RF por RF emitiendo veredictos (`APROBADO` / `CAMBIOS NECESARIOS`).
 
 ## 4. Especificaciones Técnicas Modulares (SDD) y Gestión de Backlog
-- Toda funcionalidad pertenece a un módulo y se especifica en `docs/specs/<modulo>/spec.md` (ej. `triage`, `pacientes`, `consultas`, `telemetria`).
-- Las decisiones y convenciones transversales residen en `docs/specs/global_spec.md`.
-- No generes código sin contrastar antes contra la spec modular del componente afectado.
+- Toda funcionalidad pertenece a un módulo y se especifica en `docs/specs/<modulo>/spec.md` (ej. `triage`, `pacientes`, `consultas`, `geo`).
+- Las decisiones transversales residen en `docs/specs/global_spec.md` y los contratos compartidos de Sprints 4–7 en `docs/specs/00_contracts.md`.
+- La matriz interna de ramas paralelas y responsables por HU/sub-vertical reside en `docs/team/guia_trabajo_paralelo_y_asignacion_hus.md`.
+- No generes código sin contrastar antes contra `docs/specs/00_contracts.md` y la spec modular del componente afectado.
 - **Backlog Local Optimizado (`docs/backlog.md` y `docs/backlog_archive.md`)**:
   * `docs/backlog.md` mantiene siempre en primer lugar el **Sprint Activo** seguido de los Sprints futuros.
-  * Para optimizar tokens al consultar una subtarea (`CEN-xxx`), localiza primero su línea con `grep -n "CEN-xxx" docs/backlog.md` y lee solo el rango de líneas de la tarea (o el bloque del Sprint Activo).
-  * Los Sprints finalizados residen en `docs/backlog_archive.md`; **no leas ese archivo** salvo que se solicite auditar o consultar tareas históricas cerradas.
-  * Al completar o aprobar en auditoría la última subtarea `[x]` del Sprint Activo, migra el Sprint finalizado a `docs/backlog_archive.md` y promueve el siguiente Sprint como `(ACTIVO)` al inicio de `docs/backlog.md`.
+  * Para optimizar tokens al consultar una HU o subtarea (`CEN-xxx`), localiza primero su línea con `grep -n "CEN-xxx" docs/backlog.md` y lee solo ese bloque.
+  * Los Sprints finalizados residen en `docs/backlog_archive.md`; **no leas ese archivo** salvo consulta histórica explícita.
+  * **Regla anti-conflictos en trabajo paralelo:** **NO edites `docs/backlog.md` ni `docs/changelog.md` dentro de ramas de features/HUs**; se consolidan directamente en `develop` al cierre del día/bloque para evitar conflictos de merge entre integrantes.
 
 ## 5. Convenciones de Código y Arquitectura
 - Sigue la arquitectura del proyecto: Models, Enums de dominio para tipos cerrados (`app/Enums/`), Policies para autorización.
@@ -73,11 +74,12 @@ Este proyecto implementa el flujo de trabajo multiagente basado en especificacio
 
 # Regla Estricta de Pull Requests y Control de Versiones
 - **PROHIBIDO EL AUTO-MERGE**: Bajo ninguna circunstancia el agente debe fusionar automáticamente ramas hacia `develop` o `main`.
-- La tarea culmina empujando la rama (`git push origin <rama>`) y creando la Pull Request (vía MCP de GitHub, `gh pr create` o enlace directo a GitHub compare) para revisión humana por parte de Gabriel o del equipo.
-- **REGLA INVIOLABLE DE CLAVE JIRA ÚNICA (`CEN-xxx`)**: Jira Cloud ejecuta automatizaciones sobre cada `CEN-<número>` que detecta en GitHub. Por eso, en el **nombre de la rama**, el **título y cuerpo de cada commit** y el **título y descripción de la PR**:
-  * Solo puede figurar la clave `CEN-xxx` de la subtarea activa (o **ninguna** en ramas de mantenimiento/docs sin ticket).
-  * Queda **TERMINANTEMENTE PROHIBIDO** escribir otras claves `CEN-xxx` (épicas, HUs padre, dependencias previas, tareas futuras ni rangos de cierre de Sprint).
-  * Para mencionar trabajo relacionado, usá el nombre funcional/técnico (ej. "lógica de reclasificación", "Sprint 3") o códigos locales (`RF-xxx`, `T4.x`) sin el prefijo `CEN-`.
+- La tarea culmina ejecutando auto-auditoría (`/auditoria` o `@reviewer`), empujando la rama (`git push origin <rama>`) y creando la Pull Request (vía MCP de GitHub, `gh pr create` o enlace directo a GitHub compare) para aprobación y merge humano en GitHub.
+- **REGLA INVIOLABLE DE ALCANCE DE CLAVES JIRA (`CEN-xxx`)**: Jira Cloud ejecuta automatizaciones al crear ramas (`En curso`), abrir PRs (`En revisión`) y fusionar PRs (`Listo`). Por eso:
+  * El **nombre de la rama** lleva **una sola clave** `CEN-xxx` (la HU o sub-vertical asignada en `.github/jira-scopes.conf`, o **ninguna** en ramas de mantenimiento/docs).
+  * El **título/cuerpo de cada commit** y el **título/descripción de la PR** solo pueden contener claves autorizadas para esa rama en `.github/jira-scopes.conf` (o las subtareas hijas de esa HU en `docs/backlog.md`). Así se permite 1 rama por HU con commits etiquetados por subtarea (`feat(CEN-48): ...`, `feat(CEN-49): ...`).
+  * Queda **TERMINANTEMENTE PROHIBIDO** escribir claves `CEN-xxx` fuera de ese alcance (épicas, otras HUs, tareas de otros compañeros ni rangos de Sprint).
+  * Para mencionar trabajo fuera del alcance, usá nombres técnicos/funcionales (ej. "lógica de reclasificación", "Sprint 3") o códigos locales (`RF-xxx`, `T4.x`) sin el prefijo `CEN-`.
   * Ver especificación completa en `docs/specs/global_spec.md` (sección `2.E`). El incumplimiento falla el check de CI `jira-key-guard` y bloquea `/auditoria`.
 - Los commits deben seguir el estándar Conventional Commits en español (`feat(CEN-xxx): ...`, `fix(CEN-xxx): ...`, `test(CEN-xxx): ...`, o sin clave en tareas de mantenimiento).
 
