@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\ConsultationStatus;
 use App\Enums\TriagePriority;
 use App\Enums\TriageStatus;
 use Database\Factories\TriageFactory;
+use DomainException;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -155,6 +157,151 @@ class Triage extends Model
         );
 
         return $row === null ? null : (int) $row->position;
+    }
+
+    /**
+     * Estados que conforman un episodio clínico activo (bloquean una nueva admisión).
+     *
+     * @var list<TriageStatus>
+     */
+    public const ACTIVE_STATUSES = [
+        TriageStatus::PENDING_CONSULTATION,
+        TriageStatus::CALLED,
+        TriageStatus::IN_CONSULTATION,
+    ];
+
+    /**
+     * Triages con episodio activo: en espera, llamados o en consulta (00_contracts §1.2).
+     *
+     * @param  Builder<Triage>  $query
+     * @return Builder<Triage>
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->whereIn('status', self::ACTIVE_STATUSES);
+    }
+
+    /**
+     * CEN-44: pending_consultation ➔ called.
+     *
+     * @throws DomainException
+     */
+    public function callForConsultation(): void
+    {
+        $this->transitionTo(TriageStatus::CALLED, from: TriageStatus::PENDING_CONSULTATION);
+    }
+
+    /**
+     * CEN-44: called ➔ in_consultation, abriendo la consulta en curso del médico.
+     *
+     * @throws DomainException
+     */
+    public function startConsultation(User $doctor): Consultation
+    {
+        $this->assertStatus(TriageStatus::CALLED, 'ingresar a consulta');
+
+        return DB::transaction(function () use ($doctor): Consultation {
+            $this->transitionTo(TriageStatus::IN_CONSULTATION, from: TriageStatus::CALLED);
+
+            return $this->consultation()->create([
+                'doctor_id' => $doctor->id,
+                'status' => ConsultationStatus::IN_PROGRESS,
+                'started_at' => now(),
+            ]);
+        });
+    }
+
+    /**
+     * CEN-44: called ➔ pending_consultation. Conserva created_at, por lo que el
+     * paciente recupera su posición FIFO original dentro de su nivel MTS.
+     *
+     * @throws DomainException
+     */
+    public function returnToQueue(): void
+    {
+        $this->transitionTo(TriageStatus::PENDING_CONSULTATION, from: TriageStatus::CALLED);
+    }
+
+    /**
+     * CEN-44: called ➔ cancelled (ausente o retirado). Libera el episodio activo
+     * para que el paciente pueda volver a ser admitido.
+     *
+     * @throws DomainException
+     */
+    public function markAsAbsent(): void
+    {
+        $this->transitionTo(TriageStatus::CANCELLED, from: TriageStatus::CALLED);
+    }
+
+    /**
+     * CEN-44: in_consultation ➔ completed, cerrando la consulta como finalizada o
+     * derivada por SIPEC. Lo usa el consultorio al registrar el diagnóstico.
+     *
+     * @throws DomainException
+     */
+    public function finishConsultation(
+        ConsultationStatus $status,
+        string $diagnosis,
+        ?string $clinicalNotes = null,
+        ?string $prescription = null,
+    ): Consultation {
+        $this->assertStatus(TriageStatus::IN_CONSULTATION, 'finalizar la consulta');
+
+        if ($status === ConsultationStatus::IN_PROGRESS) {
+            throw new DomainException('La consulta debe cerrarse como finalizada o derivada por SIPEC.');
+        }
+
+        return DB::transaction(function () use ($status, $diagnosis, $clinicalNotes, $prescription): Consultation {
+            $consultation = $this->consultation()->firstOrFail();
+            $consultation->update([
+                'status' => $status,
+                'diagnosis' => $diagnosis,
+                'clinical_notes' => $clinicalNotes,
+                'prescription' => $prescription,
+                'completed_at' => now(),
+            ]);
+
+            $this->transitionTo(TriageStatus::COMPLETED, from: TriageStatus::IN_CONSULTATION);
+
+            return $consultation;
+        });
+    }
+
+    /**
+     * Aplica la transición solo si el estado persistido coincide con el de origen,
+     * evitando carreras entre terminales que actúan sobre el mismo paciente.
+     *
+     * @throws DomainException
+     */
+    private function transitionTo(TriageStatus $to, TriageStatus $from): void
+    {
+        $this->assertStatus($from, "pasar a «{$to->label()}»");
+
+        $updated = static::query()
+            ->whereKey($this->getKey())
+            ->where('status', $from)
+            ->update(['status' => $to, 'updated_at' => now()]);
+
+        if ($updated === 0) {
+            throw new DomainException('El paciente cambió de estado en otra terminal. Actualizá la cola.');
+        }
+
+        $this->status = $to;
+        $this->syncOriginalAttribute('status');
+    }
+
+    /**
+     * @throws DomainException
+     */
+    private function assertStatus(TriageStatus $expected, string $action): void
+    {
+        if ($this->status !== $expected) {
+            throw new DomainException(sprintf(
+                'No se puede %s: el paciente está «%s».',
+                $action,
+                $this->status?->label() ?? 'sin estado',
+            ));
+        }
     }
 
     /**
