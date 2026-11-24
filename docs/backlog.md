@@ -56,28 +56,28 @@
 ### 📖 HU03: Gestión de Cola Médica en Tiempo Real (`CEN-26`, 20 SP)
 
 #### 📌 CEN-42: [T4.1] Diseño y maquetación del panel médico con ordenamiento dinámico por MTS
-- **Estado:** `[ ]` Por hacer | **Responsable:** Gabriel Pineda | **Estimación:** 4 SP
+- **Estado:** `[ ]` Por hacer | **Responsable:** Valeria Budiño | **Estimación:** 4 SP
 - **Archivos Objetivo:** `app/Livewire/Doctor/MedicalQueue.php`, `resources/views/livewire/doctor/medical-queue.blade.php`.
 - **Detalle Técnico:** Tarjetas de espera ordenadas por color MTS (Rojo al frente, luego Naranja, Amarillo, Verde, Azul) mostrando posición `#N` y ticket `TR-XXXXX`. Cronómetro regresivo con tiempo restante antes del límite máximo de espera. Botón "Llamar a Consultorio", botón de Clinical Override (`open-clinical-override`) y acciones selectivas sobre pacientes en estado `called`: "Ingresar a consulta", "Volver a espera" o "Cancelar / Ausente".
 
 #### 📌 CEN-43: [T4.2] Implementación de eventos y actualización reactiva de colas en Livewire
-- **Estado:** `[ ]` Por hacer | **Responsable:** Gabriel Pineda | **Estimación:** 4 SP
+- **Estado:** `[ ]` Por hacer | **Responsable:** Valeria Budiño | **Estimación:** 4 SP
 - **Archivos Objetivo:** `app/Livewire/Doctor/MedicalQueue.php`.
 - **Detalle Técnico:** Actualización reactiva mediante eventos Livewire (`#[On('patient-triaged')]`, `#[On('triage-overridden')]`, `wire:poll.5s` para sincronización entre terminales). Ordenamiento SQL nativo:
   `ORDER BY CASE final_priority WHEN 'red' THEN 1 WHEN 'orange' THEN 2 WHEN 'yellow' THEN 3 WHEN 'green' THEN 4 WHEN 'blue' THEN 5 END, created_at ASC`.
 
 #### 📌 CEN-44: [T4.3] Lógica de cambio de estados del paciente (Llamado, En Consulta, Atendido)
-- **Estado:** `[ ]` Por hacer | **Responsable:** Gabriel Pineda | **Estimación:** 4 SP
+- **Estado:** `[ ]` Por hacer | **Responsable:** Valeria Budiño | **Estimación:** 4 SP
 - **Archivos Objetivo:** `app/Models/Triage.php`, `app/Models/Consultation.php`, `app/Enums/TriageStatus.php`.
 - **Detalle Técnico:** Agregar `CALLED = 'called'` en `TriageStatus`. Transiciones válidas: `pending_consultation` ➔ `called` ➔ `in_consultation` ➔ `completed` (con `Consultation` en `completed` / `referred_sipec`), más transiciones selectivas desde `called`: ➔ `pending_consultation` (devolver a cola conservando `created_at` FIFO) o ➔ `cancelled` (ausente/retirado, habilitando re-admisión futura). Registro de timestamps `started_at` y `completed_at`.
 
 #### 📌 CEN-45: [T4.5] Optimización de consultas a la cola de espera mediante índices compuestos
-- **Estado:** `[ ]` Por hacer | **Responsable:** Gabriel Pineda | **Estimación:** 3 SP
+- **Estado:** `[ ]` Por hacer | **Responsable:** Valeria Budiño | **Estimación:** 3 SP
 - **Archivos Objetivo:** `database/migrations/xxxx_add_indexes_to_triages_table.php`.
 - **Detalle Técnico:** Índice compuesto en PostgreSQL: `CREATE INDEX idx_triages_active_queue ON triages (status, final_priority, created_at);`. Tiempo de respuesta < 20 ms probado con `EXPLAIN ANALYZE`.
 
 #### 📌 CEN-46: [T4.6] Testing de flujo completo de sala de espera desde admisión hasta alta médica
-- **Estado:** `[ ]` Por hacer | **Responsable:** Gabriel Pineda | **Estimación:** 5 SP
+- **Estado:** `[ ]` Por hacer | **Responsable:** Valeria Budiño | **Estimación:** 5 SP
 - **Archivos Objetivo:** `tests/Feature/MedicalQueueWorkflowTest.php`.
 - **Detalle Técnico:** Test E2E del flujo unificado real: Admisión+Triage (`/pacientes/nuevo`) ➔ Edición/Override en `/triage` ➔ Cola de Espera (`/consultas`) ➔ Llamado (`called` con retorno a espera y ausente) ➔ Atención (`in_consultation`) ➔ Cierre (`completed`).
 

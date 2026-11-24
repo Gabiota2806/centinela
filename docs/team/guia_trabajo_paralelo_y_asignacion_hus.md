@@ -46,7 +46,7 @@
 > git config core.hooksPath .githooks
 > ```
 
-### Enrique Maximiliano González (Backend, Clima, Telemetría/FastAPI, PostGIS y Seguridad)
+### Enrique Maximiliano González (Backend, Clima, Telemetría/FastAPI, PostGIS y Seguridad — 82 SP totales / 54 SP pend.)
 
 | Orden | Comando `/desarrollo-tarea` | Nombre Exacto de Rama | Claves Permitidas en Commits/PR | Alcance / Archivos Exclusivos | Spec |
 | :---: | :--- | :--- | :--- | :--- | :--- |
@@ -56,23 +56,32 @@
 | **4** | `/desarrollo-tarea CEN-57 local` | `CEN-57-api-inferencia-sync-postgis` | `CEN-57`, `CEN-58`, `CEN-63` | `backend_analytics/routers/predict.py`, `PredictiveRiskClient`, `SyncNeighborhoodRiskCommand`, `GeoSpatialController` (`GET /api/v1/geo/neighborhoods`) | `00_contracts`, `geo` |
 | **5** | `/desarrollo-tarea CEN-67 local` | `CEN-67-hardening-owasp-green-software` | `CEN-67`, `CEN-69` | `SecurityHeadersMiddleware`, `docs/security/owasp_audit.md`, `docs/sustainability/green_software_report.md` | `global_spec`, `00_contracts` |
 
-### Valeria Budiño (Frontend/UX, Consultorio, Dashboard Alertas, Modales Mapa y Entregables)
+### Valeria Budiño (Frontend/UX, Cola Médica, Consultorio, Alertas/Modales y Entregables — 90 SP totales / 62 SP pend.)
 
 | Orden | Comando `/desarrollo-tarea` | Nombre Exacto de Rama | Claves Permitidas en Commits/PR | Alcance / Archivos Exclusivos | Spec |
 | :---: | :--- | :--- | :--- | :--- | :--- |
-| **1** | `/desarrollo-tarea CEN-27 local` | `CEN-27-consultorio-diagnostico-cierre` | `CEN-27`, `CEN-47` | `ConsultationRoom` (`/consultas/{triage}`), ficha clínica de signos/discriminadores, diagnóstico presuntivo obligatorio, cierre (`completed`/`referred_sipec`) y despacho `ConsultationCompleted` | `00_contracts`, `consultas`, `ui` |
-| **2** | `/desarrollo-tarea CEN-59 local` | `CEN-59-alertas-epidemiologicas-modales-mapa` | `CEN-59`, `CEN-64`, `CEN-65` | `EpidemiologicalAlerts` (badges/banners/tendencias leyendo `neighborhoods`), `NeighborhoodDetailModal` (evento `open-neighborhood-detail`), validación visual/rendimiento en navegador | `00_contracts`, `geo`, `ui` |
-| **3** | `/desarrollo-tarea CEN-53 local` | `CEN-53-compliance-manual-caps-informe-apa` | `CEN-53`, `CEN-70`, `CEN-71` | `docs/compliance/ley_25326_audit.md`, `docs/manuals/manual_operativo_caps.md`, `docs/thesis/informe_final_tfi.md` | `global_spec`, `00_contracts` |
+| **1** | `/desarrollo-tarea CEN-26 local` | `CEN-26-cola-medica-tiempo-real` | `CEN-26`, `CEN-42`, `CEN-43`, `CEN-44`, `CEN-45`, `CEN-46` | `MedicalQueue` (`/consultas`), transiciones en `Triage` (`callForConsultation`, `startConsultation`, `returnToQueue`, `markAsAbsent`), polling/eventos, `MedicalQueueWorkflowTest` E2E | `00_contracts`, `consultas`, `ui` |
+| **2** | `/desarrollo-tarea CEN-27 local` | `CEN-27-consultorio-diagnostico-cierre` | `CEN-27`, `CEN-47` | `ConsultationRoom` (`/consultas/{triage}`), ficha clínica de signos/discriminadores, diagnóstico presuntivo obligatorio, cierre (`completed`/`referred_sipec`) y despacho `ConsultationCompleted` | `00_contracts`, `consultas`, `ui` |
+| **3** | `/desarrollo-tarea CEN-59 local` | `CEN-59-alertas-epidemiologicas-modales-mapa` | `CEN-59`, `CEN-64`, `CEN-65` | `EpidemiologicalAlerts` (badges/banners/tendencias leyendo `neighborhoods`), `NeighborhoodDetailModal` (evento `open-neighborhood-detail`), validación visual/rendimiento en navegador | `00_contracts`, `geo`, `ui` |
+| **4** | `/desarrollo-tarea CEN-53 local` | `CEN-53-compliance-manual-caps-informe-apa` | `CEN-53`, `CEN-70`, `CEN-71` | `docs/compliance/ley_25326_audit.md`, `docs/manuals/manual_operativo_caps.md`, `docs/thesis/informe_final_tfi.md` | `global_spec`, `00_contracts` |
 
-### Antonio Gabriel Pineda (Cierre Triage, Cola Médica, Motor ML, Visor Leaflet y QA/Demo)
+### Antonio Gabriel Pineda (Cierre Triage, Motor ML, Visor Leaflet y QA/Demo — 94 SP totales / 54 SP pend.)
 
 | Orden | Comando `/desarrollo-tarea` | Nombre Exacto de Rama | Claves Permitidas en Commits/PR | Alcance / Archivos Exclusivos | Spec |
 | :---: | :--- | :--- | :--- | :--- | :--- |
 | **1** | `/desarrollo-tarea CEN-72 local` | `CEN-72-cierre-bugfix-triage-ui` | `CEN-72`, `CEN-76`, `CEN-77`, `CEN-78` | `EvaluatePatient` (DNI, pestañas En espera con edición auditada / Historial), remediación UI signos vitales (`pr-*`, `wire:target="save"`), suite Feature unificada | `triage`, `pacientes`, `ui` |
-| **2** | `/desarrollo-tarea CEN-26 local` | `CEN-26-cola-medica-tiempo-real` | `CEN-26`, `CEN-42`, `CEN-43`, `CEN-44`, `CEN-45`, `CEN-46` | `MedicalQueue` (`/consultas`), transiciones en `Triage` (`callForConsultation`, `startConsultation`, `returnToQueue`, `markAsAbsent`), polling/eventos, `MedicalQueueWorkflowTest` E2E | `00_contracts`, `consultas`, `ui` |
-| **3** | `/desarrollo-tarea CEN-54 local` | `CEN-54-pipeline-ml-random-forest` | `CEN-54`, `CEN-55`, `CEN-56` | `backend_analytics/pipeline/{dataset_builder,lag_features}.py`, generador sintético epidemiológico Formosa, `backend_analytics/ml/train_random_forest.py`, `risk_classifier.pkl` | `00_contracts`, `geo` |
-| **4** | `/desarrollo-tarea CEN-60 local` | `CEN-60-visor-leaflet-coropletas-heatmap` | `CEN-60`, `CEN-61`, `CEN-62` | `resources/views/components/leaflet-map.blade.php`, `resources/js/{map,choropleth,heatmap}.js` (consume `GET /api/v1/geo/neighborhoods` y despacha `open-neighborhood-detail`) | `00_contracts`, `geo`, `ui` |
-| **5** | `/desarrollo-tarea CEN-66 local` | `CEN-66-qa-e2e-demo-defensa` | `CEN-66`, `CEN-68` | `FullSystemE2ETest`, `DemoScenarioSeeder` (offline para defensa), `docs/defense/demo_script.md` | `global_spec`, `00_contracts` |
+| **2** | `/desarrollo-tarea CEN-54 local` | `CEN-54-pipeline-ml-random-forest` | `CEN-54`, `CEN-55`, `CEN-56` | `backend_analytics/pipeline/{dataset_builder,lag_features}.py`, generador sintético epidemiológico Formosa, `backend_analytics/ml/train_random_forest.py`, `risk_classifier.pkl` | `00_contracts`, `geo` |
+| **3** | `/desarrollo-tarea CEN-60 local` | `CEN-60-visor-leaflet-coropletas-heatmap` | `CEN-60`, `CEN-61`, `CEN-62` | `resources/views/components/leaflet-map.blade.php`, `resources/js/{map,choropleth,heatmap}.js` (consume `GET /api/v1/geo/neighborhoods` y despacha `open-neighborhood-detail`) | `00_contracts`, `geo`, `ui` |
+| **4** | `/desarrollo-tarea CEN-66 local` | `CEN-66-qa-e2e-demo-defensa` | `CEN-66`, `CEN-68` | `FullSystemE2ETest`, `DemoScenarioSeeder` (offline para defensa), `docs/defense/demo_script.md` | `global_spec`, `00_contracts` |
+
+### Balance Consolidado de Story Points (Sprints 1 a 8)
+
+| Integrante | S1–S3 Hechos | S4–S8 Plan | Pendiente Hoy | **TOTAL S1–S8** | Ramas Pendientes |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Valeria Budiño** | 28 SP | 62 SP | **62 SP** | **90 SP** | 4 ramas (`CEN-26`, `CEN-27`, `CEN-59`, `CEN-53`) |
+| **Enrique M. González** | 28 SP | 54 SP | **54 SP** | **82 SP** | 5 ramas (`CEN-73`, `CEN-28`, `CEN-29`, `CEN-57`, `CEN-67`) |
+| **Antonio Gabriel Pineda** | 32 SP | 62 SP | **54 SP** | **94 SP** | 4 ramas (`CEN-72`, `CEN-54`, `CEN-60`, `CEN-66`) |
+| **TOTAL EQUIPO** | **88 SP** | **178 SP** | **170 SP** | **266 SP** | **13 ramas** |
 
 > **Nota sobre Jira Cloud:** En las dos macro-HUs divididas en sub-verticales (`HU07`/`CEN-30` y `HU08`/`CEN-31`), las ramas usan las claves `CEN-54`/`CEN-57`/`CEN-59`/`CEN-60` para evitar que Jira cierre la HU padre antes de completar ambas mitades. Una vez mergeadas todas sus sub-verticales, Gabriel cierra `CEN-30` y `CEN-31` en el tablero.
 
