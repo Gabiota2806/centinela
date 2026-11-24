@@ -182,6 +182,22 @@ class Triage extends Model
     }
 
     /**
+     * CEN-45: cola médica activa (en espera, llamados y en consulta) en orden
+     * canónico MTS + FIFO, con las relaciones que muestra el panel precargadas.
+     * El filtro por estado se resuelve con idx_triages_active_queue.
+     *
+     * @param  Builder<Triage>  $query
+     * @return Builder<Triage>
+     */
+    public function scopeActiveQueue(Builder $query): Builder
+    {
+        return $query
+            ->active()
+            ->with(['patient.neighborhood', 'user', 'consultation'])
+            ->orderedByPriority();
+    }
+
+    /**
      * CEN-44: pending_consultation ➔ called.
      *
      * @throws DomainException
