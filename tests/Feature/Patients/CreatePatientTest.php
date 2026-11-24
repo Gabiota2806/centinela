@@ -519,6 +519,8 @@ class CreatePatientTest extends TestCase
             ->assertSeeHtml('mt-0 pr-9')
             ->assertSeeHtml('mt-0 pr-12')
             ->assertSeeHtml('mt-0 pr-14')
+            ->assertSeeHtml('lg:sticky lg:top-20')
+            ->assertDontSeeHtml('lg:sticky lg:top-6')
             ->assertSeeHtml('pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-ink-muted')
             ->assertSeeHtml('wire:target="save"')
             ->assertSeeHtml('aria-describedby="temperature-error"')

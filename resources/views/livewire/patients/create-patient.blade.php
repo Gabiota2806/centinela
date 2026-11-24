@@ -457,8 +457,8 @@
             </div>
         </div>
 
-        {{-- Columna Derecha: Panel Sticky MTS en vivo --}}
-        <div class="lg:col-span-1 space-y-4 lg:sticky lg:top-6">
+        {{-- Columna Derecha: Panel Sticky MTS en vivo (despejado bajo topbar h-16) --}}
+        <div class="lg:col-span-1 space-y-4 lg:sticky lg:top-20">
             <div class="bg-white border border-line rounded-2xl shadow-card overflow-hidden">
                 {{-- Encabezado con Color Manchester Dinámico --}}
                 <div class="p-5 text-center transition-colors duration-300 {{ $badgeClasses }}">

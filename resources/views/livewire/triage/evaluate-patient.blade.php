@@ -333,7 +333,8 @@
         </div>
     </section>
 
-    {{-- Formulario de Edición Auditada / Evaluación Clínica MTS --}}
+    {{-- Formulario de Edición Auditada (solo visible al pulsar "Editar" o con paciente seleccionado) --}}
+    @if ($editingTriageId !== null || $patient !== null)
     <div id="triage-evaluation-form" class="space-y-6 scroll-mt-24">
         @if ($editingTriageId !== null)
             <div role="status" class="p-4 rounded-2xl border border-brand-turquesa/50 bg-brand-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -710,8 +711,8 @@
                 </div>
             </div>
 
-            {{-- Columna Derecha: Tarjeta Determinística de Resultado MTS (Sticky) --}}
-            <div class="lg:col-span-1 space-y-4 lg:sticky lg:top-6">
+            {{-- Columna Derecha: Tarjeta Determinística de Resultado MTS (Sticky bajo topbar h-16) --}}
+            <div class="lg:col-span-1 space-y-4 lg:sticky lg:top-20">
                 <div class="bg-white border border-line rounded-2xl shadow-card overflow-hidden">
                     {{-- Encabezado con Color Manchester Dinámico --}}
                     <div class="p-5 text-center transition-colors duration-300 {{ $badgeClasses }}">
@@ -802,4 +803,14 @@
             </div>
         </div>
     </div>
+    @elseif ($errors->any())
+        <div id="triage-save-errors" role="alert" class="p-4 rounded-xl border border-danger/30 bg-danger/10 text-danger">
+            <p class="text-xs font-bold">No se pudo registrar el triage:</p>
+            <ul class="mt-1 list-disc ps-4 text-xs space-y-0.5">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 </div>

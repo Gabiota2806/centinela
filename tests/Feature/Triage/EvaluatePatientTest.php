@@ -192,12 +192,11 @@ class EvaluatePatientTest extends TestCase
 
         // Con sincronización "live" el valor parcial "38." llegaba vacío y borraba el campo (QA CEN-37).
         Livewire::actingAs($nurse)
-            ->test(EvaluatePatient::class)
+            ->test(EvaluatePatient::class, ['patient' => $patient])
             ->assertSeeHtml('wire:model.live.blur="temperature"')
             // type="number" descarta "38.9" si el navegador está en español (espera coma).
             ->assertSeeHtml('inputmode="decimal"')
             ->assertSeeHtml("replace(',', '.')")
-            ->call('selectPatient', $patient->id)
             ->set('symptoms', 'Fiebre')
             ->set('temperature', 38.9)
             ->call('save')
@@ -208,20 +207,45 @@ class EvaluatePatientTest extends TestCase
 
     public function test_los_signos_vitales_no_usan_campos_numericos_con_flechas_ni_rueda(): void
     {
+        $patient = Patient::factory()->create();
+
         // type="number" muestra flechas y cambia el valor con la rueda del mouse (QA CEN-37).
         Livewire::actingAs(User::factory()->triageNurse()->create())
-            ->test(EvaluatePatient::class)
+            ->test(EvaluatePatient::class, ['patient' => $patient])
             ->assertDontSeeHtml('type="number"')
             ->assertSeeHtml('inputmode="numeric"');
     }
 
     public function test_la_vista_solo_usa_colores_de_marca_definidos_en_la_paleta(): void
     {
-        // brand-azul no existe en tailwind.config.js: el botón "Registrar Triage Clínico" quedaba blanco sobre blanco.
+        $patient = Patient::factory()->create();
+
+        // brand-azul no existe en tailwind.config.js: el botón principal quedaba blanco sobre blanco.
         Livewire::actingAs(User::factory()->triageNurse()->create())
-            ->test(EvaluatePatient::class)
+            ->test(EvaluatePatient::class, ['patient' => $patient])
             ->assertDontSeeHtml('brand-azul')
             ->assertSeeHtml('bg-brand-petroleo');
+    }
+
+    public function test_el_formulario_de_signos_vitales_permanece_oculto_en_triage_hasta_pulsar_editar(): void
+    {
+        $nurse = User::factory()->triageNurse()->create();
+        $triage = Triage::factory()->create([
+            'status' => TriageStatus::PENDING_CONSULTATION,
+        ]);
+
+        Livewire::actingAs($nurse)
+            ->test(EvaluatePatient::class)
+            ->assertDontSeeHtml('id="triage-evaluation-form"')
+            ->assertDontSee('Signos Vitales Cuantitativos')
+            ->call('startEditing', $triage->id)
+            ->assertSeeHtml('id="triage-evaluation-form"')
+            ->assertSee('Signos Vitales Cuantitativos')
+            ->assertSeeHtml('lg:sticky lg:top-20')
+            ->assertDontSeeHtml('lg:sticky lg:top-6')
+            ->call('cancelEditing')
+            ->assertDontSeeHtml('id="triage-evaluation-form"')
+            ->assertDontSee('Signos Vitales Cuantitativos');
     }
 
     public function test_pestana_en_espera_ordena_por_mts_muestra_posicion_global_y_badge_llamado(): void
