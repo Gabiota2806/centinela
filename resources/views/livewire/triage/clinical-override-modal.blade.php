@@ -8,14 +8,14 @@
         <div class="fixed inset-0 z-50 flex items-start sm:items-center justify-center overflow-y-auto bg-brand-noche/60 p-4"
              role="dialog" aria-modal="true" aria-labelledby="override-title"
              x-data x-on:keydown.escape.window="$wire.close()">
-            <form wire:submit="save" class="w-full max-w-lg my-8 sm:my-0 bg-white rounded-2xl shadow-modal border border-line">
+            <form wire:submit="save" class="w-full max-w-2xl my-8 sm:my-0 bg-white rounded-2xl shadow-modal border border-line">
                 <header class="flex items-start justify-between gap-3 p-5 border-b border-line">
                     <div class="flex items-start gap-3">
                         <span class="shrink-0 w-10 h-10 rounded-xl bg-brand-50 text-brand-petroleo flex items-center justify-center">
                             <x-icon name="arrows-up-down" class="w-5 h-5" />
                         </span>
                         <div>
-                            <h2 id="override-title" class="text-lg font-extrabold text-ink leading-tight">Reclasificar prioridad (Clinical Override)</h2>
+                            <h2 id="override-title" class="text-lg font-extrabold text-ink leading-tight">Reclasificar prioridad</h2>
                             <p class="text-xs text-ink-muted mt-0.5">
                                 {{ $triage->patient->full_name }} · DNI {{ $triage->patient->dni }}
                             </p>
@@ -37,12 +37,12 @@
                     {{-- Selector de nuevo nivel MTS (5 colores estandarizados) --}}
                     <fieldset>
                         <legend class="text-xs font-bold uppercase tracking-wider text-ink-muted mb-2">Nuevo nivel MTS</legend>
-                        <div class="grid grid-cols-1 sm:grid-cols-5 gap-2">
+                        <div class="grid grid-cols-1 sm:grid-cols-5 gap-2.5 sm:gap-3">
                             @foreach ($priorities as $priority)
                                 @php $isCurrent = $priority === $current; @endphp
                                 <label data-mts-option="{{ $priority->value }}"
                                        @class([
-                                           'relative flex sm:flex-col items-center gap-3 sm:gap-1 rounded-xl px-3 py-2.5 sm:py-3 text-center transition',
+                                           'relative flex sm:flex-col items-center justify-center gap-3 sm:gap-1.5 rounded-xl px-3 py-3 text-center transition',
                                            $priority->badgeClasses(),
                                            'cursor-pointer hover:brightness-95' => ! $isCurrent,
                                            'opacity-40 cursor-not-allowed' => $isCurrent,

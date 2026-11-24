@@ -381,7 +381,7 @@ class EvaluatePatient extends Component
             return;
         }
 
-        $this->savedMessage = "Triage de {$triage->patient->full_name} reclasificado por Clinical Override a prioridad {$triage->final_priority->label()} (Espera máxima: {$triage->target_wait_minutes} min).";
+        $this->savedMessage = "Triage de {$triage->patient->full_name} reclasificado a prioridad {$triage->final_priority->label()} (Espera máxima: {$triage->target_wait_minutes} min).";
     }
 
     #[On('triage-updated')]

@@ -568,6 +568,8 @@ class EvaluatePatientTest extends TestCase
 
         Livewire::actingAs($nurse)
             ->test(EvaluatePatient::class)
+            ->assertSee('Reclasificar')
+            ->assertDontSee('Clinical Override')
             ->call('showTicketFor', $triage->id)
             ->assertDispatched('triage-saved', triageId: $triage->id)
             ->call('openOverrideFor', $triage->id)
