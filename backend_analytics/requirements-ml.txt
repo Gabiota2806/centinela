@@ -1,0 +1,7 @@
+# Dependencias del pipeline analítico y entrenamiento ML (CEN-54 / CEN-55 / CEN-56)
+# Archivo dedicado para evitar solapamientos con backend_analytics/requirements.txt (FastAPI)
+numpy>=2.1.0,<3.0.0
+pandas>=2.2.0,<3.0.0
+scikit-learn>=1.6.0,<2.0.0
+joblib>=1.4.0,<2.0.0
+pytest>=8.3.0,<9.0.0
