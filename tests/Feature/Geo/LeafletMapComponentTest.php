@@ -79,7 +79,12 @@ class LeafletMapComponentTest extends TestCase
             ->assertSee('isolate', false)
             ->assertSee('role="region"', false)
             ->assertSee('data-map-recenter', false)
-            ->assertSee('data-map-refresh', false);
+            ->assertSee('data-map-refresh', false)
+            ->assertSee('data-layer-toggle="choropleth"', false)
+            ->assertSee('data-map-hover-panel', false)
+            ->assertSee('Riesgo Bajo')
+            ->assertSee('Riesgo Moderado')
+            ->assertSee('Riesgo Alto');
     }
 
     public function test_el_visor_es_offline_first_sin_cdns_externos_ni_emojis(): void

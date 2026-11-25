@@ -43,6 +43,21 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
+            {{-- Conmutador de capa coroplética --}}
+            <button
+                type="button"
+                data-layer-toggle="choropleth"
+                aria-pressed="true"
+                data-active="true"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-brand-petroleo bg-brand-petroleo text-xs font-semibold text-white hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-turquesa transition"
+                title="Mostrar u ocultar polígonos de riesgo barrial"
+            >
+                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.429 9.75 2.25 12l4.179 2.25m0-4.5 5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0 4.179 2.25L12 21.75 2.25 16.5l4.179-2.25m11.142 0-5.571 3-5.571-3" />
+                </svg>
+                <span>Coropletas</span>
+            </button>
+
             <button
                 type="button"
                 data-map-recenter
@@ -93,6 +108,16 @@
         </button>
     </div>
 
+    {{-- Barra de inspección interactiva al pasar el cursor sobre cada barrio --}}
+    <div class="px-5 py-2 bg-canvas/70 border-b border-line flex items-center gap-2 text-xs text-ink-muted">
+        <svg class="w-4 h-4 text-brand-turquesa shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+        </svg>
+        <span data-map-hover-panel class="truncate">
+            Pasá el cursor sobre un barrio para inspeccionar su riesgo o hacé clic para abrir el detalle.
+        </span>
+    </div>
+
     {{-- Lienzo Leaflet aislado en stacking context propio (z-0) para no superponerse a topbar/sidebar/modales --}}
     <div class="relative z-0 isolate">
         <div
@@ -102,14 +127,24 @@
         ></div>
     </div>
 
-    {{-- Pie informativo del visor --}}
+    {{-- Leyenda de riesgo barrial y pie normativo --}}
     <div class="px-5 py-3 border-t border-line bg-canvas/60 flex flex-wrap items-center justify-between gap-3 text-xs text-ink-muted">
-        <div class="flex items-center gap-2">
-            <svg class="w-4 h-4 text-brand-petroleo shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
-            </svg>
-            <span>Centro de referencia: Formosa Capital (-26.18, -58.17)</span>
+        <div class="flex flex-wrap items-center gap-4" aria-label="Leyenda de riesgo epidemiológico">
+            <span class="inline-flex items-center gap-1.5 font-medium text-ink">
+                <span class="w-3 h-3 rounded-sm bg-risk-low border border-ok inline-block"></span>
+                <span>Riesgo Bajo</span>
+                <span data-risk-count="low" class="px-1.5 py-0.5 rounded bg-white border border-line text-[11px] font-semibold text-ink-muted">0</span>
+            </span>
+            <span class="inline-flex items-center gap-1.5 font-medium text-ink">
+                <span class="w-3 h-3 rounded-sm bg-risk-mid border border-warn inline-block"></span>
+                <span>Riesgo Moderado</span>
+                <span data-risk-count="moderate" class="px-1.5 py-0.5 rounded bg-white border border-line text-[11px] font-semibold text-ink-muted">0</span>
+            </span>
+            <span class="inline-flex items-center gap-1.5 font-medium text-ink">
+                <span class="w-3 h-3 rounded-sm bg-risk-high border border-danger inline-block"></span>
+                <span>Riesgo Alto</span>
+                <span data-risk-count="high" class="px-1.5 py-0.5 rounded bg-white border border-line text-[11px] font-semibold text-ink-muted">0</span>
+            </span>
         </div>
 
         <span>Datos agregados anonimizados (Ley N.º 25.326)</span>

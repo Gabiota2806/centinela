@@ -78,6 +78,11 @@ function createFakeContainer(dataset = {}) {
     const recenterButton = createFakeElement();
     const refreshButton = createFakeElement();
     const retryButton = createFakeElement();
+    const choroplethToggle = createFakeElement();
+    const hoverPanel = createFakeElement();
+    const riskCountLow = createFakeElement();
+    const riskCountModerate = createFakeElement();
+    const riskCountHigh = createFakeElement();
 
     const selectors = {
         '[data-map-canvas]': canvas,
@@ -87,6 +92,11 @@ function createFakeContainer(dataset = {}) {
         '[data-map-recenter]': recenterButton,
         '[data-map-refresh]': refreshButton,
         '[data-map-retry]': retryButton,
+        '[data-layer-toggle="choropleth"]': choroplethToggle,
+        '[data-map-hover-panel]': hoverPanel,
+        '[data-risk-count="low"]': riskCountLow,
+        '[data-risk-count="moderate"]': riskCountModerate,
+        '[data-risk-count="high"]': riskCountHigh,
     };
 
     const root = createFakeElement(dataset);
@@ -104,6 +114,8 @@ function createFakeLeaflet() {
         removed: false,
         invalidateSize: 0,
         tileLayerAdded: false,
+        geoJsonAdded: 0,
+        geoJsonRemoved: 0,
     };
 
     const tileHandlers = new Map();
@@ -148,6 +160,20 @@ function createFakeLeaflet() {
         tileLayer(url, options) {
             calls.tileLayer = { url, options };
             return tileLayerInstance;
+        },
+        geoJSON(collection, config) {
+            return {
+                collection,
+                config,
+                addTo() {
+                    calls.geoJsonAdded += 1;
+                    return this;
+                },
+                remove() {
+                    calls.geoJsonRemoved += 1;
+                },
+                resetStyle() {},
+            };
         },
     };
 
@@ -325,4 +351,39 @@ test('createCentinelaMap degrada sin fallos ante error HTTP o desconexión y usa
     assert.equal(controllerUnavailable.getState().featureCount, 0);
     assert.equal(rootUnavailable.refs['[data-map-banner]'].hidden, false);
     controllerUnavailable.destroy();
+});
+
+test('createCentinelaMap renderiza coropletas, actualiza contadores de riesgo y conmuta visibilidad', async () => {
+    const root = createFakeContainer();
+    const { leaflet, calls } = createFakeLeaflet();
+
+    const controller = await createCentinelaMap(root, {
+        leaflet,
+        fetchImpl: async () => ({
+            ok: true,
+            status: 200,
+            async json() {
+                return SAMPLE_COLLECTION;
+            },
+        }),
+        storage: createMemoryStorage(),
+    });
+
+    assert.equal(calls.geoJsonAdded, 1);
+    assert.equal(root.refs['[data-risk-count="high"]'].textContent, '1');
+    assert.equal(root.refs['[data-risk-count="low"]'].textContent, '0');
+    assert.equal(root.refs['[data-layer-toggle="choropleth"]'].getAttribute('aria-pressed'), 'true');
+
+    // Conmutar coropletas OFF y luego ON
+    root.refs['[data-layer-toggle="choropleth"]'].trigger('click');
+    assert.equal(controller.getState().choroplethVisible, false);
+    assert.equal(calls.geoJsonRemoved, 1);
+    assert.equal(root.refs['[data-layer-toggle="choropleth"]'].getAttribute('aria-pressed'), 'false');
+
+    root.refs['[data-layer-toggle="choropleth"]'].trigger('click');
+    assert.equal(controller.getState().choroplethVisible, true);
+    assert.equal(calls.geoJsonAdded, 2);
+
+    controller.destroy();
+    assert.equal(calls.geoJsonRemoved, 2);
 });

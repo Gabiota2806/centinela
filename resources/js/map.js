@@ -1,7 +1,13 @@
 /**
- * CEN-60: Visor interactivo Leaflet.js sobre OpenStreetMap centrado en Formosa Capital.
- * Consume GET /api/v1/geo/neighborhoods según docs/specs/00_contracts.md §4.3.
+ * CEN-60 / CEN-61: Visor interactivo Leaflet.js sobre OpenStreetMap centrado en Formosa Capital
+ * con capas poligonales coropléticas GeoJSON.
+ * Consume GET /api/v1/geo/neighborhoods según docs/specs/00_contracts.md §4.3 y §6.
  */
+
+import {
+    createChoroplethLayer,
+    summarizeRiskDistribution,
+} from './choropleth.js';
 
 export const DEFAULT_MAP_CONFIG = Object.freeze({
     center: [-26.18, -58.17],
@@ -14,6 +20,8 @@ export const DEFAULT_MAP_CONFIG = Object.freeze({
 });
 
 export const GEO_CACHE_KEY = 'centinela.geo.neighborhoods.v1';
+
+const DEFAULT_HOVER_HINT = 'Pasá el cursor sobre un barrio para inspeccionar su riesgo o hacé clic para abrir el detalle.';
 
 const activeControllers = new Map();
 
@@ -142,6 +150,21 @@ function updateBanner(bannerEl, messageEl, visible, message = '') {
     }
 }
 
+function syncToggleButton(buttonEl, active) {
+    if (!buttonEl) {
+        return;
+    }
+
+    buttonEl.setAttribute('aria-pressed', active ? 'true' : 'false');
+    buttonEl.setAttribute('data-active', active ? 'true' : 'false');
+    buttonEl.classList.toggle('bg-brand-petroleo', active);
+    buttonEl.classList.toggle('text-white', active);
+    buttonEl.classList.toggle('border-brand-petroleo', active);
+    buttonEl.classList.toggle('bg-white', !active);
+    buttonEl.classList.toggle('text-ink', !active);
+    buttonEl.classList.toggle('border-line', !active);
+}
+
 export async function createCentinelaMap(container, options = {}) {
     if (!container) {
         throw new Error('Contenedor de mapa Leaflet no encontrado.');
@@ -152,6 +175,7 @@ export async function createCentinelaMap(container, options = {}) {
     const L = options.leaflet ?? (await loadBrowserLeaflet());
     const fetchImpl = options.fetchImpl ?? (typeof globalThis.fetch === 'function' ? globalThis.fetch.bind(globalThis) : null);
     const storage = options.storage !== undefined ? options.storage : resolveDefaultStorage();
+    const targetWindow = options.targetWindow ?? (typeof globalThis.window !== 'undefined' ? globalThis.window : null);
 
     const statusBadge = container.querySelector('[data-map-status-badge]');
     const statusMessage = container.querySelector('[data-map-status-message]');
@@ -159,15 +183,24 @@ export async function createCentinelaMap(container, options = {}) {
     const recenterButton = container.querySelector('[data-map-recenter]');
     const refreshButton = container.querySelector('[data-map-refresh]');
     const retryButton = container.querySelector('[data-map-retry]');
+    const choroplethToggle = container.querySelector('[data-layer-toggle="choropleth"]');
+    const hoverPanel = container.querySelector('[data-map-hover-panel]');
+    const riskCountLow = container.querySelector('[data-risk-count="low"]');
+    const riskCountModerate = container.querySelector('[data-risk-count="moderate"]');
+    const riskCountHigh = container.querySelector('[data-risk-count="high"]');
 
     const state = {
         status: 'loading',
         featureCount: 0,
         tileOffline: false,
+        choroplethVisible: true,
+        riskSummary: { total: 0, low: 0, moderate: 0, high: 0 },
         lastFeatureCollection: null,
         lastError: null,
         destroyed: false,
     };
+
+    let choroplethLayer = null;
 
     const map = L.map(canvas, {
         center: config.center,
@@ -222,10 +255,82 @@ export async function createCentinelaMap(container, options = {}) {
         resizeObserver.observe(canvas);
     }
 
+    function updateHoverPanel(info) {
+        if (!hoverPanel) {
+            return;
+        }
+
+        if (!info) {
+            hoverPanel.textContent = DEFAULT_HOVER_HINT;
+            return;
+        }
+
+        hoverPanel.textContent = `${info.name} · ${info.riskLabel} · ${info.febrileCases7d} febriles (7 días) · ${info.totalConsultations7d} consultas`;
+    }
+
+    function updateRiskCounters(summary) {
+        if (riskCountLow) {
+            riskCountLow.textContent = String(summary.low);
+        }
+        if (riskCountModerate) {
+            riskCountModerate.textContent = String(summary.moderate);
+        }
+        if (riskCountHigh) {
+            riskCountHigh.textContent = String(summary.high);
+        }
+    }
+
+    function removeChoroplethLayer() {
+        if (choroplethLayer && typeof choroplethLayer.remove === 'function') {
+            choroplethLayer.remove();
+        }
+        choroplethLayer = null;
+    }
+
+    function renderChoropleth(featureCollection) {
+        removeChoroplethLayer();
+
+        if (typeof L.geoJSON !== 'function') {
+            return;
+        }
+
+        choroplethLayer = createChoroplethLayer(L, featureCollection, {
+            targetWindow,
+            onHover: (info) => updateHoverPanel(info),
+        });
+
+        if (state.choroplethVisible && typeof choroplethLayer.addTo === 'function') {
+            choroplethLayer.addTo(map);
+        }
+    }
+
     function applyFeatureCollection(featureCollection) {
         state.lastFeatureCollection = featureCollection;
-        state.featureCount = featureCollection.features.length;
+        state.riskSummary = summarizeRiskDistribution(featureCollection);
+        state.featureCount = state.riskSummary.total;
+        updateRiskCounters(state.riskSummary);
+        renderChoropleth(featureCollection);
     }
+
+    function setChoroplethVisible(visible) {
+        state.choroplethVisible = Boolean(visible);
+        syncToggleButton(choroplethToggle, state.choroplethVisible);
+
+        if (!choroplethLayer) {
+            return;
+        }
+
+        if (state.choroplethVisible) {
+            if (typeof choroplethLayer.addTo === 'function') {
+                choroplethLayer.addTo(map);
+            }
+        } else if (typeof choroplethLayer.remove === 'function') {
+            choroplethLayer.remove();
+        }
+    }
+
+    syncToggleButton(choroplethToggle, state.choroplethVisible);
+    updateHoverPanel(null);
 
     async function loadNeighborhoods() {
         if (state.destroyed) {
@@ -307,6 +412,8 @@ export async function createCentinelaMap(container, options = {}) {
 
             state.status = 'unavailable';
             state.featureCount = 0;
+            state.riskSummary = { total: 0, low: 0, moderate: 0, high: 0 };
+            updateRiskCounters(state.riskSummary);
             setBadgeAppearance(statusBadge, 'unavailable', 'API espacial pendiente');
             updateBanner(
                 statusBanner,
@@ -329,14 +436,21 @@ export async function createCentinelaMap(container, options = {}) {
         void loadNeighborhoods();
     };
 
+    const onToggleChoropleth = () => {
+        if (!state.destroyed) {
+            setChoroplethVisible(!state.choroplethVisible);
+        }
+    };
+
     recenterButton?.addEventListener('click', onRecenter);
     refreshButton?.addEventListener('click', onRefresh);
     retryButton?.addEventListener('click', onRefresh);
+    choroplethToggle?.addEventListener('click', onToggleChoropleth);
 
     const controller = {
         map,
         config,
-        getState: () => ({ ...state }),
+        getState: () => ({ ...state, riskSummary: { ...state.riskSummary } }),
         reload: loadNeighborhoods,
         renderFeatureCollection: (featureCollection) => {
             if (!isValidFeatureCollection(featureCollection) || state.destroyed) {
@@ -352,6 +466,7 @@ export async function createCentinelaMap(container, options = {}) {
             updateBanner(statusBanner, statusMessage, false);
             return true;
         },
+        setChoroplethVisible,
         recenter: onRecenter,
         destroy() {
             if (state.destroyed) {
@@ -361,7 +476,9 @@ export async function createCentinelaMap(container, options = {}) {
             recenterButton?.removeEventListener('click', onRecenter);
             refreshButton?.removeEventListener('click', onRefresh);
             retryButton?.removeEventListener('click', onRefresh);
+            choroplethToggle?.removeEventListener('click', onToggleChoropleth);
             resizeObserver?.disconnect();
+            removeChoroplethLayer();
             map.remove();
             activeControllers.delete(container);
         },
