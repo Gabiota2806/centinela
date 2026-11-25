@@ -81,7 +81,10 @@ class LeafletMapComponentTest extends TestCase
             ->assertSee('data-map-recenter', false)
             ->assertSee('data-map-refresh', false)
             ->assertSee('data-layer-toggle="choropleth"', false)
+            ->assertSee('data-layer-toggle="heatmap"', false)
+            ->assertSee('data-heatmap-febrile-total', false)
             ->assertSee('data-map-hover-panel', false)
+            ->assertSee('Mapa de calor')
             ->assertSee('Riesgo Bajo')
             ->assertSee('Riesgo Moderado')
             ->assertSee('Riesgo Alto');

@@ -23,6 +23,7 @@
         "@laravel/multiplex": "^0.4.1"
     },
     "dependencies": {
-        "leaflet": "^1.9.4"
+        "leaflet": "^1.9.4",
+        "leaflet.heat": "^1.0.1"
     }
 }

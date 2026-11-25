@@ -79,10 +79,13 @@ function createFakeContainer(dataset = {}) {
     const refreshButton = createFakeElement();
     const retryButton = createFakeElement();
     const choroplethToggle = createFakeElement();
+    const heatmapToggle = createFakeElement();
     const hoverPanel = createFakeElement();
     const riskCountLow = createFakeElement();
     const riskCountModerate = createFakeElement();
     const riskCountHigh = createFakeElement();
+    const heatmapFebrileTotal = createFakeElement();
+    const heatmapLegend = createFakeElement();
 
     const selectors = {
         '[data-map-canvas]': canvas,
@@ -93,10 +96,13 @@ function createFakeContainer(dataset = {}) {
         '[data-map-refresh]': refreshButton,
         '[data-map-retry]': retryButton,
         '[data-layer-toggle="choropleth"]': choroplethToggle,
+        '[data-layer-toggle="heatmap"]': heatmapToggle,
         '[data-map-hover-panel]': hoverPanel,
         '[data-risk-count="low"]': riskCountLow,
         '[data-risk-count="moderate"]': riskCountModerate,
         '[data-risk-count="high"]': riskCountHigh,
+        '[data-heatmap-febrile-total]': heatmapFebrileTotal,
+        '[data-heatmap-legend]': heatmapLegend,
     };
 
     const root = createFakeElement(dataset);
@@ -386,4 +392,71 @@ test('createCentinelaMap renderiza coropletas, actualiza contadores de riesgo y 
 
     controller.destroy();
     assert.equal(calls.geoJsonRemoved, 2);
+});
+
+test('createCentinelaMap conmuta capa de calor heatmap, actualiza resumen febril y limpia al destruir', async () => {
+    const heatInstances = [];
+
+    class FakeHeatLayer {
+        constructor(points, options) {
+            this.points = points;
+            this.options = options;
+            this.added = 0;
+            this.removed = 0;
+            heatInstances.push(this);
+        }
+
+        addTo() {
+            this.added += 1;
+            return this;
+        }
+
+        remove() {
+            this.removed += 1;
+            return this;
+        }
+
+        setLatLngs(points) {
+            this.points = points;
+            return this;
+        }
+    }
+
+    const root = createFakeContainer();
+    const { leaflet } = createFakeLeaflet();
+
+    const controller = await createCentinelaMap(root, {
+        leaflet,
+        HeatLayerClass: FakeHeatLayer,
+        fetchImpl: async () => ({
+            ok: true,
+            status: 200,
+            async json() {
+                return SAMPLE_COLLECTION;
+            },
+        }),
+        storage: createMemoryStorage(),
+    });
+
+    assert.equal(controller.getState().heatmapVisible, false);
+    assert.equal(root.refs['[data-heatmap-febrile-total]'].textContent, '12 febriles (1 foco)');
+    assert.equal(root.refs['[data-heatmap-legend]'].hidden, true);
+    assert.equal(heatInstances.length, 0);
+
+    // Activar mapa de calor (crea instancia bajo demanda y agrega al mapa)
+    await controller.setHeatmapVisible(true);
+    assert.equal(controller.getState().heatmapVisible, true);
+    assert.equal(root.refs['[data-layer-toggle="heatmap"]'].getAttribute('aria-pressed'), 'true');
+    assert.equal(root.refs['[data-heatmap-legend]'].hidden, false);
+    assert.equal(heatInstances.length, 1);
+    assert.equal(heatInstances[0].added, 1);
+    assert.equal(heatInstances[0].points.length, 1);
+
+    // Desactivar mapa de calor
+    await controller.setHeatmapVisible(false);
+    assert.equal(controller.getState().heatmapVisible, false);
+    assert.equal(heatInstances[0].removed, 1);
+    assert.equal(root.refs['[data-heatmap-legend]'].hidden, true);
+
+    controller.destroy();
 });

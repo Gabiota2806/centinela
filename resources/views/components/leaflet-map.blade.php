@@ -4,6 +4,7 @@
     'centerLng' => -58.17,
     'zoom' => 13,
     'tileUrl' => 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    'heatmapDefault' => false,
     'heightClass' => 'h-[480px] sm:h-[540px]',
     'title' => 'Mapa Epidemiológico de Formosa Capital',
 ])
@@ -15,6 +16,7 @@
     data-center-lng="{{ $centerLng }}"
     data-zoom="{{ $zoom }}"
     data-tile-url="{{ $tileUrl }}"
+    data-heatmap-default="{{ $heatmapDefault ? 'true' : 'false' }}"
     role="region"
     aria-label="{{ $title }}"
     {{ $attributes->merge(['class' => 'bg-white border border-line rounded-2xl shadow-card overflow-hidden']) }}
@@ -56,6 +58,22 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6.429 9.75 2.25 12l4.179 2.25m0-4.5 5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0 4.179 2.25L12 21.75 2.25 16.5l4.179-2.25m11.142 0-5.571 3-5.571-3" />
                 </svg>
                 <span>Coropletas</span>
+            </button>
+
+            {{-- Conmutador de capa de calor (leaflet.heat) --}}
+            <button
+                type="button"
+                data-layer-toggle="heatmap"
+                aria-pressed="{{ $heatmapDefault ? 'true' : 'false' }}"
+                data-active="{{ $heatmapDefault ? 'true' : 'false' }}"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border {{ $heatmapDefault ? 'border-brand-petroleo bg-brand-petroleo text-white' : 'border-line bg-white text-ink' }} text-xs font-semibold hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-turquesa transition"
+                title="Mostrar u ocultar mapa de calor de densidad febril"
+            >
+                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 18a3.75 3.75 0 0 0 .495-7.468 5.99 5.99 0 0 0-1.925 3.547 5.975 5.975 0 0 1-2.133-1.001A3.75 3.75 0 0 0 12 18Z" />
+                </svg>
+                <span>Mapa de calor</span>
             </button>
 
             <button
@@ -109,12 +127,21 @@
     </div>
 
     {{-- Barra de inspección interactiva al pasar el cursor sobre cada barrio --}}
-    <div class="px-5 py-2 bg-canvas/70 border-b border-line flex items-center gap-2 text-xs text-ink-muted">
-        <svg class="w-4 h-4 text-brand-turquesa shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
-        </svg>
-        <span data-map-hover-panel class="truncate">
-            Pasá el cursor sobre un barrio para inspeccionar su riesgo o hacé clic para abrir el detalle.
+    <div class="px-5 py-2 bg-canvas/70 border-b border-line flex flex-wrap items-center justify-between gap-2 text-xs text-ink-muted">
+        <div class="flex items-center gap-2 min-w-0">
+            <svg class="w-4 h-4 text-brand-turquesa shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+            </svg>
+            <span data-map-hover-panel class="truncate">
+                Pasá el cursor sobre un barrio para inspeccionar su riesgo o hacé clic para abrir el detalle.
+            </span>
+        </div>
+
+        <span
+            data-heatmap-febrile-total
+            class="inline-flex items-center px-2 py-0.5 rounded-md bg-white border border-line text-[11px] font-semibold text-ink shrink-0"
+        >
+            0 febriles (0 focos)
         </span>
     </div>
 
@@ -127,7 +154,7 @@
         ></div>
     </div>
 
-    {{-- Leyenda de riesgo barrial y pie normativo --}}
+    {{-- Leyenda de riesgo barrial, escala térmica febril y pie normativo --}}
     <div class="px-5 py-3 border-t border-line bg-canvas/60 flex flex-wrap items-center justify-between gap-3 text-xs text-ink-muted">
         <div class="flex flex-wrap items-center gap-4" aria-label="Leyenda de riesgo epidemiológico">
             <span class="inline-flex items-center gap-1.5 font-medium text-ink">
@@ -144,6 +171,16 @@
                 <span class="w-3 h-3 rounded-sm bg-risk-high border border-danger inline-block"></span>
                 <span>Riesgo Alto</span>
                 <span data-risk-count="high" class="px-1.5 py-0.5 rounded bg-white border border-line text-[11px] font-semibold text-ink-muted">0</span>
+            </span>
+
+            <span
+                data-heatmap-legend
+                @unless ($heatmapDefault) hidden @endunless
+                class="inline-flex items-center gap-2 font-medium text-ink"
+            >
+                <span>Densidad febril (7d):</span>
+                <span class="w-20 h-2.5 rounded-full border border-line inline-block" style="background: linear-gradient(90deg, #9FD8C6 0%, #F4B860 45%, #EA580C 75%, #C2410C 100%);"></span>
+                <span class="text-[11px] text-ink-muted">Baja → Alta</span>
             </span>
         </div>
 

@@ -1,6 +1,6 @@
 /**
- * CEN-60 / CEN-61: Visor interactivo Leaflet.js sobre OpenStreetMap centrado en Formosa Capital
- * con capas poligonales coropléticas GeoJSON.
+ * CEN-60 / CEN-61 / CEN-62: Visor interactivo Leaflet.js sobre OpenStreetMap centrado en Formosa Capital
+ * con capas poligonales coropléticas GeoJSON y mapa de calor (leaflet.heat) conmutable.
  * Consume GET /api/v1/geo/neighborhoods según docs/specs/00_contracts.md §4.3 y §6.
  */
 
@@ -8,6 +8,10 @@ import {
     createChoroplethLayer,
     summarizeRiskDistribution,
 } from './choropleth.js';
+import {
+    buildHeatmapPoints,
+    createHeatmapController,
+} from './heatmap.js';
 
 export const DEFAULT_MAP_CONFIG = Object.freeze({
     center: [-26.18, -58.17],
@@ -17,6 +21,7 @@ export const DEFAULT_MAP_CONFIG = Object.freeze({
     endpoint: '/api/v1/geo/neighborhoods',
     tileUrl: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
     tileAttribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors',
+    heatmapDefault: false,
 });
 
 export const GEO_CACHE_KEY = 'centinela.geo.neighborhoods.v1';
@@ -55,12 +60,15 @@ export function parseMapConfig(container) {
         ? dataset.tileUrl.trim()
         : DEFAULT_MAP_CONFIG.tileUrl;
 
+    const heatmapDefault = String(dataset.heatmapDefault ?? '').toLowerCase() === 'true';
+
     return {
         ...DEFAULT_MAP_CONFIG,
         center: [lat, lng],
         zoom,
         endpoint,
         tileUrl,
+        heatmapDefault,
     };
 }
 
@@ -184,23 +192,30 @@ export async function createCentinelaMap(container, options = {}) {
     const refreshButton = container.querySelector('[data-map-refresh]');
     const retryButton = container.querySelector('[data-map-retry]');
     const choroplethToggle = container.querySelector('[data-layer-toggle="choropleth"]');
+    const heatmapToggle = container.querySelector('[data-layer-toggle="heatmap"]');
     const hoverPanel = container.querySelector('[data-map-hover-panel]');
     const riskCountLow = container.querySelector('[data-risk-count="low"]');
     const riskCountModerate = container.querySelector('[data-risk-count="moderate"]');
     const riskCountHigh = container.querySelector('[data-risk-count="high"]');
+    const heatmapFebrileTotal = container.querySelector('[data-heatmap-febrile-total]');
+    const heatmapLegend = container.querySelector('[data-heatmap-legend]');
 
     const state = {
         status: 'loading',
         featureCount: 0,
         tileOffline: false,
         choroplethVisible: true,
+        heatmapVisible: config.heatmapDefault,
         riskSummary: { total: 0, low: 0, moderate: 0, high: 0 },
+        heatmapSummary: { hotspotCount: 0, totalFebrileCases7d: 0, maxFebrileCases7d: 0 },
         lastFeatureCollection: null,
         lastError: null,
         destroyed: false,
     };
 
     let choroplethLayer = null;
+    let heatmapController = null;
+    let heatmapLoadingPromise = null;
 
     const map = L.map(canvas, {
         center: config.center,
@@ -250,6 +265,9 @@ export async function createCentinelaMap(container, options = {}) {
         resizeObserver = new globalThis.ResizeObserver(() => {
             if (!state.destroyed) {
                 map.invalidateSize({ animate: false });
+                if (state.heatmapVisible && heatmapController && !heatmapController.isVisible()) {
+                    heatmapController.setVisible(true);
+                }
             }
         });
         resizeObserver.observe(canvas);
@@ -280,6 +298,15 @@ export async function createCentinelaMap(container, options = {}) {
         }
     }
 
+    function updateHeatmapSummaryUi(summary) {
+        if (heatmapFebrileTotal) {
+            heatmapFebrileTotal.textContent = `${summary.totalFebrileCases7d} febriles (${summary.hotspotCount} ${summary.hotspotCount === 1 ? 'foco' : 'focos'})`;
+        }
+        if (heatmapLegend) {
+            heatmapLegend.hidden = !state.heatmapVisible;
+        }
+    }
+
     function removeChoroplethLayer() {
         if (choroplethLayer && typeof choroplethLayer.remove === 'function') {
             choroplethLayer.remove();
@@ -304,12 +331,61 @@ export async function createCentinelaMap(container, options = {}) {
         }
     }
 
-    function applyFeatureCollection(featureCollection) {
+    async function ensureHeatmapController(featureCollection) {
+        if (state.destroyed) {
+            return null;
+        }
+
+        if (heatmapController) {
+            state.heatmapSummary = heatmapController.update(featureCollection);
+            updateHeatmapSummaryUi(state.heatmapSummary);
+            return heatmapController;
+        }
+
+        if (!heatmapLoadingPromise) {
+            heatmapLoadingPromise = createHeatmapController(map, featureCollection, {
+                HeatLayerClass: options.HeatLayerClass,
+                visible: state.heatmapVisible,
+            })
+                .then((created) => {
+                    if (state.destroyed) {
+                        created.destroy();
+                        return null;
+                    }
+                    heatmapController = created;
+                    if (state.lastFeatureCollection) {
+                        state.heatmapSummary = heatmapController.update(state.lastFeatureCollection);
+                    } else {
+                        state.heatmapSummary = heatmapController.getSummary();
+                    }
+                    heatmapController.setVisible(state.heatmapVisible);
+                    updateHeatmapSummaryUi(state.heatmapSummary);
+                    return heatmapController;
+                })
+                .finally(() => {
+                    heatmapLoadingPromise = null;
+                });
+        }
+
+        return heatmapLoadingPromise;
+    }
+
+    async function applyFeatureCollection(featureCollection) {
         state.lastFeatureCollection = featureCollection;
         state.riskSummary = summarizeRiskDistribution(featureCollection);
         state.featureCount = state.riskSummary.total;
+        state.heatmapSummary = buildHeatmapPoints(featureCollection).summary;
+
         updateRiskCounters(state.riskSummary);
+        updateHeatmapSummaryUi(state.heatmapSummary);
         renderChoropleth(featureCollection);
+
+        if (heatmapController) {
+            state.heatmapSummary = heatmapController.update(featureCollection);
+            updateHeatmapSummaryUi(state.heatmapSummary);
+        } else if (state.heatmapVisible) {
+            await ensureHeatmapController(featureCollection);
+        }
     }
 
     function setChoroplethVisible(visible) {
@@ -329,7 +405,24 @@ export async function createCentinelaMap(container, options = {}) {
         }
     }
 
+    async function setHeatmapVisible(visible) {
+        state.heatmapVisible = Boolean(visible);
+        syncToggleButton(heatmapToggle, state.heatmapVisible);
+        updateHeatmapSummaryUi(state.heatmapSummary);
+
+        if (state.heatmapVisible && !heatmapController && state.lastFeatureCollection) {
+            await ensureHeatmapController(state.lastFeatureCollection);
+            return;
+        }
+
+        if (heatmapController) {
+            heatmapController.setVisible(state.heatmapVisible);
+        }
+    }
+
     syncToggleButton(choroplethToggle, state.choroplethVisible);
+    syncToggleButton(heatmapToggle, state.heatmapVisible);
+    updateHeatmapSummaryUi(state.heatmapSummary);
     updateHoverPanel(null);
 
     async function loadNeighborhoods() {
@@ -376,7 +469,7 @@ export async function createCentinelaMap(container, options = {}) {
                 return null;
             }
 
-            applyFeatureCollection(payload);
+            await applyFeatureCollection(payload);
             writeCachedGeoJson(storage, payload);
 
             state.status = 'online';
@@ -397,7 +490,7 @@ export async function createCentinelaMap(container, options = {}) {
 
             const cached = readCachedGeoJson(storage);
             if (cached) {
-                applyFeatureCollection(cached.data);
+                await applyFeatureCollection(cached.data);
                 state.status = 'cached';
                 setBadgeAppearance(statusBadge, 'cached', 'Caché local (offline)');
                 updateBanner(
@@ -413,7 +506,9 @@ export async function createCentinelaMap(container, options = {}) {
             state.status = 'unavailable';
             state.featureCount = 0;
             state.riskSummary = { total: 0, low: 0, moderate: 0, high: 0 };
+            state.heatmapSummary = { hotspotCount: 0, totalFebrileCases7d: 0, maxFebrileCases7d: 0 };
             updateRiskCounters(state.riskSummary);
+            updateHeatmapSummaryUi(state.heatmapSummary);
             setBadgeAppearance(statusBadge, 'unavailable', 'API espacial pendiente');
             updateBanner(
                 statusBanner,
@@ -442,21 +537,32 @@ export async function createCentinelaMap(container, options = {}) {
         }
     };
 
+    const onToggleHeatmap = () => {
+        if (!state.destroyed) {
+            void setHeatmapVisible(!state.heatmapVisible);
+        }
+    };
+
     recenterButton?.addEventListener('click', onRecenter);
     refreshButton?.addEventListener('click', onRefresh);
     retryButton?.addEventListener('click', onRefresh);
     choroplethToggle?.addEventListener('click', onToggleChoropleth);
+    heatmapToggle?.addEventListener('click', onToggleHeatmap);
 
     const controller = {
         map,
         config,
-        getState: () => ({ ...state, riskSummary: { ...state.riskSummary } }),
+        getState: () => ({
+            ...state,
+            riskSummary: { ...state.riskSummary },
+            heatmapSummary: { ...state.heatmapSummary },
+        }),
         reload: loadNeighborhoods,
-        renderFeatureCollection: (featureCollection) => {
+        renderFeatureCollection: async (featureCollection) => {
             if (!isValidFeatureCollection(featureCollection) || state.destroyed) {
                 return false;
             }
-            applyFeatureCollection(featureCollection);
+            await applyFeatureCollection(featureCollection);
             state.status = 'online';
             setBadgeAppearance(
                 statusBadge,
@@ -467,6 +573,7 @@ export async function createCentinelaMap(container, options = {}) {
             return true;
         },
         setChoroplethVisible,
+        setHeatmapVisible,
         recenter: onRecenter,
         destroy() {
             if (state.destroyed) {
@@ -477,8 +584,11 @@ export async function createCentinelaMap(container, options = {}) {
             refreshButton?.removeEventListener('click', onRefresh);
             retryButton?.removeEventListener('click', onRefresh);
             choroplethToggle?.removeEventListener('click', onToggleChoropleth);
+            heatmapToggle?.removeEventListener('click', onToggleHeatmap);
             resizeObserver?.disconnect();
             removeChoroplethLayer();
+            heatmapController?.destroy();
+            heatmapController = null;
             map.remove();
             activeControllers.delete(container);
         },
