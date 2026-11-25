@@ -1,0 +1,88 @@
+/* Estilos encapsulados del visor Leaflet.js de Centinela (docs/specs/ui/spec.md). */
+
+.centinela-leaflet-canvas {
+    background-color: #f5f8f8;
+    font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+}
+
+.centinela-leaflet-canvas .leaflet-control-zoom {
+    border: 1px solid #dce6e6 !important;
+    border-radius: 0.75rem !important;
+    box-shadow: 0 2px 8px rgba(10, 46, 51, 0.08) !important;
+    overflow: hidden;
+}
+
+.centinela-leaflet-canvas .leaflet-control-zoom a {
+    color: #12292c;
+    background-color: #ffffff;
+    border-bottom-color: #dce6e6;
+    font-weight: 700;
+    width: 34px;
+    height: 34px;
+    line-height: 34px;
+}
+
+.centinela-leaflet-canvas .leaflet-control-zoom a:hover,
+.centinela-leaflet-canvas .leaflet-control-zoom a:focus-visible {
+    background-color: #e3f1f2;
+    color: #0b4f55;
+}
+
+.centinela-leaflet-canvas .leaflet-control-attribution {
+    background: rgba(255, 255, 255, 0.88) !important;
+    color: #56706f;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-top-left-radius: 0.5rem;
+}
+
+.centinela-leaflet-canvas .leaflet-control-attribution a {
+    color: #0b4f55;
+}
+
+.centinela-map-tooltip {
+    background-color: #ffffff;
+    border: 1px solid #dce6e6;
+    border-radius: 0.75rem;
+    box-shadow: 0 8px 24px rgba(10, 46, 51, 0.16);
+    color: #12292c;
+    padding: 0.5rem 0.75rem;
+    font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+}
+
+.centinela-map-tooltip::before {
+    border-top-color: #dce6e6;
+}
+
+.centinela-map-tooltip__title {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: #12292c;
+    margin-bottom: 0.25rem;
+}
+
+.centinela-map-tooltip__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    margin-bottom: 0.375rem;
+}
+
+.centinela-map-tooltip__meta {
+    font-size: 0.75rem;
+    color: #56706f;
+    line-height: 1.4;
+}
+
+.centinela-map-tooltip__hint {
+    margin-top: 0.375rem;
+    padding-top: 0.25rem;
+    border-top: 1px solid #dce6e6;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: #0b4f55;
+}
