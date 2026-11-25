@@ -5,6 +5,8 @@ import {
     DEFAULT_MAP_CONFIG,
     GEO_CACHE_KEY,
     createCentinelaMap,
+    destroyAllLeafletMaps,
+    initAllLeafletMaps,
     isValidFeatureCollection,
     parseMapConfig,
 } from '../../resources/js/map.js';
@@ -459,4 +461,53 @@ test('createCentinelaMap conmuta capa de calor heatmap, actualiza resumen febril
     assert.equal(root.refs['[data-heatmap-legend]'].hidden, true);
 
     controller.destroy();
+});
+
+test('initAllLeafletMaps deduplica inicializaciones concurrentes (DOMContentLoaded + livewire:navigated)', async () => {
+    const container = createFakeContainer();
+    const { leaflet } = createFakeLeaflet();
+    let mapInitCount = 0;
+
+    const trackedLeaflet = {
+        ...leaflet,
+        map(element, options) {
+            mapInitCount += 1;
+            return leaflet.map(element, options);
+        },
+    };
+
+    const fakeDocument = {
+        querySelectorAll: () => [container],
+    };
+
+    const fetchImpl = async () => {
+        await new Promise((r) => setTimeout(r, 10));
+        return {
+            ok: true,
+            status: 200,
+            async json() {
+                return SAMPLE_COLLECTION;
+            },
+        };
+    };
+
+    const [firstBatch, secondBatch] = await Promise.all([
+        initAllLeafletMaps(fakeDocument, {
+            leaflet: trackedLeaflet,
+            fetchImpl,
+            storage: createMemoryStorage(),
+        }),
+        initAllLeafletMaps(fakeDocument, {
+            leaflet: trackedLeaflet,
+            fetchImpl,
+            storage: createMemoryStorage(),
+        }),
+    ]);
+
+    assert.equal(mapInitCount, 1);
+    assert.equal(firstBatch.length, 1);
+    assert.equal(secondBatch.length, 1);
+    assert.strictEqual(firstBatch[0], secondBatch[0]);
+
+    destroyAllLeafletMaps();
 });

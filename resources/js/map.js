@@ -29,6 +29,7 @@ export const GEO_CACHE_KEY = 'centinela.geo.neighborhoods.v1';
 const DEFAULT_HOVER_HINT = 'Pasá el cursor sobre un barrio para inspeccionar su riesgo o hacé clic para abrir el detalle.';
 
 const activeControllers = new Map();
+const pendingControllers = new Map();
 
 function parseBoundedNumber(raw, fallback, min, max) {
     if (raw === undefined || raw === null || String(raw).trim() === '') {
@@ -601,7 +602,7 @@ export async function createCentinelaMap(container, options = {}) {
     return controller;
 }
 
-export async function initAllLeafletMaps(root = typeof document !== 'undefined' ? document : null) {
+export async function initAllLeafletMaps(root = typeof document !== 'undefined' ? document : null, options = {}) {
     if (!root || typeof root.querySelectorAll !== 'function') {
         return [];
     }
@@ -615,7 +616,17 @@ export async function initAllLeafletMaps(root = typeof document !== 'undefined' 
             continue;
         }
 
-        const controller = await createCentinelaMap(container);
+        if (pendingControllers.has(container)) {
+            initialized.push(await pendingControllers.get(container));
+            continue;
+        }
+
+        const creationPromise = createCentinelaMap(container, options).finally(() => {
+            pendingControllers.delete(container);
+        });
+        pendingControllers.set(container, creationPromise);
+
+        const controller = await creationPromise;
         initialized.push(controller);
     }
 
@@ -631,4 +642,5 @@ export function destroyAllLeafletMaps() {
         controller.destroy();
     }
     activeControllers.clear();
+    pendingControllers.clear();
 }
