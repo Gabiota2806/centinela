@@ -5,10 +5,10 @@
 - **Última Actualización:** 2026-11-24
 - **Contratos base:** `docs/specs/00_contracts.md`, `docs/specs/global_spec.md`
 - **Historias y Subtareas asociadas:**
-  - `HU05` (`CEN-28`): Ingestión Meteorológica Automatizada (`CEN-48`, `CEN-49`, `CEN-50`)
-  - `HU06` (`CEN-29`): Telemetría Epidemiológica Asíncrona y Anonimización Ley 25.326 (`CEN-51`, `CEN-52`, `CEN-53`)
-  - `HU07` (`CEN-30`): Predicción de Riesgo de Brote Epidemiológico con Scikit-Learn (`CEN-54`, `CEN-55`, `CEN-56`, `CEN-57`, `CEN-58`, `CEN-59`)
-  - `HU08` (`CEN-31`): Mapa Interactivo de Calor por Barrios en Leaflet.js (`CEN-60`, `CEN-61`, `CEN-62`, `CEN-63`, `CEN-64`, `CEN-65`)
+  - [ ] `HU05` (`CEN-28`): Ingestión Meteorológica Automatizada (`CEN-48`, `CEN-49`, `CEN-50`)
+  - [ ] `HU06` (`CEN-29`): Telemetría Epidemiológica Asíncrona y Anonimización Ley 25.326 (`CEN-51`, `CEN-52`, `CEN-53`)
+  - [/] `HU07` (`CEN-30`): Predicción de Riesgo de Brote Epidemiológico con Scikit-Learn (Listo: `CEN-54`, `CEN-55`, `CEN-56` en PR #23 | Pendiente: `CEN-57`, `CEN-58`, `CEN-59`)
+  - [/] `HU08` (`CEN-31`): Mapa Interactivo de Calor por Barrios en Leaflet.js (Listo: `CEN-60`, `CEN-61`, `CEN-62` en PR #24 | Pendiente: `CEN-63`, `CEN-64`, `CEN-65`)
 
 ---
 

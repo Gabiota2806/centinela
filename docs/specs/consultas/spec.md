@@ -5,8 +5,8 @@
 - **Última Actualización:** 2026-11-24
 - **Contratos base:** `docs/specs/00_contracts.md`, `docs/specs/global_spec.md`
 - **Historias y Subtareas asociadas:**
-  - `HU03` (`CEN-26`): Cola Médica en Tiempo Real (`CEN-42`, `CEN-43`, `CEN-44`, `CEN-45`, `CEN-46`)
-  - `HU04` (`CEN-27`): Registro Diagnóstico al Cierre de Consulta (`CEN-47`)
+  - [x] `HU03` (`CEN-26`): Cola Médica en Tiempo Real (`CEN-42`, `CEN-43`, `CEN-44`, `CEN-45`, `CEN-46` — PR #21)
+  - [ ] `HU04` (`CEN-27`): Registro Diagnóstico al Cierre de Consulta (`CEN-47`)
 
 ---
 

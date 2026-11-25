@@ -2,7 +2,7 @@
 
 - **Módulo:** `triage`
 - **Estado:** `En Implementación`
-- **Última Actualización:** 2026-11-18
+- **Última Actualización:** 2026-11-24
 - **Subtareas asociadas:**
   - [x] `CEN-35` (Programación de la lógica del árbol de decisión clínico Manchester - MTS)
   - [x] `CEN-37` (Emisión y visualización de ticket digital con color de prioridad asignado)
@@ -12,9 +12,9 @@
   - [x] `CEN-41` (Testing de casos de discrepancia y reordenamiento de cola por override clínico)
   - [ ] `CEN-73` / `T4.B1` (Permiso de PrintTicket desde admisión manteniendo Override bajo `access-triage`)
   - [x] `CEN-75` / `T4.B3` (Cálculo y visualización de posición estimada `#N` en cola y ticket 80 mm)
-  - [ ] `CEN-76` / `T4.B4` (Evolución de `/triage`: búsqueda por DNI, pestaña "En espera" con edición auditada y pestaña "Historial")
-  - [ ] `CEN-77` / `T4.B5` (Remediación UI de unidades `pr-*`/`pointer-events-none`, `wire:target="save"` y tokens de error)
-  - [ ] `CEN-78` / `T4.B6` (Suite de pruebas Feature/Livewire para flujo unificado y gestión en `/triage`)
+  - [x] `CEN-76` / `T4.B4` (Evolución de `/triage`: búsqueda por DNI, pestaña "En espera" con edición auditada y pestaña "Historial")
+  - [x] `CEN-77` / `T4.B5` (Remediación UI de unidades `pr-*`/`pointer-events-none`, `wire:target="save"` y tokens de error)
+  - [x] `CEN-78` / `T4.B6` (Suite de pruebas Feature/Livewire para flujo unificado y gestión en `/triage`)
 
 ---
 

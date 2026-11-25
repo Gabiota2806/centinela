@@ -39,45 +39,45 @@
 - **Detalle Técnico:** Método en `Triage` para calcular la posición estimada `#N` dentro de `pending_consultation` (jerarquía MTS + FIFO `created_at`/`id`), mostrado en la confirmación de alta de `/pacientes/nuevo` y en el ticket digital/80 mm con nota de posición dinámica al ingreso, recalculando tras override/edición.
 
 #### 📌 CEN-76: [T4.B4] Evolución de /triage: buscador por DNI, pestaña "En espera" con edición auditada y pestaña "Historial"
-- **Estado:** `[ ]` Por hacer | **Responsable:** Gabriel Pineda | **Estimación:** 5 SP
+- **Estado:** `[x]` Listo | **Responsable:** Gabriel Pineda | **Estimación:** 5 SP
 - **Archivos Objetivo:** `app/Livewire/Triage/EvaluatePatient.php`, `resources/views/livewire/triage/evaluate-patient.blade.php`, `app/Models/Triage.php`.
 - **Detalle Técnico:** Buscador por DNI/nombre; pestaña "En espera" (`pending_consultation` con `#N` y `called` con badge "Llamado") con acciones Editar signos/motivo/discriminadores (recalcula MTS y registra en `triage_audit_logs` si cambia la prioridad), Clinical Override y Ver ticket; pestaña "Historial" (`in_consultation`, `completed`, `cancelled`).
 
 #### 📌 CEN-77: [T4.B5] Remediación UI/UX de campos de signos vitales, estados de carga y tokens MTS
-- **Estado:** `[ ]` Por hacer | **Responsable:** Gabriel Pineda | **Estimación:** 2 SP
+- **Estado:** `[x]` Listo | **Responsable:** Gabriel Pineda | **Estimación:** 2 SP
 - **Archivos Objetivo:** `resources/views/livewire/patients/create-patient.blade.php`, `resources/views/livewire/triage/evaluate-patient.blade.php`, `tailwind.config.js`.
 - **Detalle Técnico:** Padding derecho reservado (`pr-9`, `pr-12`, `pr-14`) + `pointer-events-none` en unidades (`°C`, `mmHg`, `lpm`, `rpm`, `%`), `wire:target="save"` en botones de guardado, bordes `border-danger` / `aria-invalid` / `aria-describedby` según `docs/specs/ui/spec.md` y verificación de compilación CSS de los 5 colores MTS.
 
 #### 📌 CEN-78: [T4.B6] Suite de pruebas Feature/Livewire para flujo unificado, RBAC actualizado, bloqueo activo y gestión en /triage
-- **Estado:** `[ ]` Por hacer | **Responsable:** Gabriel Pineda | **Estimación:** 3 SP
+- **Estado:** `[x]` Listo | **Responsable:** Gabriel Pineda | **Estimación:** 3 SP
 - **Archivos Objetivo:** `tests/Feature/Patients/CreatePatientTest.php`, `tests/Feature/Patients/PatientDirectoryTest.php`, `tests/Feature/AuthRoleAccessTest.php`, `tests/Feature/Triage/EvaluatePatientTest.php`, `tests/Feature/Triage/PrintTicketTest.php`.
 - **Detalle Técnico:** Cobertura Feature/Livewire completa de los criterios Gherkin del Bugfix Sprint 4 (`CEN-72`).
 
 ### 📖 HU03: Gestión de Cola Médica en Tiempo Real (`CEN-26`, 20 SP)
 
 #### 📌 CEN-42: [T4.1] Diseño y maquetación del panel médico con ordenamiento dinámico por MTS
-- **Estado:** `[ ]` Por hacer | **Responsable:** Valeria Budiño | **Estimación:** 4 SP
+- **Estado:** `[x]` Listo | **Responsable:** Valeria Budiño | **Estimación:** 4 SP
 - **Archivos Objetivo:** `app/Livewire/Doctor/MedicalQueue.php`, `resources/views/livewire/doctor/medical-queue.blade.php`.
 - **Detalle Técnico:** Tarjetas de espera ordenadas por color MTS (Rojo al frente, luego Naranja, Amarillo, Verde, Azul) mostrando posición `#N` y ticket `TR-XXXXX`. Cronómetro regresivo con tiempo restante antes del límite máximo de espera. Botón "Llamar a Consultorio", botón de Clinical Override (`open-clinical-override`) y acciones selectivas sobre pacientes en estado `called`: "Ingresar a consulta", "Volver a espera" o "Cancelar / Ausente".
 
 #### 📌 CEN-43: [T4.2] Implementación de eventos y actualización reactiva de colas en Livewire
-- **Estado:** `[ ]` Por hacer | **Responsable:** Valeria Budiño | **Estimación:** 4 SP
+- **Estado:** `[x]` Listo | **Responsable:** Valeria Budiño | **Estimación:** 4 SP
 - **Archivos Objetivo:** `app/Livewire/Doctor/MedicalQueue.php`.
 - **Detalle Técnico:** Actualización reactiva mediante eventos Livewire (`#[On('patient-triaged')]`, `#[On('triage-overridden')]`, `wire:poll.5s` para sincronización entre terminales). Ordenamiento SQL nativo:
   `ORDER BY CASE final_priority WHEN 'red' THEN 1 WHEN 'orange' THEN 2 WHEN 'yellow' THEN 3 WHEN 'green' THEN 4 WHEN 'blue' THEN 5 END, created_at ASC`.
 
 #### 📌 CEN-44: [T4.3] Lógica de cambio de estados del paciente (Llamado, En Consulta, Atendido)
-- **Estado:** `[ ]` Por hacer | **Responsable:** Valeria Budiño | **Estimación:** 4 SP
+- **Estado:** `[x]` Listo | **Responsable:** Valeria Budiño | **Estimación:** 4 SP
 - **Archivos Objetivo:** `app/Models/Triage.php`, `app/Models/Consultation.php`, `app/Enums/TriageStatus.php`.
 - **Detalle Técnico:** Agregar `CALLED = 'called'` en `TriageStatus`. Transiciones válidas: `pending_consultation` ➔ `called` ➔ `in_consultation` ➔ `completed` (con `Consultation` en `completed` / `referred_sipec`), más transiciones selectivas desde `called`: ➔ `pending_consultation` (devolver a cola conservando `created_at` FIFO) o ➔ `cancelled` (ausente/retirado, habilitando re-admisión futura). Registro de timestamps `started_at` y `completed_at`.
 
 #### 📌 CEN-45: [T4.5] Optimización de consultas a la cola de espera mediante índices compuestos
-- **Estado:** `[ ]` Por hacer | **Responsable:** Valeria Budiño | **Estimación:** 3 SP
+- **Estado:** `[x]` Listo | **Responsable:** Valeria Budiño | **Estimación:** 3 SP
 - **Archivos Objetivo:** `database/migrations/xxxx_add_indexes_to_triages_table.php`.
 - **Detalle Técnico:** Índice compuesto en PostgreSQL: `CREATE INDEX idx_triages_active_queue ON triages (status, final_priority, created_at);`. Tiempo de respuesta < 20 ms probado con `EXPLAIN ANALYZE`.
 
 #### 📌 CEN-46: [T4.6] Testing de flujo completo de sala de espera desde admisión hasta alta médica
-- **Estado:** `[ ]` Por hacer | **Responsable:** Valeria Budiño | **Estimación:** 5 SP
+- **Estado:** `[x]` Listo | **Responsable:** Valeria Budiño | **Estimación:** 5 SP
 - **Archivos Objetivo:** `tests/Feature/MedicalQueueWorkflowTest.php`.
 - **Detalle Técnico:** Test E2E del flujo unificado real: Admisión+Triage (`/pacientes/nuevo`) ➔ Edición/Override en `/triage` ➔ Cola de Espera (`/consultas`) ➔ Llamado (`called` con retorno a espera y ausente) ➔ Atención (`in_consultation`) ➔ Cierre (`completed`).
 
@@ -133,23 +133,23 @@
 
 ## 🏃 Sprint 6: Motor Analítico de Alerta Temprana con Scikit-Learn
 - **Épica:** `CEN-21`
-- **Estado:** `[ ]` Por hacer (Inicio: 26/11/2026 - Fin: 28/11/2026) | **Puntos:** 36 SP
+- **Estado:** `[/]` En curso (Parcial: 16 / 36 SP completados | Inicio: 26/11/2026 - Fin: 28/11/2026) | **Puntos:** 36 SP
 - **Alcance:** Pipeline de Scikit-Learn, correlación con time-lag lluvia-casos e inferencia analítica en FastAPI.
 
 ### 📖 HU07: Predicción de Riesgo de Brote Epidemiológico con Scikit-Learn (`CEN-30`, 36 SP)
 
 #### 📌 CEN-54: [T6.1] Procesamiento y limpieza de series temporales de consultas con Pandas
-- **Estado:** `[ ]` Por hacer | **Responsable:** Gabriel Pineda | **Estimación:** 4 SP
+- **Estado:** `[x]` Listo | **Responsable:** Gabriel Pineda | **Estimación:** 4 SP
 - **Archivos Objetivo:** `backend_analytics/pipeline/dataset_builder.py`.
 - **Detalle Técnico:** Transformación de telemetría y registros meteorológicos en series temporales agrupadas por semana epidemiológica (EpiWeek) y barrio.
 
 #### 📌 CEN-55: [T6.2] Modelado matemático del retardo temporal (time-lag de 7 a 14 días) lluvia-casos
-- **Estado:** `[ ]` Por hacer | **Responsable:** Gabriel Pineda | **Estimación:** 4 SP
+- **Estado:** `[x]` Listo | **Responsable:** Gabriel Pineda | **Estimación:** 4 SP
 - **Archivos Objetivo:** `backend_analytics/pipeline/lag_features.py`.
 - **Detalle Técnico:** Generación de variables con retardo (`rain_lag_7d`, `rain_lag_14d`, `temp_mean_lag_7d`) correlacionadas con el ciclo biológico del mosquito transmisor.
 
 #### 📌 CEN-56: [T6.3] Entrenamiento y ajuste del modelo de Machine Learning (Random Forest)
-- **Estado:** `[ ]` Por hacer | **Responsable:** Gabriel Pineda | **Estimación:** 8 SP
+- **Estado:** `[x]` Listo | **Responsable:** Gabriel Pineda | **Estimación:** 8 SP
 - **Archivos Objetivo:** `backend_analytics/ml/train_random_forest.py`, `backend_analytics/models/risk_classifier.pkl`.
 - **Detalle Técnico:** Entrenamiento con Scikit-Learn (RandomForestClassifier). Clasificación del riesgo barrial en 3 clases: Bajo (0), Moderado (1) y Alto (2). Exportación con `joblib`.
 
@@ -172,23 +172,23 @@
 
 ## 🏃 Sprint 7: Visualización Geoespacial Barrial en Leaflet.js
 - **Épica:** `CEN-22`
-- **Estado:** `[ ]` Por hacer (Inicio: 29/11/2026 - Fin: 01/12/2026) | **Puntos:** 36 SP
+- **Estado:** `[/]` En curso (Parcial: 16 / 36 SP completados | Inicio: 29/11/2026 - Fin: 01/12/2026) | **Puntos:** 36 SP
 - **Alcance:** Integración Leaflet.js, mapas coropléticos de barrios de Formosa Capital y mapas de calor.
 
 ### 📖 HU08: Mapa Interactivo de Calor por Barrios en Leaflet.js (`CEN-31`, 36 SP)
 
 #### 📌 CEN-60: [T7.1] Integración de la librería Leaflet.js sobre OpenStreetMap en el dashboard
-- **Estado:** `[ ]` Por hacer | **Responsable:** Gabriel Pineda | **Estimación:** 4 SP
+- **Estado:** `[x]` Listo | **Responsable:** Gabriel Pineda | **Estimación:** 4 SP
 - **Archivos Objetivo:** `resources/js/map.js`, `resources/views/components/leaflet-map.blade.php`.
 - **Detalle Técnico:** Mapa interactivo Leaflet.js integrado con OpenStreetMap, centrado en Formosa Capital (`[-26.18, -58.17]`, zoom 13).
 
 #### 📌 CEN-61: [T7.2] Carga y renderizado de capas poligonales GeoJSON de barrios de la ciudad
-- **Estado:** `[ ]` Por hacer | **Responsable:** Gabriel Pineda | **Estimación:** 6 SP
+- **Estado:** `[x]` Listo | **Responsable:** Gabriel Pineda | **Estimación:** 6 SP
 - **Archivos Objetivo:** `resources/js/choropleth.js`.
 - **Detalle Técnico:** Renderizado de coropletas coloreadas dinámicamente según el nivel de riesgo predicho del barrio (Verde: Bajo, Amarillo: Moderado, Rojo: Alto) con eventos `mouseover` y `click`.
 
 #### 📌 CEN-62: [T7.3] Implementación de capa de calor (Heatmap) basada en densidad de casos
-- **Estado:** `[ ]` Por hacer | **Responsable:** Gabriel Pineda | **Estimación:** 6 SP
+- **Estado:** `[x]` Listo | **Responsable:** Gabriel Pineda | **Estimación:** 6 SP
 - **Archivos Objetivo:** `resources/js/heatmap.js`.
 - **Detalle Técnico:** Representación continua de focos calientes mediante `leaflet.heat` con ponderación espacial basada en consultas febriles recientes.
 
