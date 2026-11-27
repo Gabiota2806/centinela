@@ -6,7 +6,7 @@
 - **Subtareas asociadas:**
   - [x] `CEN-15` (implementación de autenticación y autorización por roles)
   - [x] `CEN-16` (pruebas unitarias y de integración de modelos, PostGIS, inmutabilidad, enum y gates)
-  - [ ] `CEN-73` / `T4.B1` (habilitación de `triage_nurse` en `access-admission` según relevamiento CAPS Codda)
+  - [x] `CEN-73` / `T4.B1` (habilitación de `triage_nurse` en `access-admission` según relevamiento CAPS Codda)
 
 ---
 

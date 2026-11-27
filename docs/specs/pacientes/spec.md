@@ -20,8 +20,8 @@ Registro demográfico de pacientes en el nodo local del CAPS junto con la toma i
 - [x] **RF-PAC-04:** Cuando se ingresa un DNI en `/pacientes/nuevo`, si ya está registrado en `patients` (incluyendo `withTrashed()`), el sistema debe precargar sus datos personales editables para crear un nuevo triage sin duplicar el paciente; si ya posee un triage activo (`pending_consultation`, `called`, `in_consultation`), debe alertar con el `#TR-XXXXX` activo y bloquear el doble ingreso en cola.
 - [x] **RF-PAC-05:** El formulario debe incluir un selector reactivo con autocompletado y búsqueda rápida en tiempo real para seleccionar el barrio de residencia dentro del nomenclador oficial de Formosa Capital con delimitación poligonal PostGIS (SRID 4326).
 - [x] **RF-PAC-06:** El formulario `/pacientes/nuevo` debe exigir los 6 signos vitales cuantitativos y el motivo de consulta (ubicado arriba de los discriminadores MTS opcionales), mostrando en tiempo real la clasificación MTS calculada por `ManchesterTriageService`.
-- [ ] **RF-PAC-07:** El ticket digital abierto tras guardar (`PrintTicket`) debe estar habilitado tanto para `access-admission` como para `access-triage`, ocultando el botón de *Reclasificar (Override)* cuando el usuario no cuente con `access-triage`.
-- [ ] **RF-PAC-08:** La pantalla `/pacientes` (`PatientDirectory`) debe permitir buscar pacientes por DNI o nombre, visualizar su barrio y cantidad de atenciones, e iniciar una nueva atención en `/pacientes/nuevo?dni=...` (reemplazando el placeholder previo).
+- [x] **RF-PAC-07:** El ticket digital abierto tras guardar (`PrintTicket`) debe estar habilitado tanto para `access-admission` como para `access-triage`, ocultando el botón de *Reclasificar (Override)* cuando el usuario no cuente con `access-triage`.
+- [x] **RF-PAC-08:** La pantalla `/pacientes` (`PatientDirectory`) debe permitir buscar pacientes por DNI o nombre, visualizar su barrio y cantidad de atenciones, e iniciar una nueva atención en `/pacientes/nuevo?dni=...` (reemplazando el placeholder previo).
 
 ---
 

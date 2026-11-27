@@ -8,6 +8,7 @@ use App\Enums\TriagePriority;
 use App\Enums\TriageStatus;
 use App\Enums\UserRole;
 use App\Livewire\Patients\CreatePatient;
+use App\Livewire\Triage\ClinicalOverrideModal;
 use App\Livewire\Triage\PrintTicket;
 use App\Models\Neighborhood;
 use App\Models\Patient;
@@ -66,7 +67,20 @@ class CreatePatientTest extends TestCase
 
         $this->actingAs($user)->get('/pacientes/nuevo')
             ->assertOk()
-            ->assertSeeLivewire(CreatePatient::class);
+            ->assertSeeLivewire(CreatePatient::class)
+            ->assertSeeLivewire(PrintTicket::class)
+            ->assertDontSeeLivewire(ClinicalOverrideModal::class);
+    }
+
+    public function test_enfermeria_de_triage_ve_formulario_ticket_y_modal_override_en_admision(): void
+    {
+        $user = User::factory()->triageNurse()->create();
+
+        $this->actingAs($user)->get('/pacientes/nuevo')
+            ->assertOk()
+            ->assertSeeLivewire(CreatePatient::class)
+            ->assertSeeLivewire(PrintTicket::class)
+            ->assertSeeLivewire(ClinicalOverrideModal::class);
     }
 
     /**
@@ -76,7 +90,7 @@ class CreatePatientTest extends TestCase
     {
         return [
             'admisión' => [UserRole::ADMISSION, 200],
-            'enfermería de triage' => [UserRole::TRIAGE_NURSE, 403],
+            'enfermería de triage' => [UserRole::TRIAGE_NURSE, 200],
             'médico de guardia' => [UserRole::DOCTOR, 403],
             'dirección' => [UserRole::DIRECTOR, 200],
         ];
