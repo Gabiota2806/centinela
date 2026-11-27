@@ -226,12 +226,57 @@ class MedicalQueueTest extends TestCase
         Livewire::actingAs($medico)
             ->test(MedicalQueue::class)
             ->call('startConsultation', $triage->id)
-            ->assertSee('En consulta');
+            ->assertRedirect(route('consultations.show', $triage));
 
         $triage->refresh();
         $this->assertSame(TriageStatus::IN_CONSULTATION, $triage->status);
         $this->assertSame($medico->id, $triage->consultation->doctor_id);
         $this->assertSame(ConsultationStatus::IN_PROGRESS, $triage->consultation->status);
+    }
+
+    public function test_los_pacientes_en_consulta_enlazan_al_consultorio(): void
+    {
+        $triage = $this->enEspera('Marta Rodríguez', TriagePriority::YELLOW, 30, TriageStatus::CALLED);
+        $triage->startConsultation($this->medico());
+
+        Livewire::actingAs($this->medico())
+            ->test(MedicalQueue::class)
+            ->assertSee('Abrir consultorio')
+            ->assertSeeHtml('href="'.route('consultations.show', $triage).'"');
+    }
+
+    public function test_los_horarios_de_dias_anteriores_muestran_la_fecha(): void
+    {
+        Carbon::setTestNow('2026-11-24 22:07:00');
+        $triage = $this->enEspera('Carlos Villalba', TriagePriority::ORANGE, 30, TriageStatus::CALLED);
+        $triage->startConsultation($this->medico());
+
+        Carbon::setTestNow('2026-11-27 15:00:00');
+
+        // 22:07 UTC del 24/11 = 19:07 hora local del CAPS.
+        Livewire::actingAs($this->medico())
+            ->test(MedicalQueue::class)
+            ->assertSee('desde 24/11 19:07');
+
+        $this->enEspera('Ana Verde', TriagePriority::GREEN, 60 * 24 * 2);
+        Livewire::actingAs($this->medico())
+            ->test(MedicalQueue::class)
+            ->assertSee('llegó 25/11 12:00');
+
+        Carbon::setTestNow('2026-11-24 23:00:00');
+        Livewire::actingAs($this->medico())
+            ->test(MedicalQueue::class)
+            ->assertSee('desde 19:07')
+            ->assertDontSee('desde 24/11');
+    }
+
+    public function test_muestra_el_aviso_del_cierre_de_consulta_al_volver_a_la_cola(): void
+    {
+        session()->flash('queue-notice', 'Consulta de Marta Rodríguez cerrada: Sospecha de Dengue / Arbovirosis (Finalizada).');
+
+        Livewire::actingAs($this->medico())
+            ->test(MedicalQueue::class)
+            ->assertSee('Consulta de Marta Rodríguez cerrada');
     }
 
     public function test_una_accion_invalida_muestra_el_error_sin_romper_la_pantalla(): void

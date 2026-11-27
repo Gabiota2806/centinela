@@ -77,7 +77,7 @@
                             <span class="inline-flex h-10 min-w-10 items-center justify-center rounded-lg px-2 text-lg font-extrabold {{ $triage->final_priority->badgeClasses() }}">{{ $triage->final_priority->level() }}</span>
                             <div>
                                 <p class="font-bold text-ink">{{ $triage->patient->full_name }}</p>
-                                <p class="text-xs text-ink-muted"><span class="font-mono">{{ \App\Livewire\Doctor\MedicalQueue::ticketNumber($triage) }}</span> · {{ $triage->final_priority->label() }} · llamado {{ $triage->updated_at->timezone($tz)->format('H:i') }}</p>
+                                <p class="text-xs text-ink-muted"><span class="font-mono">{{ \App\Livewire\Doctor\MedicalQueue::ticketNumber($triage) }}</span> · {{ $triage->final_priority->label() }} · llamado {{ \App\Livewire\Doctor\MedicalQueue::localTime($triage->updated_at) }}</p>
                             </div>
                         </div>
                         <div class="flex flex-wrap gap-2">
@@ -115,7 +115,7 @@
                             <div>
                                 <p class="font-semibold text-ink">{{ $triage->patient->full_name }}</p>
                                 <p class="text-xs text-ink-muted"><span class="font-mono">{{ \App\Livewire\Doctor\MedicalQueue::ticketNumber($triage) }}</span>
-                                    @if ($triage->consultation?->started_at) · desde {{ $triage->consultation->started_at->timezone($tz)->format('H:i') }} @endif
+                                    @if ($triage->consultation?->started_at) · desde {{ \App\Livewire\Doctor\MedicalQueue::localTime($triage->consultation->started_at) }} @endif
                                 </p>
                             </div>
                         </div>
@@ -178,7 +178,7 @@
                                         <x-icon name="clock" class="w-4 h-4" />
                                         <span x-text="wait({{ $deadline }}, {{ $triage->target_wait_minutes }})">{{ $text }}</span>
                                     </p>
-                                    <p class="text-[11px] opacity-80">Espera máx. {{ $triage->target_wait_minutes }} min · llegó {{ $triage->created_at->timezone($tz)->format('H:i') }}</p>
+                                    <p class="text-[11px] opacity-80">Espera máx. {{ $triage->target_wait_minutes }} min · llegó {{ \App\Livewire\Doctor\MedicalQueue::localTime($triage->created_at) }}</p>
                                 </div>
                             </div>
 
