@@ -99,4 +99,35 @@ class NeighborhoodSpatialTest extends TestCase
 
         $this->assertSame(4326, (int) $srid->srid);
     }
+
+    /**
+     * Verifica que ante polígonos solapados containingPoint resuelva de forma determinística
+     * el barrio más específico (menor área) o con centroide más cercano, independientemente del orden de inserción.
+     */
+    public function test_overlapping_polygons_resolve_deterministically_regardless_of_insertion_order(): void
+    {
+        // Insertamos primero el polígono más grande que también contiene el centroide de Lote 4
+        Neighborhood::factory()->create([
+            'name' => 'Independencia',
+            'geometry' => DB::raw(
+                "ST_SetSRID(ST_GeomFromText('POLYGON((-58.208 -26.190, -58.195 -26.190, -58.195 -26.200, -58.208 -26.200, -58.208 -26.190))'), 4326)"
+            ),
+            'risk_level' => 'normal',
+        ]);
+
+        // Insertamos después el polígono más específico (Lote 4, menor área y centroide exacto en -26.195, -58.205)
+        $lote4 = Neighborhood::factory()->create([
+            'name' => 'Lote 4',
+            'geometry' => DB::raw(
+                "ST_SetSRID(ST_GeomFromText('POLYGON((-58.210 -26.190, -58.200 -26.190, -58.200 -26.200, -58.210 -26.200, -58.210 -26.190))'), 4326)"
+            ),
+            'risk_level' => 'alto',
+        ]);
+
+        $matched = Neighborhood::containingPoint(-26.195, -58.205)->first();
+
+        $this->assertNotNull($matched);
+        $this->assertSame($lote4->id, $matched->id);
+        $this->assertSame('Lote 4', $matched->name);
+    }
 }

@@ -6,6 +6,7 @@ namespace App\Livewire\Triage;
 
 use App\Models\Triage;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -21,16 +22,16 @@ class PrintTicket extends Component
 
     public function mount(): void
     {
-        $this->authorize('access-triage');
+        abort_unless(Gate::any(['access-admission', 'access-triage']), 403);
     }
 
     /**
-     * Abre el ticket cuando EvaluatePatient registra un triage.
+     * Abre el ticket cuando admisión o triage registra una atención.
      */
     #[On('triage-saved')]
     public function open(int $triageId): void
     {
-        $this->authorize('access-triage');
+        abort_unless(Gate::any(['access-admission', 'access-triage']), 403);
 
         $this->triageId = $triageId;
         $this->show = true;
@@ -48,10 +49,12 @@ class PrintTicket extends Component
     }
 
     /**
-     * CEN-39: cierra el ticket y abre el modal de Clinical Override del mismo triage.
+     * Cierra el ticket y abre el modal de Clinical Override del mismo triage (solo roles con access-triage).
      */
     public function reclassify(): void
     {
+        $this->authorize('access-triage');
+
         $this->show = false;
 
         if ($this->triageId !== null) {

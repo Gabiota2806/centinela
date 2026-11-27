@@ -32,7 +32,7 @@ class RoleAccessTest extends TestCase
             'admisión → pacientes' => [UserRole::ADMISSION, '/pacientes', 200],
             'admisión → triage' => [UserRole::ADMISSION, '/triage', 403],
             'admisión → consultas' => [UserRole::ADMISSION, '/consultas', 403],
-            'triage → pacientes' => [UserRole::TRIAGE_NURSE, '/pacientes', 403],
+            'triage → pacientes' => [UserRole::TRIAGE_NURSE, '/pacientes', 200],
             'triage → triage' => [UserRole::TRIAGE_NURSE, '/triage', 200],
             'triage → consultas' => [UserRole::TRIAGE_NURSE, '/consultas', 403],
             'médico → pacientes' => [UserRole::DOCTOR, '/pacientes', 403],
@@ -81,11 +81,19 @@ class RoleAccessTest extends TestCase
 
     public function test_la_barra_lateral_muestra_solo_los_modulos_del_rol(): void
     {
-        $user = User::factory()->doctor()->create();
+        $doctor = User::factory()->doctor()->create();
 
-        $this->actingAs($user)->get('/consultas')
+        $this->actingAs($doctor)->get('/consultas')
             ->assertSee('Consultas')
             ->assertSee('Triage MTS')
             ->assertDontSee('Admisión');
+
+        $nurse = User::factory()->triageNurse()->create();
+
+        $this->actingAs($nurse)->get('/triage')
+            ->assertSee('Admisión')
+            ->assertSee('Nuevo paciente')
+            ->assertSee('Triage MTS')
+            ->assertDontSee('Consultas');
     }
 }

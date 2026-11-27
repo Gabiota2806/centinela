@@ -82,15 +82,19 @@ class AuthRoleAccessTest extends TestCase
     {
         return [
             'admission -> /pacientes (200)' => [UserRole::ADMISSION, '/pacientes', 200],
+            'admission -> /pacientes/nuevo (200)' => [UserRole::ADMISSION, '/pacientes/nuevo', 200],
             'admission -> /triage (403)' => [UserRole::ADMISSION, '/triage', 403],
             'admission -> /consultas (403)' => [UserRole::ADMISSION, '/consultas', 403],
-            'triage_nurse -> /pacientes (403)' => [UserRole::TRIAGE_NURSE, '/pacientes', 403],
+            'triage_nurse -> /pacientes (200)' => [UserRole::TRIAGE_NURSE, '/pacientes', 200],
+            'triage_nurse -> /pacientes/nuevo (200)' => [UserRole::TRIAGE_NURSE, '/pacientes/nuevo', 200],
             'triage_nurse -> /triage (200)' => [UserRole::TRIAGE_NURSE, '/triage', 200],
             'triage_nurse -> /consultas (403)' => [UserRole::TRIAGE_NURSE, '/consultas', 403],
             'doctor -> /pacientes (403)' => [UserRole::DOCTOR, '/pacientes', 403],
+            'doctor -> /pacientes/nuevo (403)' => [UserRole::DOCTOR, '/pacientes/nuevo', 403],
             'doctor -> /triage (200)' => [UserRole::DOCTOR, '/triage', 200],
             'doctor -> /consultas (200)' => [UserRole::DOCTOR, '/consultas', 200],
             'director -> /pacientes (200)' => [UserRole::DIRECTOR, '/pacientes', 200],
+            'director -> /pacientes/nuevo (200)' => [UserRole::DIRECTOR, '/pacientes/nuevo', 200],
             'director -> /triage (200)' => [UserRole::DIRECTOR, '/triage', 200],
             'director -> /consultas (200)' => [UserRole::DIRECTOR, '/consultas', 200],
         ];
@@ -124,7 +128,7 @@ class AuthRoleAccessTest extends TestCase
 
         // Gate: access-admission
         $this->assertTrue(Gate::forUser($admission)->allows('access-admission'));
-        $this->assertFalse(Gate::forUser($nurse)->allows('access-admission'));
+        $this->assertTrue(Gate::forUser($nurse)->allows('access-admission'));
         $this->assertFalse(Gate::forUser($doctor)->allows('access-admission'));
         $this->assertTrue(Gate::forUser($director)->allows('access-admission'));
 

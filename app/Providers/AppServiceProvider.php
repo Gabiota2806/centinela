@@ -22,8 +22,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Acceso a módulos por rol (CEN-15 · docs/specs/auth/spec.md §4).
-        Gate::define('access-admission', fn (User $user) => in_array($user->role, [UserRole::ADMISSION, UserRole::DIRECTOR], true)
+        // Acceso a módulos por rol (docs/specs/auth/spec.md §4 · CEN-73).
+        Gate::define('access-admission', fn (User $user) => in_array($user->role, [UserRole::ADMISSION, UserRole::TRIAGE_NURSE, UserRole::DIRECTOR], true)
         );
 
         Gate::define('access-triage', fn (User $user) => in_array($user->role, [UserRole::TRIAGE_NURSE, UserRole::DOCTOR, UserRole::DIRECTOR], true)

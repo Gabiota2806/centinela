@@ -10,8 +10,9 @@
         </div>
     </div>
 
+    <livewire:triage.print-ticket />
+
     @can('access-triage')
-        <livewire:triage.print-ticket />
         <livewire:triage.clinical-override-modal />
     @endcan
 </x-app-layout>

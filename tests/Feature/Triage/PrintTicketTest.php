@@ -14,6 +14,7 @@ use App\Models\Triage;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -118,8 +119,42 @@ class PrintTicketTest extends TestCase
             ->assertSee('window.print()', false);
     }
 
-    public function test_admision_no_puede_ver_tickets_de_triage(): void
+    public function test_admision_puede_abrir_el_ticket_pero_no_ve_ni_puede_ejecutar_override(): void
     {
+        $triage = $this->triage();
+        $numero = PrintTicket::ticketNumber($triage->id);
+
+        $componente = Livewire::actingAs(User::factory()->admission()->create())
+            ->test(PrintTicket::class)
+            ->dispatch('triage-saved', triageId: $triage->id)
+            ->assertSet('show', true)
+            ->assertSee($numero)
+            ->assertSee('Marta Rodríguez')
+            ->assertDontSee('Reclasificar prioridad (Override)');
+
+        $componente->call('reclassify')
+            ->assertForbidden();
+    }
+
+    public function test_enfermeria_ve_el_boton_de_reclasificar_y_puede_disparar_override(): void
+    {
+        $triage = $this->triage();
+
+        Livewire::actingAs(User::factory()->triageNurse()->create())
+            ->test(PrintTicket::class)
+            ->dispatch('triage-saved', triageId: $triage->id)
+            ->assertSet('show', true)
+            ->assertSee('Reclasificar prioridad (Override)')
+            ->call('reclassify')
+            ->assertSet('show', false)
+            ->assertDispatched('open-clinical-override', triageId: $triage->id);
+    }
+
+    public function test_usuario_sin_acceso_a_admision_ni_triage_recibe_403_en_print_ticket(): void
+    {
+        Gate::define('access-admission', fn () => false);
+        Gate::define('access-triage', fn () => false);
+
         Livewire::actingAs(User::factory()->admission()->create())
             ->test(PrintTicket::class)
             ->assertForbidden();
