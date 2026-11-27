@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout del repositorio
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Configurar PHP 8.5 y Composer
         uses: shivammathur/setup-php@v2
@@ -40,10 +40,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout del repositorio
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Configurar Node.js 22
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: 'npm'
@@ -55,7 +55,7 @@ jobs:
         run: npm run build
 
       - name: Publicar artefacto de build frontend
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: frontend-build
           path: public/build
@@ -83,7 +83,7 @@ jobs:
 
     steps:
       - name: Checkout del repositorio
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Configurar PHP 8.5 y extensiones requeridas
         uses: shivammathur/setup-php@v2
@@ -98,7 +98,7 @@ jobs:
         run: composer install --no-interaction --prefer-dist --no-progress
 
       - name: Descargar artefacto de build frontend
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: frontend-build
           path: public/build
