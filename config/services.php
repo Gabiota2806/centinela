@@ -35,4 +35,14 @@ return [
         ],
     ],
 
+    'open_meteo' => [
+        'base_url' => env('OPEN_METEO_BASE_URL', 'https://api.open-meteo.com/v1/forecast'),
+        'latitude' => (float) env('OPEN_METEO_LATITUDE', -26.18),
+        'longitude' => (float) env('OPEN_METEO_LONGITUDE', -58.17),
+        'timezone' => env('OPEN_METEO_TIMEZONE', env('CENTINELA_TIMEZONE', 'America/Argentina/Cordoba')),
+        'timeout' => (int) env('OPEN_METEO_TIMEOUT', 10),
+        'past_days' => (int) env('OPEN_METEO_PAST_DAYS', 7),
+        'forecast_days' => (int) env('OPEN_METEO_FORECAST_DAYS', 1),
+    ],
+
 ];
