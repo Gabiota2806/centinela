@@ -8,15 +8,21 @@ use App\Exceptions\WeatherFetchException;
 use App\Models\WeatherRecord;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
 /**
- * Cliente HTTP de Open-Meteo para Formosa Capital con persistencia idempotente en weather_records (RF-GEO-01).
+ * Cliente HTTP de Open-Meteo para Formosa Capital con persistencia idempotente en weather_records (RF-GEO-01)
+ * y caché de contingencia de 7 días para operación offline-first (RF-GEO-02).
  */
 class OpenMeteoService
 {
     public const SOURCE = 'open-meteo';
+
+    public const CONTINGENCY_CACHE_KEY = 'centinela.weather.contingency_7d';
+
+    public const CONTINGENCY_TTL_DAYS = 7;
 
     /**
      * Consulta la serie meteorológica diaria en Open-Meteo y la persiste de forma idempotente por fecha.
@@ -113,7 +119,61 @@ class OpenMeteoService
             return $stored;
         });
 
+        $this->refreshContingencyCache();
+
         return $records;
+    }
+
+    /**
+     * Actualiza la caché de contingencia de 7 días a partir de la base local PostgreSQL.
+     *
+     * @return array<int, array{recorded_date: string, temperature_max: float|null, temperature_min: float|null, precipitation_sum: float, relative_humidity_mean: float|null, source: string}>
+     */
+    public function refreshContingencyCache(int $days = self::CONTINGENCY_TTL_DAYS): array
+    {
+        $limit = max(1, $days);
+
+        /** @var array<int, array{recorded_date: string, temperature_max: float|null, temperature_min: float|null, precipitation_sum: float, relative_humidity_mean: float|null, source: string}> $snapshot */
+        $snapshot = WeatherRecord::query()
+            ->recentDays($limit)
+            ->get()
+            ->map(static fn (WeatherRecord $record): array => [
+                'recorded_date' => $record->recorded_date->toDateString(),
+                'temperature_max' => $record->temperature_max,
+                'temperature_min' => $record->temperature_min,
+                'precipitation_sum' => $record->precipitation_sum,
+                'relative_humidity_mean' => $record->relative_humidity_mean,
+                'source' => $record->source,
+            ])
+            ->values()
+            ->all();
+
+        if ($snapshot !== []) {
+            Cache::put(
+                self::CONTINGENCY_CACHE_KEY,
+                $snapshot,
+                now()->addDays(self::CONTINGENCY_TTL_DAYS),
+            );
+        }
+
+        return $snapshot;
+    }
+
+    /**
+     * Devuelve los últimos N días climáticos desde caché de contingencia o, en su defecto, desde la base local.
+     *
+     * @return array<int, array{recorded_date: string, temperature_max: float|null, temperature_min: float|null, precipitation_sum: float, relative_humidity_mean: float|null, source: string}>
+     */
+    public function getContingencyWeather(int $days = self::CONTINGENCY_TTL_DAYS): array
+    {
+        $limit = max(1, $days);
+        $cached = Cache::get(self::CONTINGENCY_CACHE_KEY);
+
+        if (is_array($cached) && $cached !== []) {
+            return array_slice($cached, 0, $limit);
+        }
+
+        return $this->refreshContingencyCache($limit);
     }
 
     /**
