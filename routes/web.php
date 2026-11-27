@@ -30,6 +30,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // CEN-42: cola médica en tiempo real (docs/specs/consultas/spec.md).
     Route::view('/consultas', 'consultations.index')
         ->middleware('can:access-doctor')->name('consultations.index');
+
+    // CEN-50: panel de configuración de parámetros epidemiológicos (docs/specs/geo/spec.md).
+    Route::view('/epidemiologia/configuracion', 'epidemiology.settings')
+        ->middleware('can:access-epidemiology')
+        ->name('epidemiology.settings');
 });
 
 Route::middleware('auth')->group(function () {

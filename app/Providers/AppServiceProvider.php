@@ -35,6 +35,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('access-analytics', fn (User $user) => $user->role === UserRole::DIRECTOR
         );
 
+        Gate::define('access-epidemiology', fn (User $user) => $user->role === UserRole::DIRECTOR
+        );
+
         // Reglas de dominio previas: se revisan en los Sprints 3 y 4.
         Gate::define('admit-patient', fn (User $user) => in_array($user->role, [UserRole::ADMISSION, UserRole::TRIAGE_NURSE], true)
         );

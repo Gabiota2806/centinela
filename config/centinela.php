@@ -43,6 +43,7 @@ return [
         ['label' => 'Nuevo paciente', 'route' => 'patients.create', 'icon' => 'user-plus', 'can' => 'access-admission'],
         ['label' => 'Triage MTS', 'route' => 'triage.index', 'icon' => 'activity', 'can' => 'access-triage'],
         ['label' => 'Consultas', 'route' => 'consultations.index', 'icon' => 'stethoscope', 'can' => 'access-doctor'],
+        ['label' => 'Epidemiología', 'route' => 'epidemiology.settings', 'icon' => 'adjustments-horizontal', 'can' => 'access-epidemiology'],
         ['label' => 'Mi perfil', 'route' => 'profile.edit', 'icon' => 'user-circle'],
     ],
 
