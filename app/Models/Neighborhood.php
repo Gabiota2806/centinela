@@ -29,17 +29,25 @@ class Neighborhood extends Model
     }
 
     /**
-     * Filtra el barrio cuyo polígono (SRID 4326) contiene el punto geográfico (latitud, longitud).
+     * Filtra el barrio cuyo polígono (SRID 4326) contiene el punto geográfico (latitud, longitud),
+     * ordenando de forma determinística por menor área, menor distancia al centroide e ID ante solapamientos.
      *
      * @param  Builder<Neighborhood>  $query
      * @return Builder<Neighborhood>
      */
     public function scopeContainingPoint(Builder $query, float $latitude, float $longitude): Builder
     {
-        return $query->whereRaw(
-            'ST_Contains(geometry, ST_SetSRID(ST_MakePoint(?, ?), 4326))',
-            [$longitude, $latitude]
-        );
+        return $query
+            ->whereRaw(
+                'ST_Contains(geometry, ST_SetSRID(ST_MakePoint(?, ?), 4326))',
+                [$longitude, $latitude]
+            )
+            ->orderByRaw('ST_Area(geometry) ASC')
+            ->orderByRaw(
+                'ST_Distance(ST_Centroid(geometry), ST_SetSRID(ST_MakePoint(?, ?), 4326)) ASC',
+                [$longitude, $latitude]
+            )
+            ->orderBy('id');
     }
 
     /**
