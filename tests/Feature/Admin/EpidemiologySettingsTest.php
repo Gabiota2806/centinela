@@ -85,10 +85,10 @@ class EpidemiologySettingsTest extends TestCase
         $this->actingAs($director);
 
         Livewire::test(EpidemiologySettings::class)
-            ->assertSet('rain_threshold_mm', EpidemiologySetting::DEFAULT_RAIN_THRESHOLD_MM)
-            ->assertSet('time_lag_days', EpidemiologySetting::DEFAULT_TIME_LAG_DAYS)
-            ->assertSet('febrile_alert_threshold', EpidemiologySetting::DEFAULT_FEBRILE_ALERT_THRESHOLD)
-            ->assertSet('high_risk_probability', EpidemiologySetting::DEFAULT_HIGH_RISK_PROBABILITY);
+            ->assertSet('rain_threshold_mm', '40')
+            ->assertSet('time_lag_days', '10')
+            ->assertSet('febrile_alert_threshold', '5')
+            ->assertSet('high_risk_probability', '0.70');
 
         $this->assertDatabaseCount('epidemiology_settings', 1);
     }
@@ -103,12 +103,13 @@ class EpidemiologySettingsTest extends TestCase
         $this->actingAs($director);
 
         Livewire::test(EpidemiologySettings::class)
-            ->set('rain_threshold_mm', 55.5)
-            ->set('time_lag_days', 12)
-            ->set('febrile_alert_threshold', 8)
-            ->set('high_risk_probability', 0.78)
+            ->set('rain_threshold_mm', '55.5')
+            ->set('time_lag_days', '12')
+            ->set('febrile_alert_threshold', '8')
+            ->set('high_risk_probability', '0.90')
             ->call('save')
             ->assertHasNoErrors()
+            ->assertSet('high_risk_probability', '0.90')
             ->assertSee('Parámetros epidemiológicos actualizados correctamente.')
             ->assertSee('Dra. Laura Romero');
 
@@ -117,21 +118,21 @@ class EpidemiologySettingsTest extends TestCase
         $this->assertSame(55.5, $setting->rain_threshold_mm);
         $this->assertSame(12, $setting->time_lag_days);
         $this->assertSame(8, $setting->febrile_alert_threshold);
-        $this->assertSame(0.78, $setting->high_risk_probability);
+        $this->assertSame(0.9, $setting->high_risk_probability);
         $this->assertSame($director->id, $setting->updated_by);
     }
 
-    public function test_validates_parameter_boundaries_including_time_lag_7_to_14_days(): void
+    public function test_accepts_decimal_comma_and_empty_inputs_without_property_exceptions(): void
     {
         $director = User::factory()->create(['role' => UserRole::DIRECTOR]);
 
         $this->actingAs($director);
 
         Livewire::test(EpidemiologySettings::class)
-            ->set('rain_threshold_mm', 0)
-            ->set('time_lag_days', 6)
-            ->set('febrile_alert_threshold', 0)
-            ->set('high_risk_probability', 1.2)
+            ->set('rain_threshold_mm', '')
+            ->set('time_lag_days', '')
+            ->set('febrile_alert_threshold', '')
+            ->set('high_risk_probability', '')
             ->call('save')
             ->assertHasErrors([
                 'rain_threshold_mm',
@@ -141,7 +142,41 @@ class EpidemiologySettingsTest extends TestCase
             ]);
 
         Livewire::test(EpidemiologySettings::class)
-            ->set('time_lag_days', 15)
+            ->set('rain_threshold_mm', '48,5')
+            ->set('time_lag_days', '11')
+            ->set('febrile_alert_threshold', '6')
+            ->set('high_risk_probability', '0,85')
+            ->call('save')
+            ->assertHasNoErrors()
+            ->assertSet('rain_threshold_mm', '48.5')
+            ->assertSet('high_risk_probability', '0.85');
+
+        $setting = EpidemiologySetting::query()->firstOrFail();
+        $this->assertSame(48.5, $setting->rain_threshold_mm);
+        $this->assertSame(0.85, $setting->high_risk_probability);
+    }
+
+    public function test_validates_parameter_boundaries_including_time_lag_7_to_14_days(): void
+    {
+        $director = User::factory()->create(['role' => UserRole::DIRECTOR]);
+
+        $this->actingAs($director);
+
+        Livewire::test(EpidemiologySettings::class)
+            ->set('rain_threshold_mm', '0')
+            ->set('time_lag_days', '6')
+            ->set('febrile_alert_threshold', '0')
+            ->set('high_risk_probability', '1.2')
+            ->call('save')
+            ->assertHasErrors([
+                'rain_threshold_mm',
+                'time_lag_days',
+                'febrile_alert_threshold',
+                'high_risk_probability',
+            ]);
+
+        Livewire::test(EpidemiologySettings::class)
+            ->set('time_lag_days', '15')
             ->call('save')
             ->assertHasErrors(['time_lag_days']);
     }
@@ -170,10 +205,10 @@ class EpidemiologySettingsTest extends TestCase
 
         Livewire::test(EpidemiologySettings::class)
             ->call('restoreDefaults')
-            ->assertSet('rain_threshold_mm', EpidemiologySetting::DEFAULT_RAIN_THRESHOLD_MM)
-            ->assertSet('time_lag_days', EpidemiologySetting::DEFAULT_TIME_LAG_DAYS)
-            ->assertSet('febrile_alert_threshold', EpidemiologySetting::DEFAULT_FEBRILE_ALERT_THRESHOLD)
-            ->assertSet('high_risk_probability', EpidemiologySetting::DEFAULT_HIGH_RISK_PROBABILITY);
+            ->assertSet('rain_threshold_mm', '40')
+            ->assertSet('time_lag_days', '10')
+            ->assertSet('febrile_alert_threshold', '5')
+            ->assertSet('high_risk_probability', '0.70');
     }
 
     public function test_displays_seven_day_weather_contingency_and_handles_offline_manual_sync(): void

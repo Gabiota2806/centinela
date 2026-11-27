@@ -1,8 +1,8 @@
 @php
-    $field = fn (string $name) => \Illuminate\Support\Arr::toCssClasses([
-        'mt-1.5 block w-full h-11 rounded-lg shadow-sm text-ink placeholder:text-ink-subtle',
-        'border-danger focus:border-danger focus:ring-danger' => $errors->has($name),
-        'border-line focus:border-brand-turquesa focus:ring-brand-turquesa' => ! $errors->has($name),
+    $groupClasses = fn (string $name) => \Illuminate\Support\Arr::toCssClasses([
+        'mt-1.5 flex items-stretch overflow-hidden rounded-lg border bg-white shadow-sm transition focus-within:ring-2',
+        'border-danger focus-within:border-danger focus-within:ring-danger/30' => $errors->has($name),
+        'border-line focus-within:border-brand-turquesa focus-within:ring-brand-turquesa/30' => ! $errors->has($name),
     ]);
 @endphp
 
@@ -42,7 +42,7 @@
                     </div>
                 </div>
                 @if ($lastUpdatedAt)
-                    <div class="text-xs text-ink-muted text-start sm:text-end">
+                    <div class="text-xs text-ink-muted text-left sm:text-right">
                         <p>Última actualización: <span class="font-semibold text-ink">{{ $lastUpdatedAt }}</span></p>
                         @if ($lastUpdatedBy)
                             <p>Responsable: <span class="font-semibold text-ink">{{ $lastUpdatedBy }}</span></p>
@@ -54,20 +54,23 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 {{-- Umbral de lluvia --}}
                 <div>
-                    <x-input-label for="rain_threshold_mm" value="Umbral de lluvia acumulada (mm) *" />
-                    <div class="relative">
+                    <x-input-label for="rain_threshold_mm" value="Umbral de lluvia acumulada *" />
+                    <div class="{{ $groupClasses('rain_threshold_mm') }}">
                         <input
                             id="rain_threshold_mm"
-                            type="number"
-                            step="0.5"
-                            min="1"
-                            max="500"
-                            wire:model.live.debounce.300ms="rain_threshold_mm"
+                            type="text"
+                            inputmode="decimal"
+                            autocomplete="off"
+                            x-data
+                            x-on:input="const clean = $el.value.replace(',', '.').replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1'); if ($el.value !== clean) { $el.value = clean; }"
+                            wire:model.blur="rain_threshold_mm"
                             aria-invalid="{{ $errors->has('rain_threshold_mm') ? 'true' : 'false' }}"
                             aria-describedby="rain_threshold_mm-help rain_threshold_mm-error"
-                            class="{{ $field('rain_threshold_mm') }} pe-12"
+                            class="block h-11 w-full min-w-0 flex-1 border-0 bg-transparent px-3 text-sm font-medium text-ink focus:ring-0"
                         >
-                        <span class="pointer-events-none absolute inset-y-0 end-3 flex items-center text-xs font-semibold text-ink-muted">mm</span>
+                        <span class="inline-flex shrink-0 select-none items-center border-l border-line bg-canvas px-3 text-xs font-semibold text-ink-muted">
+                            mm
+                        </span>
                     </div>
                     @error('rain_threshold_mm')
                         <p id="rain_threshold_mm-error" class="mt-1.5 text-sm text-danger">{{ $message }}</p>
@@ -79,20 +82,23 @@
 
                 {{-- Ventana de desfase (time-lag) --}}
                 <div>
-                    <x-input-label for="time_lag_days" value="Ventana de desfase lluvia-casos (días) *" />
-                    <div class="relative">
+                    <x-input-label for="time_lag_days" value="Ventana de desfase lluvia-casos *" />
+                    <div class="{{ $groupClasses('time_lag_days') }}">
                         <input
                             id="time_lag_days"
-                            type="number"
-                            step="1"
-                            min="7"
-                            max="14"
+                            type="text"
+                            inputmode="numeric"
+                            autocomplete="off"
+                            x-data
+                            x-on:input="const clean = $el.value.replace(/[^0-9]/g, ''); if ($el.value !== clean) { $el.value = clean; }"
                             wire:model.blur="time_lag_days"
                             aria-invalid="{{ $errors->has('time_lag_days') ? 'true' : 'false' }}"
                             aria-describedby="time_lag_days-help time_lag_days-error"
-                            class="{{ $field('time_lag_days') }} pe-14"
+                            class="block h-11 w-full min-w-0 flex-1 border-0 bg-transparent px-3 text-sm font-medium text-ink focus:ring-0"
                         >
-                        <span class="pointer-events-none absolute inset-y-0 end-3 flex items-center text-xs font-semibold text-ink-muted">días</span>
+                        <span class="inline-flex shrink-0 select-none items-center border-l border-line bg-canvas px-3 text-xs font-semibold text-ink-muted">
+                            días
+                        </span>
                     </div>
                     @error('time_lag_days')
                         <p id="time_lag_days-error" class="mt-1.5 text-sm text-danger">{{ $message }}</p>
@@ -105,19 +111,22 @@
                 {{-- Umbral de casos febriles --}}
                 <div>
                     <x-input-label for="febrile_alert_threshold" value="Umbral de casos febriles por barrio *" />
-                    <div class="relative">
+                    <div class="{{ $groupClasses('febrile_alert_threshold') }}">
                         <input
                             id="febrile_alert_threshold"
-                            type="number"
-                            step="1"
-                            min="1"
-                            max="500"
+                            type="text"
+                            inputmode="numeric"
+                            autocomplete="off"
+                            x-data
+                            x-on:input="const clean = $el.value.replace(/[^0-9]/g, ''); if ($el.value !== clean) { $el.value = clean; }"
                             wire:model.blur="febrile_alert_threshold"
                             aria-invalid="{{ $errors->has('febrile_alert_threshold') ? 'true' : 'false' }}"
                             aria-describedby="febrile_alert_threshold-help febrile_alert_threshold-error"
-                            class="{{ $field('febrile_alert_threshold') }} pe-16"
+                            class="block h-11 w-full min-w-0 flex-1 border-0 bg-transparent px-3 text-sm font-medium text-ink focus:ring-0"
                         >
-                        <span class="pointer-events-none absolute inset-y-0 end-3 flex items-center text-xs font-semibold text-ink-muted">casos</span>
+                        <span class="inline-flex shrink-0 select-none items-center border-l border-line bg-canvas px-3 text-xs font-semibold text-ink-muted">
+                            casos
+                        </span>
                     </div>
                     @error('febrile_alert_threshold')
                         <p id="febrile_alert_threshold-error" class="mt-1.5 text-sm text-danger">{{ $message }}</p>
@@ -128,29 +137,48 @@
                 </div>
 
                 {{-- Probabilidad de alerta alta --}}
-                <div>
+                @php
+                    $normalizedProbability = str_replace(',', '.', trim((string) $high_risk_probability));
+                    $initialPct = is_numeric($normalizedProbability) && (float) $normalizedProbability >= 0 && (float) $normalizedProbability <= 1
+                        ? round(((float) $normalizedProbability) * 100).'%'
+                        : '—';
+                @endphp
+                <div x-data="{
+                        pctFrom(raw) {
+                            const num = parseFloat(String(raw ?? '').replace(',', '.').trim());
+                            return (! Number.isNaN(num) && num >= 0 && num <= 1) ? Math.round(num * 100) + '%' : '—';
+                        },
+                        pct: @js($initialPct),
+                    }"
+                    x-effect="pct = pctFrom($wire.high_risk_probability)"
+                >
                     <x-input-label for="high_risk_probability" value="Probabilidad de alerta alta (0.10 – 0.99) *" />
-                    <div class="relative">
+                    <div class="{{ $groupClasses('high_risk_probability') }}">
                         <input
                             id="high_risk_probability"
-                            type="number"
-                            step="0.01"
-                            min="0.10"
-                            max="0.99"
-                            wire:model.live.debounce.300ms="high_risk_probability"
+                            type="text"
+                            inputmode="decimal"
+                            autocomplete="off"
+                            x-on:input="
+                                const clean = $el.value.replace(',', '.').replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
+                                if ($el.value !== clean) { $el.value = clean; }
+                                pct = pctFrom(clean);
+                            "
+                            wire:model.blur="high_risk_probability"
                             aria-invalid="{{ $errors->has('high_risk_probability') ? 'true' : 'false' }}"
                             aria-describedby="high_risk_probability-help high_risk_probability-error"
-                            class="{{ $field('high_risk_probability') }} pe-16"
+                            class="block h-11 w-full min-w-0 flex-1 border-0 bg-transparent px-3 text-sm font-medium text-ink focus:ring-0"
                         >
-                        <span class="pointer-events-none absolute inset-y-0 end-3 flex items-center text-xs font-semibold text-ink-muted">
-                            {{ is_numeric($high_risk_probability) ? round(((float) $high_risk_probability) * 100).'%' : '—' }}
-                        </span>
+                        <span
+                            x-text="pct"
+                            class="inline-flex min-w-[3.5rem] shrink-0 select-none items-center justify-center border-l border-line bg-canvas px-3 text-xs font-semibold text-ink-muted"
+                        >{{ $initialPct }}</span>
                     </div>
                     @error('high_risk_probability')
                         <p id="high_risk_probability-error" class="mt-1.5 text-sm text-danger">{{ $message }}</p>
                     @enderror
                     <p id="high_risk_probability-help" class="mt-1.5 text-xs text-ink-muted">
-                        Umbral de probabilidad del modelo predictivo para clasificar un barrio en riesgo alto.
+                        Umbral decimal del modelo predictivo (ej. 0.70 equivale a 70% de probabilidad).
                     </p>
                 </div>
             </div>
@@ -212,7 +240,7 @@
                 </div>
                 <p class="text-2xl font-extrabold text-ink">
                     {{ number_format($this->sevenDayRainTotal, 1, ',', '.') }} mm
-                    <span class="text-xs font-medium text-ink-muted">/ umbral {{ is_numeric($rain_threshold_mm) ? number_format((float) $rain_threshold_mm, 1, ',', '.') : '—' }} mm</span>
+                    <span class="text-xs font-medium text-ink-muted">/ umbral {{ number_format($this->activeRainThreshold, 1, ',', '.') }} mm</span>
                 </p>
             </div>
 

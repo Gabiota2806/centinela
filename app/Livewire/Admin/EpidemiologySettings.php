@@ -19,13 +19,13 @@ use Throwable;
  */
 class EpidemiologySettings extends Component
 {
-    public float|string $rain_threshold_mm = EpidemiologySetting::DEFAULT_RAIN_THRESHOLD_MM;
+    public ?string $rain_threshold_mm = '40';
 
-    public int|string $time_lag_days = EpidemiologySetting::DEFAULT_TIME_LAG_DAYS;
+    public ?string $time_lag_days = '10';
 
-    public int|string $febrile_alert_threshold = EpidemiologySetting::DEFAULT_FEBRILE_ALERT_THRESHOLD;
+    public ?string $febrile_alert_threshold = '5';
 
-    public float|string $high_risk_probability = EpidemiologySetting::DEFAULT_HIGH_RISK_PROBABILITY;
+    public ?string $high_risk_probability = '0.70';
 
     public ?string $statusMessage = null;
 
@@ -74,7 +74,7 @@ class EpidemiologySettings extends Component
             'febrile_alert_threshold.min' => 'El umbral de casos febriles debe ser al menos 1.',
             'febrile_alert_threshold.max' => 'El umbral de casos febriles no puede superar los 500.',
             'high_risk_probability.required' => 'Ingresá la probabilidad mínima de alerta alta.',
-            'high_risk_probability.numeric' => 'La probabilidad de alerta alta debe ser un valor decimal.',
+            'high_risk_probability.numeric' => 'La probabilidad de alerta alta debe ser un valor decimal (ej. 0.70).',
             'high_risk_probability.min' => 'La probabilidad mínima de alerta alta debe ser al menos 0.10.',
             'high_risk_probability.max' => 'La probabilidad de alerta alta no puede superar 0.99.',
         ];
@@ -83,6 +83,11 @@ class EpidemiologySettings extends Component
     public function save(): void
     {
         $this->authorize('access-epidemiology');
+
+        $this->rain_threshold_mm = $this->normalizeDecimal($this->rain_threshold_mm);
+        $this->time_lag_days = $this->normalizeInteger($this->time_lag_days);
+        $this->febrile_alert_threshold = $this->normalizeInteger($this->febrile_alert_threshold);
+        $this->high_risk_probability = $this->normalizeDecimal($this->high_risk_probability);
 
         $validated = $this->validate();
 
@@ -97,6 +102,7 @@ class EpidemiologySettings extends Component
 
         $setting->load('updatedBy');
         $this->loadSetting($setting);
+        unset($this->rainThresholdExceeded);
 
         $this->statusType = 'success';
         $this->statusMessage = 'Parámetros epidemiológicos actualizados correctamente.';
@@ -106,12 +112,14 @@ class EpidemiologySettings extends Component
     {
         $this->authorize('access-epidemiology');
 
-        $this->rain_threshold_mm = EpidemiologySetting::DEFAULT_RAIN_THRESHOLD_MM;
-        $this->time_lag_days = EpidemiologySetting::DEFAULT_TIME_LAG_DAYS;
-        $this->febrile_alert_threshold = EpidemiologySetting::DEFAULT_FEBRILE_ALERT_THRESHOLD;
-        $this->high_risk_probability = EpidemiologySetting::DEFAULT_HIGH_RISK_PROBABILITY;
+        $this->rain_threshold_mm = $this->formatRain(EpidemiologySetting::DEFAULT_RAIN_THRESHOLD_MM);
+        $this->time_lag_days = (string) EpidemiologySetting::DEFAULT_TIME_LAG_DAYS;
+        $this->febrile_alert_threshold = (string) EpidemiologySetting::DEFAULT_FEBRILE_ALERT_THRESHOLD;
+        $this->high_risk_probability = $this->formatProbability(EpidemiologySetting::DEFAULT_HIGH_RISK_PROBABILITY);
 
         $this->resetValidation();
+        unset($this->rainThresholdExceeded);
+
         $this->statusType = 'info';
         $this->statusMessage = 'Valores recomendados precargados en el formulario. Guardá los cambios para aplicarlos.';
     }
@@ -166,11 +174,19 @@ class EpidemiologySettings extends Component
     }
 
     #[Computed]
+    public function activeRainThreshold(): float
+    {
+        $normalized = $this->normalizeDecimal($this->rain_threshold_mm);
+
+        return is_numeric($normalized) && (float) $normalized > 0
+            ? (float) $normalized
+            : EpidemiologySetting::DEFAULT_RAIN_THRESHOLD_MM;
+    }
+
+    #[Computed]
     public function rainThresholdExceeded(): bool
     {
-        $threshold = is_numeric($this->rain_threshold_mm) ? (float) $this->rain_threshold_mm : EpidemiologySetting::DEFAULT_RAIN_THRESHOLD_MM;
-
-        return $this->sevenDayRainTotal >= $threshold && $this->recentWeather !== [];
+        return $this->recentWeather !== [] && $this->sevenDayRainTotal >= $this->activeRainThreshold;
     }
 
     public function render(): View
@@ -180,13 +196,35 @@ class EpidemiologySettings extends Component
 
     private function loadSetting(EpidemiologySetting $setting): void
     {
-        $this->rain_threshold_mm = $setting->rain_threshold_mm;
-        $this->time_lag_days = $setting->time_lag_days;
-        $this->febrile_alert_threshold = $setting->febrile_alert_threshold;
-        $this->high_risk_probability = $setting->high_risk_probability;
+        $this->rain_threshold_mm = $this->formatRain($setting->rain_threshold_mm);
+        $this->time_lag_days = (string) $setting->time_lag_days;
+        $this->febrile_alert_threshold = (string) $setting->febrile_alert_threshold;
+        $this->high_risk_probability = $this->formatProbability($setting->high_risk_probability);
 
         $timezone = (string) config('centinela.timezone', 'America/Argentina/Cordoba');
         $this->lastUpdatedAt = $setting->updated_at?->copy()->setTimezone($timezone)->format('d/m/Y H:i');
         $this->lastUpdatedBy = $setting->updatedBy?->name;
+    }
+
+    private function normalizeDecimal(?string $value): string
+    {
+        return str_replace(',', '.', trim((string) $value));
+    }
+
+    private function normalizeInteger(?string $value): string
+    {
+        return trim((string) $value);
+    }
+
+    private function formatRain(float $value): string
+    {
+        $formatted = number_format($value, 2, '.', '');
+
+        return rtrim(rtrim($formatted, '0'), '.');
+    }
+
+    private function formatProbability(float $value): string
+    {
+        return number_format($value, 2, '.', '');
     }
 }
