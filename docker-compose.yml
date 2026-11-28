@@ -15,9 +15,28 @@ services:
       - "5173:5173"
     environment:
       DB_HOST: postgres
+      CENTINELA_HUB_URL: http://hub_analytics:8001
+      CENTINELA_CAPS_API_KEY: ${CENTINELA_CAPS_API_KEY:-centinela-dev-caps-key}
     command: sh -c "trap 'rm -f public/hot; kill 0' INT TERM EXIT; rm -f public/hot && npm run dev -- --host 0.0.0.0 & php artisan serve --host=0.0.0.0 --port=8000 --no-reload & wait"
     volumes:
       - .:/var/www/html
+    depends_on:
+      - postgres
+
+  hub_analytics:
+    build:
+      context: ./backend_analytics
+      dockerfile: Dockerfile
+    container_name: centinela_hub_analytics
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    environment:
+      CENTINELA_CAPS_API_KEY: ${CENTINELA_CAPS_API_KEY:-centinela-dev-caps-key}
+      HUB_DATABASE_URL: postgresql://hub_user:hub_secret@postgres:5432/centinela_hub
+      HUB_DB_SCHEMA: hub
+    volumes:
+      - ./backend_analytics:/app/backend_analytics
     depends_on:
       - postgres
 
