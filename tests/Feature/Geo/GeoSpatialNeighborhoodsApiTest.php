@@ -19,18 +19,29 @@ class GeoSpatialNeighborhoodsApiTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_unauthenticated_requests_receive_401_json(): void
+    public function test_unauthenticated_requests_receive_401_json_without_stack_trace(): void
     {
+        config()->set('app.debug', true);
+
         $this->getJson('/api/v1/geo/neighborhoods')
-            ->assertUnauthorized();
+            ->assertUnauthorized()
+            ->assertExactJson([
+                'message' => 'No autenticado. Iniciá sesión para acceder a este recurso.',
+                'error' => 'unauthenticated',
+                'status' => 401,
+            ]);
 
         $this->get('/api/v1/geo/neighborhoods')
             ->assertUnauthorized()
-            ->assertJsonStructure(['message']);
+            ->assertJsonMissingPath('trace')
+            ->assertJsonMissingPath('exception')
+            ->assertJsonMissingPath('file');
     }
 
-    public function test_admission_role_is_forbidden_while_clinical_and_director_roles_can_read(): void
+    public function test_admission_role_is_forbidden_without_stack_trace_while_clinical_and_director_roles_can_read(): void
     {
+        config()->set('app.debug', true);
+
         Neighborhood::factory()->create(['name' => 'Centro']);
 
         $admission = User::factory()->admission()->create();
@@ -40,7 +51,19 @@ class GeoSpatialNeighborhoodsApiTest extends TestCase
 
         $this->actingAs($admission)
             ->getJson('/api/v1/geo/neighborhoods')
-            ->assertForbidden();
+            ->assertForbidden()
+            ->assertExactJson([
+                'message' => 'No tenés permisos para acceder a este recurso.',
+                'error' => 'forbidden',
+                'status' => 403,
+            ]);
+
+        $this->actingAs($admission)
+            ->get('/api/v1/geo/neighborhoods')
+            ->assertForbidden()
+            ->assertJsonMissingPath('trace')
+            ->assertJsonMissingPath('exception')
+            ->assertJsonMissingPath('file');
 
         foreach ([$director, $doctor, $nurse] as $authorizedUser) {
             $this->actingAs($authorizedUser)
