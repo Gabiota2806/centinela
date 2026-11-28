@@ -232,11 +232,18 @@ def test_default_baseline_feature_provider_serves_formosa_neighborhoods_under_20
     app = create_predict_app(caps_api_key=TEST_CAPS_KEY)
 
     with TestClient(app) as test_client:
-        # Precarga y primera llamada
+        # Precarga y primera llamada batch sobre los 105 barrios oficiales de Formosa Capital
+        batch_start = time.perf_counter()
         first = test_client.get("/api/v1/neighborhoods/risks", headers=AUTH_HEADERS)
+        batch_ms = (time.perf_counter() - batch_start) * 1000.0
         assert first.status_code == 200
         items = first.json()["items"]
-        assert len(items) >= 24
+        assert len(items) == 105
+        assert batch_ms < 200.0, f"Latencia batch 105 barrios excesiva: {batch_ms:.2f} ms"
+
+        # Verificar estratificación realista en las 3 clases de riesgo
+        levels = {item["risk_level"] for item in items}
+        assert levels == {"low", "moderate", "high"}
 
         start = time.perf_counter()
         single = test_client.get("/api/v1/neighborhoods/14/risk", headers=AUTH_HEADERS)
