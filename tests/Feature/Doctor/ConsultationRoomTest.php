@@ -201,7 +201,9 @@ class ConsultationRoomTest extends TestCase
         $this->consultorio($triage)
             ->call('save')
             ->assertHasErrors(['diagnosis' => 'required'])
-            ->assertSee('Seleccioná el diagnóstico presuntivo');
+            ->assertSee('Seleccioná el diagnóstico presuntivo')
+            // El error queda visible aunque el médico esté al final del formulario.
+            ->assertSeeHtml('id="diagnosis-error" x-init="$el.scrollIntoView');
 
         $this->assertSame(TriageStatus::IN_CONSULTATION, $triage->refresh()->status);
         $this->assertSame(ConsultationStatus::IN_PROGRESS, $triage->consultation->status);
@@ -292,7 +294,8 @@ class ConsultationRoomTest extends TestCase
         $componente->set('diagnosis', 'ira')
             ->call('save')
             ->assertNoRedirect()
-            ->assertSee('No se puede finalizar la consulta');
+            ->assertSee('No se puede finalizar la consulta')
+            ->assertSeeHtml('id="close-error" role="alert" tabindex="-1" x-init="$el.scrollIntoView');
 
         $this->assertSame('otro_clinico', $triage->refresh()->consultation->diagnosis);
         Event::assertNotDispatched(ConsultationCompleted::class);

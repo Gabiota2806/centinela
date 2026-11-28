@@ -119,7 +119,7 @@
             </div>
 
             @if ($error)
-                <div role="alert" class="flex items-start gap-3 rounded-xl border border-danger/30 bg-red-50 px-4 py-3 text-sm text-danger">
+                <div id="close-error" role="alert" tabindex="-1" x-init="$el.scrollIntoView({ behavior: 'smooth', block: 'center' }); $el.focus({ preventScroll: true })" class="outline-none flex items-start gap-3 rounded-xl border border-danger/30 bg-red-50 px-4 py-3 text-sm text-danger">
                     <x-icon name="exclamation-triangle" class="w-5 h-5 shrink-0" />
                     <p class="font-medium">{{ $error }}</p>
                 </div>
@@ -143,7 +143,7 @@
                         </label>
                     @endforeach
                 </div>
-                @error('diagnosis') <p id="diagnosis-error" class="mt-2 text-sm text-danger">{{ $message }}</p> @enderror
+                @error('diagnosis') <p id="diagnosis-error" x-init="$el.scrollIntoView({ behavior: 'smooth', block: 'center' })" class="mt-2 text-sm text-danger">{{ $message }}</p> @enderror
             </fieldset>
 
             <fieldset>
