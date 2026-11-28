@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Models\Triage;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -30,6 +31,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // CEN-42: cola médica en tiempo real (docs/specs/consultas/spec.md).
     Route::view('/consultas', 'consultations.index')
         ->middleware('can:access-doctor')->name('consultations.index');
+
+    // CEN-47: consultorio y cierre con diagnóstico presuntivo.
+    Route::get('/consultas/{triage}', fn (Triage $triage) => view('consultations.show', ['triage' => $triage]))
+        ->middleware('can:access-doctor')->name('consultations.show');
 });
 
 Route::middleware('auth')->group(function () {

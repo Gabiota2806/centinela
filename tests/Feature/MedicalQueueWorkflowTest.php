@@ -7,6 +7,8 @@ namespace Tests\Feature;
 use App\Enums\ConsultationStatus;
 use App\Enums\TriagePriority;
 use App\Enums\TriageStatus;
+use App\Events\ConsultationCompleted;
+use App\Livewire\Doctor\ConsultationRoom;
 use App\Livewire\Doctor\MedicalQueue;
 use App\Livewire\Patients\CreatePatient;
 use App\Livewire\Triage\ClinicalOverrideModal;
@@ -16,6 +18,7 @@ use App\Models\Triage;
 use App\Models\TriageAuditLog;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -136,22 +139,39 @@ class MedicalQueueWorkflowTest extends TestCase
 
         // 6. Marta ingresa a consulta con el médico de guardia (vuelve a la terminal médica).
         $cola = $this->cola();
-        $cola->call('callPatient', $marta->id)->call('startConsultation', $marta->id)->assertSee('En consulta');
+        $cola->call('callPatient', $marta->id)
+            ->call('startConsultation', $marta->id)
+            ->assertRedirect(route('consultations.show', $marta));
         $marta->refresh();
         $this->assertSame(TriageStatus::IN_CONSULTATION, $marta->status);
         $this->assertSame($this->medico->id, $marta->consultation->doctor_id);
         $this->assertNotNull($marta->consultation->started_at);
 
-        // 7. Alta médica: consulta y triage completados, fuera de la cola activa.
-        $marta->finishConsultation(ConsultationStatus::COMPLETED, 'otro_clinico', 'Dolor osteomuscular.', 'Ibuprofeno 400 mg.');
+        // 7. Alta médica desde el consultorio: el diagnóstico es obligatorio.
+        Event::fake([ConsultationCompleted::class]);
+        $this->actingAs($this->medico)->get(route('consultations.show', $marta))->assertOk()->assertSee('Marta Rodriguez');
+
+        Livewire::actingAs($this->medico)
+            ->test(ConsultationRoom::class, ['triage' => $marta])
+            ->call('save')
+            ->assertHasErrors(['diagnosis' => 'required'])
+            ->set('diagnosis', 'otro_clinico')
+            ->set('clinicalNotes', 'Dolor osteomuscular.')
+            ->set('prescription', 'Ibuprofeno 400 mg.')
+            ->call('save')
+            ->assertRedirect(route('consultations.index'));
 
         $marta->refresh();
         $this->assertSame(TriageStatus::COMPLETED, $marta->status);
         $this->assertSame(ConsultationStatus::COMPLETED, $marta->consultation->status);
+        $this->assertSame('otro_clinico', $marta->consultation->diagnosis);
         $this->assertNotNull($marta->consultation->completed_at);
+        Event::assertDispatched(ConsultationCompleted::class, fn (ConsultationCompleted $e) => $e->triage->is($marta));
 
         $this->cola()
-            ->assertDontSee('Marta Rodriguez')
+            ->assertSee('Consulta de Marta Rodriguez cerrada')
+            ->assertDontSeeHtml('consulting-'.$marta->id)
+            ->assertDontSeeHtml('waiting-'.$marta->id)
             ->assertSee('Carlos Villalba')
             ->assertSee('#1');
 

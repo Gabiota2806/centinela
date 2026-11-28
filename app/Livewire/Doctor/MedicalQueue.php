@@ -7,6 +7,7 @@ namespace App\Livewire\Doctor;
 use App\Enums\TriageStatus;
 use App\Livewire\Triage\PrintTicket;
 use App\Models\Triage;
+use Carbon\CarbonInterface;
 use Closure;
 use DomainException;
 use Illuminate\Contracts\View\View;
@@ -34,6 +35,26 @@ class MedicalQueue extends Component
     public function mount(): void
     {
         $this->authorize('access-doctor');
+
+        // Aviso que deja el consultorio al cerrar una consulta (CEN-47).
+        if (session()->has('queue-notice')) {
+            $this->flash((string) session('queue-notice'));
+        }
+    }
+
+    /**
+     * Hora local del CAPS; agrega el día si no es de hoy (24/11 19:07).
+     */
+    public static function localTime(?CarbonInterface $moment): string
+    {
+        if ($moment === null) {
+            return '—';
+        }
+
+        $tz = config('centinela.timezone');
+        $local = $moment->copy()->timezone($tz);
+
+        return $local->isSameDay(now()->timezone($tz)) ? $local->format('H:i') : $local->format('d/m H:i');
     }
 
     /**
