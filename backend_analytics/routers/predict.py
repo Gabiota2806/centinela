@@ -89,7 +89,7 @@ class CachedBaselineFeatureProvider:
     manteniendo inferencia 100 % real sobre `rf-v1.0` y latencia < 200 ms.
     """
 
-    DEFAULT_TOTAL_NEIGHBORHOODS: int = 105
+    DEFAULT_TOTAL_NEIGHBORHOODS: int = 113
 
     # Barrios con alta vulnerabilidad hídrica / focos prioritarios históricos en Formosa Capital
     HIGH_VULNERABILITY_IDS: frozenset[int] = frozenset(
@@ -120,14 +120,25 @@ class CachedBaselineFeatureProvider:
         self._seed = seed
         self._lock = Lock()
         self._static: StaticFeatureProvider | None = None
+        self._base_rows: dict[int, dict[str, float]] = {}
+
+    @classmethod
+    def _classify_vulnerability_tier(cls, nid: int) -> str:
+        mapped = ((nid - 1) % 105) + 1
+        if mapped in cls.HIGH_VULNERABILITY_IDS:
+            return "high"
+        if mapped in cls.MODERATE_VULNERABILITY_IDS:
+            return "moderate"
+        return "low"
 
     @classmethod
     def _build_zone_adjusted_features(cls, nid: int, base: Mapping[str, float]) -> dict[str, float]:
         """Modula el vector base según vulnerabilidad hídrica y circulación local del barrio."""
         row = {col: float(base[col]) for col in FEATURE_COLUMNS}
         jitter = ((nid * 13) % 11) / 100.0  # 0.00 .. 0.10 determinístico
+        tier = cls._classify_vulnerability_tier(nid)
 
-        if nid in cls.HIGH_VULNERABILITY_IDS:
+        if tier == "high":
             rain_7d = round(78.0 + jitter * 180.0, 2)
             rain_14d = round(62.0 + jitter * 120.0, 2)
             febrile_7d = round(7.0 + (nid % 5), 2)
@@ -153,7 +164,7 @@ class CachedBaselineFeatureProvider:
                     "febrile_growth_rate": round((febrile_7d - febrile_14d) / (febrile_14d + 1.0), 4),
                 }
             )
-        elif nid in cls.MODERATE_VULNERABILITY_IDS:
+        elif tier == "moderate":
             rain_7d = round(34.0 + jitter * 110.0, 2)
             rain_14d = round(26.0 + jitter * 80.0, 2)
             febrile_7d = round(2.0 + (nid % 3), 2)
@@ -240,6 +251,7 @@ class CachedBaselineFeatureProvider:
                         anchor_id = nid if nid in base_rows else available_ids[nid % len(available_ids)]
                         rows[nid] = self._build_zone_adjusted_features(nid, base_rows[anchor_id])
 
+                self._base_rows = base_rows
                 self._static = StaticFeatureProvider(rows)
 
         return self._static
@@ -254,7 +266,24 @@ class CachedBaselineFeatureProvider:
         self,
         neighborhood_ids: Sequence[int] | None = None,
     ) -> pd.DataFrame:
-        return self._ensure_loaded().get_all_neighborhood_features(neighborhood_ids)
+        static = self._ensure_loaded()
+        if neighborhood_ids is None:
+            return static.get_all_neighborhood_features(None)
+
+        records: list[dict[str, Any]] = []
+        available_ids = sorted(self._base_rows.keys())
+        for nid in sorted({int(x) for x in neighborhood_ids if int(x) >= 1}):
+            existing = static.get_neighborhood_features(nid)
+            if existing is not None:
+                records.append({"neighborhood_id": nid, **existing})
+            elif available_ids:
+                anchor_id = available_ids[nid % len(available_ids)]
+                adjusted = self._build_zone_adjusted_features(nid, self._base_rows[anchor_id])
+                records.append({"neighborhood_id": nid, **adjusted})
+
+        if not records:
+            return pd.DataFrame(columns=["neighborhood_id", *FEATURE_COLUMNS])
+        return pd.DataFrame(records)
 
 
 class RiskInferenceService:
