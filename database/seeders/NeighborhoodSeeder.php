@@ -63,9 +63,11 @@ class NeighborhoodSeeder extends Seeder
     public function run(): void
     {
         $barrios = self::barrios();
+        $catalogNames = [];
 
         foreach ($barrios as $item) {
             $name = $item['name'];
+            $catalogNames[] = $name;
             $riskLevel = $item['risk_level'];
             $geojson = json_encode($item['geometry'], JSON_THROW_ON_ERROR);
 
@@ -85,6 +87,18 @@ class NeighborhoodSeeder extends Seeder
                     VALUES (?, ST_SetSRID(ST_GeomFromGeoJSON(?), 4326), ?, NOW(), NOW())
                 ', [$name, $geojson, $riskLevel]);
             }
+        }
+
+        // Elimina polígonos legados que ya no pertenecen al catálogo oficial y no tienen pacientes asociados
+        if ($catalogNames !== []) {
+            DB::table('neighborhoods')
+                ->whereNotIn('name', $catalogNames)
+                ->whereNotExists(function ($query): void {
+                    $query->select(DB::raw(1))
+                        ->from('patients')
+                        ->whereColumn('patients.neighborhood_id', 'neighborhoods.id');
+                })
+                ->delete();
         }
     }
 }
