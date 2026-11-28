@@ -48,7 +48,14 @@ class SyncNeighborhoodRiskCommand extends Command
             if ($targetNeighborhoodId !== null) {
                 $items = [$client->fetchNeighborhoodRisk($targetNeighborhoodId, $highRiskThreshold)];
             } else {
-                $batch = $client->fetchAllNeighborhoodRisks($highRiskThreshold);
+                /** @var list<int> $localIds */
+                $localIds = Neighborhood::query()
+                    ->orderBy('id')
+                    ->pluck('id')
+                    ->map(static fn (mixed $id): int => (int) $id)
+                    ->all();
+
+                $batch = $client->fetchAllNeighborhoodRisks($highRiskThreshold, $localIds !== [] ? $localIds : null);
                 $items = $batch['items'];
             }
         } catch (PredictiveRiskException|Throwable $exception) {

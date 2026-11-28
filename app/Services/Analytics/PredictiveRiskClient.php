@@ -25,6 +25,7 @@ class PredictiveRiskClient
     /**
      * Obtiene las predicciones de riesgo en lote para todos los barrios disponibles en el Hub.
      *
+     * @param  list<int>|null  $neighborhoodIds
      * @return array{
      *     items: list<array{
      *         neighborhood_id: int,
@@ -41,9 +42,9 @@ class PredictiveRiskClient
      *
      * @throws PredictiveRiskException
      */
-    public function fetchAllNeighborhoodRisks(?float $highRiskThreshold = null): array
+    public function fetchAllNeighborhoodRisks(?float $highRiskThreshold = null, ?array $neighborhoodIds = null): array
     {
-        $query = $this->buildQuery($highRiskThreshold);
+        $query = $this->buildQuery($highRiskThreshold, $neighborhoodIds);
 
         try {
             $response = $this->httpClient()->get('/api/v1/neighborhoods/risks', $query);
@@ -149,19 +150,31 @@ class PredictiveRiskClient
     }
 
     /**
-     * @return array<string, float>
+     * @param  list<int>|null  $neighborhoodIds
+     * @return array<string, float|string>
      */
-    private function buildQuery(?float $highRiskThreshold): array
+    private function buildQuery(?float $highRiskThreshold, ?array $neighborhoodIds = null): array
     {
-        if ($highRiskThreshold === null) {
-            return [];
+        $query = [];
+
+        if ($highRiskThreshold !== null) {
+            if ($highRiskThreshold <= 0.0 || $highRiskThreshold > 1.0) {
+                throw new PredictiveRiskException('El umbral high_risk_threshold debe estar en el rango (0, 1].');
+            }
+            $query['high_risk_threshold'] = round($highRiskThreshold, 4);
         }
 
-        if ($highRiskThreshold <= 0.0 || $highRiskThreshold > 1.0) {
-            throw new PredictiveRiskException('El umbral high_risk_threshold debe estar en el rango (0, 1].');
+        if ($neighborhoodIds !== null && $neighborhoodIds !== []) {
+            $cleanIds = array_values(array_unique(array_filter(
+                array_map(static fn (int $id): int => $id, $neighborhoodIds),
+                static fn (int $id): bool => $id >= 1,
+            )));
+            if ($cleanIds !== []) {
+                $query['neighborhood_ids'] = implode(',', $cleanIds);
+            }
         }
 
-        return ['high_risk_threshold' => round($highRiskThreshold, 4)];
+        return $query;
     }
 
     /**
