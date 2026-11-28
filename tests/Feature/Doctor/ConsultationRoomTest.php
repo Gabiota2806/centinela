@@ -117,14 +117,28 @@ class ConsultationRoomTest extends TestCase
             ->assertSeeLivewire(ConsultationRoom::class);
     }
 
-    public function test_un_triage_que_no_esta_en_consulta_vuelve_a_la_cola(): void
+    public function test_un_triage_que_no_esta_en_consulta_muestra_el_aviso_sin_formulario(): void
     {
         $enEspera = Triage::factory()->create(['status' => TriageStatus::PENDING_CONSULTATION]);
 
-        $this->consultorio($enEspera)
-            ->assertRedirect(route('consultations.index'));
+        // El aviso se muestra en la misma pantalla: no depende de la sesión, que
+        // otra pestaña con la cola (wire:poll) podría pisar.
+        $this->actingAs($this->medico)
+            ->get(route('consultations.show', $enEspera))
+            ->assertOk()
+            ->assertSee('no está en consulta')
+            ->assertSee('En espera')
+            ->assertSee('Volver a la cola')
+            ->assertDontSee('Cerrar consulta');
 
-        $this->assertStringContainsString('no está en consulta', session('queue-notice'));
+        $this->consultorio($enEspera)
+            ->assertNoRedirect()
+            ->set('diagnosis', 'ira')
+            ->call('save')
+            ->assertNoRedirect();
+
+        $this->assertNull($enEspera->refresh()->consultation);
+        $this->assertSame(TriageStatus::PENDING_CONSULTATION, $enEspera->status);
     }
 
     public function test_la_ficha_muestra_el_resumen_clinico_completo(): void

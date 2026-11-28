@@ -39,23 +39,26 @@ class ConsultationRoom extends Component
 
     public ?string $error = null;
 
+    /**
+     * Aviso cuando el triage no está en consulta. Se muestra en la misma pantalla
+     * (sin redirigir con flash): la cola abierta en otra pestaña refresca cada 5 s
+     * y su escritura de sesión podía pisar el mensaje.
+     */
+    #[Locked]
+    public ?string $unavailable = null;
+
     public function mount(Triage $triage): void
     {
         $this->authorize('access-doctor');
-        $this->triage = $triage;
+        $this->triage = $triage->load(['patient.neighborhood', 'user', 'consultation.doctor']);
 
         if ($triage->status !== TriageStatus::IN_CONSULTATION) {
-            session()->flash('queue-notice', sprintf(
+            $this->unavailable = sprintf(
                 'El ticket %s no está en consulta (%s).',
                 PrintTicket::ticketNumber($triage->id),
                 $triage->status->label(),
-            ));
-            $this->redirectRoute('consultations.index');
-
-            return;
+            );
         }
-
-        $this->triage = $triage->load(['patient.neighborhood', 'user', 'consultation.doctor']);
     }
 
     /**
@@ -92,6 +95,11 @@ class ConsultationRoom extends Component
     public function save(): void
     {
         $this->authorize('access-doctor');
+
+        if ($this->unavailable !== null) {
+            return;
+        }
+
         $this->error = null;
         $validated = $this->validate();
 

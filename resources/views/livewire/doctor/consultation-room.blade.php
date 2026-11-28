@@ -12,6 +12,21 @@
     $discriminators = $this->discriminatorLabels();
 @endphp
 
+@if ($unavailable)
+<div class="mx-auto max-w-xl rounded-2xl border border-warn/40 bg-amber-50 p-6 shadow-card">
+    <div role="alert" class="flex items-start gap-3 text-sm text-ink">
+        <x-icon name="exclamation-triangle" class="w-6 h-6 shrink-0 text-warn" />
+        <div>
+            <p class="font-bold">{{ $unavailable }}</p>
+            <p class="mt-1 text-ink-muted">Solo se puede abrir el consultorio de un paciente que ingresó a consulta desde la cola médica.</p>
+        </div>
+    </div>
+    <a href="{{ route('consultations.index') }}"
+       class="mt-5 inline-flex items-center gap-1.5 rounded-lg bg-brand-petroleo px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-noche">
+        <x-icon name="arrow-uturn-left" class="w-4 h-4" /> Volver a la cola
+    </a>
+</div>
+@else
 <div class="grid grid-cols-1 gap-6 xl:grid-cols-5">
 
     {{-- Ficha clínica (RF-CONS-08) --}}
@@ -176,3 +191,4 @@
         </form>
     </section>
 </div>
+@endif
