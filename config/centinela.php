@@ -16,6 +16,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Código de Nodo Emisor y Hub Analítico Central
+    |--------------------------------------------------------------------------
+    |
+    | Identificador anónimo del CAPS emisor (nunca PII de pacientes) y parámetros
+    | de conexión HTTP REST hacia el microservicio FastAPI del Hub Central.
+    |
+    */
+
+    'caps_code' => env('CENTINELA_CAPS_CODE', 'CAPS-CODDA-01'),
+
+    'hub' => [
+        'url' => env('CENTINELA_HUB_URL', 'http://hub_analytics:8001'),
+        'api_key' => env('CENTINELA_CAPS_API_KEY', ''),
+        'timeout_seconds' => (int) env('CENTINELA_HUB_TIMEOUT', 5),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Zona horaria de visualización
     |--------------------------------------------------------------------------
     |
