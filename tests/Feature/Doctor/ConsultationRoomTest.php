@@ -117,6 +117,23 @@ class ConsultationRoomTest extends TestCase
             ->assertSeeLivewire(ConsultationRoom::class);
     }
 
+    public function test_el_formulario_de_cierre_queda_dentro_de_la_raiz_del_componente(): void
+    {
+        $html = $this->actingAs($this->medico)
+            ->get(route('consultations.show', $this->enConsulta()))
+            ->assertOk()
+            ->getContent();
+
+        // Si el formulario queda fuera del elemento con wire:id, el navegador lo
+        // envía como GET nativo y el cierre no se guarda.
+        $dom = new \DOMDocument;
+        @$dom->loadHTML($html);
+        $root = (new \DOMXPath($dom))->query('//*[@*[name()="wire:name"]="doctor.consultation-room"]')->item(0);
+
+        $this->assertNotNull($root);
+        $this->assertSame(1, (new \DOMXPath($dom))->query('.//form[@*[name()="wire:submit"]="save"]', $root)->length);
+    }
+
     public function test_un_triage_que_no_esta_en_consulta_muestra_el_aviso_sin_formulario(): void
     {
         $enEspera = Triage::factory()->create(['status' => TriageStatus::PENDING_CONSULTATION]);

@@ -12,6 +12,7 @@
     $discriminators = $this->discriminatorLabels();
 @endphp
 
+<div>
 @if ($unavailable)
 <div class="mx-auto max-w-xl rounded-2xl border border-warn/40 bg-amber-50 p-6 shadow-card">
     <div role="alert" class="flex items-start gap-3 text-sm text-ink">
@@ -192,3 +193,4 @@
     </section>
 </div>
 @endif
+</div>
