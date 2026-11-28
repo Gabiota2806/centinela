@@ -83,6 +83,25 @@ class NeighborhoodSeederTest extends TestCase
         );
     }
 
+    public function test_seeded_neighborhood_polygons_have_zero_overlapping_area(): void
+    {
+        Artisan::call('db:seed', [
+            '--class' => NeighborhoodSeeder::class,
+        ]);
+
+        $overlaps = DB::select(
+            'SELECT a.name AS first_name, b.name AS second_name, ST_Area(ST_Intersection(a.geometry, b.geometry)) AS overlap_area
+             FROM neighborhoods a
+             JOIN neighborhoods b ON a.id < b.id AND ST_Intersects(a.geometry, b.geometry)
+             WHERE ST_Area(ST_Intersection(a.geometry, b.geometry)) > 1e-8'
+        );
+
+        $this->assertEmpty(
+            $overlaps,
+            'Los polígonos de barrios de Formosa Capital no deben superponerse entre sí.'
+        );
+    }
+
     public function test_neighborhood_seeder_is_idempotent(): void
     {
         // Primera ejecución
